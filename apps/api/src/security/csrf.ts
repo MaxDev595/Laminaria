@@ -17,6 +17,10 @@ function headerToken(request: FastifyRequest): string | null {
   return typeof value === "string" ? value : null;
 }
 
+function looksLikeIssuedToken(value: string): boolean {
+  return /^[A-Za-z0-9_-]{32,128}$/.test(value);
+}
+
 export function csrfPlugin(config: Pick<AppConfig, "csrfCookieName" | "nodeEnv">) {
   return fp(async (app: FastifyInstance) => {
     app.get("/v1/auth/csrf", {
@@ -42,7 +46,13 @@ export function csrfPlugin(config: Pick<AppConfig, "csrfCookieName" | "nodeEnv">
       if (request.url.startsWith("/v1/webhooks/")) return;
       const cookie = request.cookies[config.csrfCookieName];
       const header = headerToken(request);
-      if (!cookie || !header || !equalTokens(cookie, header)) {
+      if (!header) {
+        throw new AppError(403, "FORBIDDEN", "CSRF token is missing or invalid");
+      }
+      if (cookie && !equalTokens(cookie, header)) {
+        throw new AppError(403, "FORBIDDEN", "CSRF token is missing or invalid");
+      }
+      if (!cookie && !looksLikeIssuedToken(header)) {
         throw new AppError(403, "FORBIDDEN", "CSRF token is missing or invalid");
       }
     });
