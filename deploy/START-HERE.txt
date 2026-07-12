@@ -30,6 +30,17 @@ Generate TOKEN_PEPPER with:
 
 If something asks a question, send Codex a screenshot or copy the terminal text.
 
+Recommended Vercel settings when Root Directory is apps/web:
+
+Install Command:
+cd ../.. && pnpm install --frozen-lockfile
+
+Build Command:
+cd ../.. && pnpm --filter @laminaria/web build
+
+Output Directory:
+.next
+
 If Vercel says "The specified token is not valid", run:
 
 .\deploy\fix-vercel-login.ps1
