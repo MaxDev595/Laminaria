@@ -9,19 +9,6 @@
     "node": ">=22.0.0",
     "pnpm": ">=11.0.0"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@prisma/engines",
-      "@swc/core",
-      "argon2",
-      "esbuild",
-      "msgpackr-extract",
-      "prisma",
-      "sharp",
-      "unrs-resolver"
-    ]
-  },
   "scripts": {
     "dev": "pnpm --parallel --filter @laminaria/web --filter @laminaria/api --filter @laminaria/worker dev",
     "dev:web": "pnpm --filter @laminaria/web dev",
