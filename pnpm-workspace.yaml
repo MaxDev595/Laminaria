@@ -1,0 +1,32 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  '@prisma/engines': set this to true or false
+  '@swc/core': set this to true or false
+  argon2: set this to true or false
+  esbuild: set this to true or false
+  msgpackr-extract: set this to true or false
+  prisma: set this to true or false
+  sharp: set this to true or false
+  unrs-resolver: set this to true or false
+
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-s3@3.1084.0'
+  - bullmq@5.80.0
+  - icu-minify@4.13.2
+  - next-intl-swc-plugin-extractor@4.13.2
+  - next-intl@4.13.2
+  - prettier@3.9.5
+  - use-intl@4.13.2
+  - '@eslint/eslintrc@3.3.6'
+  - '@eslint/js@9.39.5'
+  - eslint@9.39.5
+
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - argon2
+  - esbuild
+  - prisma

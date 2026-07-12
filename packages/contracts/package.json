@@ -1,0 +1,26 @@
+{
+  "name": "@laminaria/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth.ts",
+    "./events": "./src/events.ts",
+    "./rbac": "./src/rbac.ts",
+    "./webinar": "./src/webinar.ts",
+    "./workspace": "./src/workspace.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "^3.0.0"
+  }
+}

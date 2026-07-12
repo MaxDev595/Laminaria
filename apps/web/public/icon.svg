@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Laminaria">
+  <rect width="512" height="512" rx="120" fill="#071b24"/>
+  <circle cx="256" cy="256" r="190" fill="#12394a"/>
+  <path d="M166 350c64-32 91-91 86-178 54 45 75 104 62 178" fill="none" stroke="#9bd8c5" stroke-width="34" stroke-linecap="round"/>
+  <path d="M236 352c32-45 44-94 35-148 43 35 61 85 51 148" fill="none" stroke="#e6fff5" stroke-width="22" stroke-linecap="round" opacity=".88"/>
+  <circle cx="338" cy="161" r="22" fill="#f6c177"/>
+</svg>

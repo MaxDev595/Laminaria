@@ -1,0 +1,10 @@
+"use client";
+
+import { ArrowRight, CheckCircle2, LoaderCircle, XCircle } from "lucide-react";
+import { useLocale } from "next-intl";
+import { useEffect, useState } from "react";
+import { api, friendlyError } from "@/lib/api";
+import { Link } from "@/i18n/navigation";
+import { Button } from "@laminaria/ui";
+
+export function RegistrationConfirmation({ slug, token }: { slug: string; token?: string }) { const locale = useLocale(); const [state, setState] = useState<"loading" | "success" | "error">(token ? "loading" : "error"); const [error, setError] = useState(token ? "" : locale === "ru" ? "В ссылке нет токена подтверждения." : "The confirmation token is missing."); useEffect(() => { if (!token) return; api.confirmRegistration(token).then((result) => { sessionStorage.setItem(`laminaria-access:${slug}`, result.accessToken); setState("success"); }).catch((reason) => { setError(friendlyError(reason, locale)); setState("error"); }); }, [token, slug, locale]); return <main className="confirmation-page"><div className={`confirmation-card confirmation-card--${state}`}><span>{state === "loading" ? <LoaderCircle className="spin" /> : state === "success" ? <CheckCircle2 /> : <XCircle />}</span><h1>{state === "loading" ? (locale === "ru" ? "Подтверждаем регистрацию" : "Confirming registration") : state === "success" ? (locale === "ru" ? "Регистрация подтверждена" : "Registration confirmed") : (locale === "ru" ? "Не удалось подтвердить" : "Confirmation failed")}</h1><p>{state === "loading" ? (locale === "ru" ? "Проверяем защищённую ссылку…" : "Checking the secure link…") : state === "success" ? (locale === "ru" ? "Пропуск сохранён в этой вкладке. Можно проверить устройства." : "Your access pass is stored in this tab. You can check your devices now.") : error}</p>{state === "success" ? <Link href={`/w/${slug}/prejoin`}><Button>{locale === "ru" ? "Проверить устройства" : "Check devices"}<ArrowRight size={17} /></Button></Link> : state === "error" ? <Link href={`/w/${slug}`}><Button variant="secondary">{locale === "ru" ? "Вернуться к вебинару" : "Return to webinar"}</Button></Link> : null}</div></main>; }

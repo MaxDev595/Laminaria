@@ -1,0 +1,862 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/api/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Locale {
+  EN
+  RU
+}
+
+enum AccountType {
+  OAUTH
+  OIDC
+}
+
+enum AuthTokenKind {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum WebinarRole {
+  HOST
+  COHOST
+  MODERATOR
+  SPEAKER
+  ATTENDEE
+  GUEST
+}
+
+enum WebinarHostRole {
+  HOST
+  COHOST
+  MODERATOR
+  SPEAKER
+}
+
+enum WebinarStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+  ARCHIVED
+}
+
+enum WebinarSessionStatus {
+  SCHEDULED
+  WAITING
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+enum WebinarAccess {
+  PUBLIC
+  PRIVATE
+  PASSWORD_PROTECTED
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum MessageStatus {
+  PENDING
+  PUBLISHED
+  FLAGGED
+  BLOCKED
+  DELETED
+}
+
+enum QuestionStatus {
+  PENDING
+  PUBLISHED
+  FLAGGED
+  ANSWERED
+  DISMISSED
+  BLOCKED
+  DELETED
+}
+
+enum PollStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum RecordingStatus {
+  PENDING
+  RECORDING
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+}
+
+enum ResourceVisibility {
+  REGISTERED_ONLY
+  PARTICIPANTS
+  PUBLIC
+}
+
+enum ModerationCategory {
+  ABUSE
+  PROFANITY
+  THREAT
+  DANGEROUS_CONTENT
+  SPAM
+  SUSPICIOUS_LINK
+  DUPLICATE
+  OFF_TOPIC
+  CUSTOM
+}
+
+enum ModerationAction {
+  ALLOW
+  FLAG
+  HOLD
+  BLOCK
+  REMOVE
+  MUTE
+  DISCONNECT
+}
+
+enum ModerationSource {
+  DETERMINISTIC
+  AI
+  MANUAL
+  SYSTEM
+}
+
+enum AiFeature {
+  MODERATION
+  QUESTION_CLASSIFICATION
+  QUESTION_DEDUPLICATION
+  ANSWER_SUGGESTION
+  AUTONOMOUS_ANSWER
+  WEBINAR_SUMMARY
+}
+
+enum AiUsageStatus {
+  SUCCEEDED
+  FAILED
+  REJECTED_LIMIT
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  PAUSED
+  CANCELLED
+  EXPIRED
+}
+
+enum BillingProvider {
+  STRIPE
+  PADDLE
+  MANUAL
+}
+
+enum UsageMetric {
+  CONCURRENT_ATTENDEES
+  CONCURRENT_WEBINARS
+  STORAGE_BYTES
+  AI_INPUT_TOKENS
+  AI_OUTPUT_TOKENS
+  TEAM_MEMBERS
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id                    String               @id @default(uuid()) @db.Uuid
+  email                 String               @db.VarChar(320)
+  normalizedEmail       String               @unique @db.VarChar(320)
+  passwordHash          String?              @db.VarChar(255)
+  name                  String?              @db.VarChar(160)
+  avatarUrl             String?              @db.Text
+  locale                Locale               @default(EN)
+  timezone              String               @default("UTC") @db.VarChar(100)
+  emailVerifiedAt       DateTime?            @db.Timestamptz(3)
+  lastLoginAt           DateTime?            @db.Timestamptz(3)
+  createdAt             DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime             @updatedAt @db.Timestamptz(3)
+  deletedAt             DateTime?            @db.Timestamptz(3)
+  accounts              Account[]
+  sessions              Session[]
+  authTokens            AuthToken[]
+  ownedWorkspaces       Workspace[]          @relation("WorkspaceOwner")
+  workspaceMemberships  WorkspaceMember[]
+  createdWebinars       Webinar[]            @relation("WebinarCreator")
+  webinarHosts          WebinarHost[]
+  registrations         Registration[]
+  participantSessions   ParticipantSession[]
+  invitationsSent       Invitation[]         @relation("InvitationSender")
+  invitationsAccepted   Invitation[]         @relation("InvitationAcceptor")
+  answeredQuestions     Question[]           @relation("QuestionAnswerer")
+  createdPolls          Poll[]                @relation("PollCreator")
+  uploadedResources     WebinarResource[]     @relation("ResourceUploader")
+  moderationEvents      ModerationEvent[]     @relation("ModerationActor")
+  aiUsage               AiUsage[]             @relation("AiRequester")
+  notifications         Notification[]
+  auditLogs             AuditLog[]            @relation("AuditActor")
+
+  @@index([email])
+  @@index([deletedAt])
+}
+
+model Account {
+  id                    String      @id @default(uuid()) @db.Uuid
+  userId                String      @db.Uuid
+  type                  AccountType
+  provider              String      @db.VarChar(80)
+  providerAccountId     String      @db.VarChar(255)
+  accessTokenEncrypted  String?     @db.Text
+  refreshTokenEncrypted String?     @db.Text
+  tokenType             String?     @db.VarChar(40)
+  scope                 String?     @db.Text
+  expiresAt             DateTime?   @db.Timestamptz(3)
+  createdAt             DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime    @updatedAt @db.Timestamptz(3)
+  deletedAt             DateTime?   @db.Timestamptz(3)
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId, deletedAt])
+}
+
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.VarChar(128)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  lastSeenAt DateTime  @default(now()) @db.Timestamptz(3)
+  ipAddress  String?   @db.Inet
+  userAgent  String?   @db.Text
+  revokedAt  DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+model AuthToken {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String        @db.Uuid
+  kind       AuthTokenKind
+  tokenHash  String        @unique @db.VarChar(128)
+  expiresAt  DateTime      @db.Timestamptz(3)
+  consumedAt DateTime?     @db.Timestamptz(3)
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, expiresAt])
+  @@index([expiresAt, consumedAt])
+}
+
+model Workspace {
+  id             String            @id @default(uuid()) @db.Uuid
+  ownerId        String            @db.Uuid
+  name           String            @db.VarChar(160)
+  slug           String            @unique @db.VarChar(100)
+  logoUrl        String?           @db.Text
+  locale         Locale            @default(EN)
+  timezone       String            @default("UTC") @db.VarChar(100)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @db.Timestamptz(3)
+  deletedAt      DateTime?         @db.Timestamptz(3)
+  owner          User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members        WorkspaceMember[]
+  webinars       Webinar[]
+  invitations    Invitation[]
+  aiUsage        AiUsage[]
+  subscriptions  Subscription[]
+  usageCounters  UsageCounter[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@index([ownerId, deletedAt])
+  @@index([deletedAt])
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid()) @db.Uuid
+  workspaceId String        @db.Uuid
+  userId      String        @db.Uuid
+  role        WorkspaceRole @default(MEMBER)
+  joinedAt    DateTime      @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
+  deletedAt   DateTime?     @db.Timestamptz(3)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId, deletedAt])
+  @@index([workspaceId, role, deletedAt])
+}
+
+model Webinar {
+  id                       String             @id @default(uuid()) @db.Uuid
+  workspaceId              String             @db.Uuid
+  createdById              String             @db.Uuid
+  slug                     String             @db.VarChar(120)
+  title                    String             @db.VarChar(200)
+  description              String?            @db.Text
+  coverImageUrl            String?            @db.Text
+  language                 Locale             @default(EN)
+  timezone                 String             @default("UTC") @db.VarChar(100)
+  status                   WebinarStatus      @default(DRAFT)
+  access                   WebinarAccess      @default(PUBLIC)
+  scheduledStartAt         DateTime?          @db.Timestamptz(3)
+  maxParticipants          Int?
+  requireEmailRegistration Boolean            @default(true)
+  allowGuestJoin           Boolean            @default(false)
+  passwordHash             String?            @db.VarChar(255)
+  waitingRoomEnabled       Boolean            @default(false)
+  recordingEnabled         Boolean            @default(false)
+  chatEnabled              Boolean            @default(true)
+  qaEnabled                Boolean            @default(true)
+  reactionsEnabled         Boolean            @default(true)
+  pollsEnabled             Boolean            @default(true)
+  aiModerationEnabled      Boolean            @default(false)
+  aiAnswersEnabled         Boolean            @default(false)
+  remindersEnabled         Boolean            @default(true)
+  startedAt                DateTime?           @db.Timestamptz(3)
+  endedAt                  DateTime?           @db.Timestamptz(3)
+  cancelledAt              DateTime?           @db.Timestamptz(3)
+  archivedAt               DateTime?           @db.Timestamptz(3)
+  version                  Int                 @default(0)
+  createdAt                DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime            @updatedAt @db.Timestamptz(3)
+  deletedAt                DateTime?           @db.Timestamptz(3)
+  workspace                Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy                User                @relation("WebinarCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  sessions                 WebinarSession[]
+  hosts                    WebinarHost[]
+  registrations            Registration[]
+  invitations              Invitation[]
+  resources                WebinarResource[]
+  moderationRules          ModerationRule[]
+  aiUsage                  AiUsage[]
+  notifications            Notification[]
+  auditLogs                AuditLog[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, status, scheduledStartAt])
+  @@index([status, scheduledStartAt])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model WebinarSession {
+  id                  String                   @id @default(uuid()) @db.Uuid
+  webinarId           String                   @db.Uuid
+  sequence            Int                      @default(1)
+  status              WebinarSessionStatus     @default(SCHEDULED)
+  livekitRoomName     String                   @unique @db.VarChar(255)
+  livekitRoomSid      String?                  @unique @db.VarChar(255)
+  scheduledStartAt    DateTime?                @db.Timestamptz(3)
+  waitingRoomOpenedAt DateTime?                @db.Timestamptz(3)
+  startedAt           DateTime?                @db.Timestamptz(3)
+  endedAt             DateTime?                @db.Timestamptz(3)
+  createdAt           DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                 @updatedAt @db.Timestamptz(3)
+  webinar             Webinar                  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  participants        ParticipantSession[]
+  chatMessages        ChatMessage[]
+  questions           Question[]
+  polls               Poll[]
+  recordings          Recording[]
+  moderationEvents    ModerationEvent[]
+  aiUsage             AiUsage[]
+
+  @@unique([webinarId, sequence])
+  @@index([webinarId, status])
+  @@index([status, scheduledStartAt])
+}
+
+model WebinarHost {
+  id         String          @id @default(uuid()) @db.Uuid
+  webinarId  String          @db.Uuid
+  userId     String          @db.Uuid
+  role       WebinarHostRole
+  invitedAt  DateTime        @default(now()) @db.Timestamptz(3)
+  acceptedAt DateTime?       @db.Timestamptz(3)
+  createdAt  DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime        @updatedAt @db.Timestamptz(3)
+  deletedAt  DateTime?       @db.Timestamptz(3)
+  webinar    Webinar         @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([webinarId, userId])
+  @@index([userId, deletedAt])
+  @@index([webinarId, role, deletedAt])
+}
+
+model Registration {
+  id              String             @id @default(uuid()) @db.Uuid
+  webinarId       String             @db.Uuid
+  userId          String?            @db.Uuid
+  email           String             @db.VarChar(320)
+  normalizedEmail String             @db.VarChar(320)
+  displayName     String             @db.VarChar(160)
+  locale          Locale             @default(EN)
+  status          RegistrationStatus @default(PENDING)
+  tokenHash       String?            @unique @db.VarChar(128)
+  consentedAt     DateTime?          @db.Timestamptz(3)
+  confirmedAt     DateTime?          @db.Timestamptz(3)
+  cancelledAt     DateTime?          @db.Timestamptz(3)
+  attendedAt      DateTime?          @db.Timestamptz(3)
+  createdAt       DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime           @updatedAt @db.Timestamptz(3)
+  deletedAt       DateTime?          @db.Timestamptz(3)
+  webinar         Webinar            @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  participantRuns ParticipantSession[]
+
+  @@unique([webinarId, normalizedEmail])
+  @@index([webinarId, status, createdAt])
+  @@index([userId])
+  @@index([deletedAt])
+}
+
+model Invitation {
+  id              String           @id @default(uuid()) @db.Uuid
+  workspaceId     String?          @db.Uuid
+  webinarId       String?          @db.Uuid
+  invitedById     String?          @db.Uuid
+  acceptedById    String?          @db.Uuid
+  email           String           @db.VarChar(320)
+  normalizedEmail String           @db.VarChar(320)
+  workspaceRole   WorkspaceRole?
+  webinarRole     WebinarRole?
+  status          InvitationStatus @default(PENDING)
+  tokenHash       String           @unique @db.VarChar(128)
+  expiresAt       DateTime         @db.Timestamptz(3)
+  acceptedAt      DateTime?        @db.Timestamptz(3)
+  revokedAt       DateTime?        @db.Timestamptz(3)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  workspace       Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  webinar         Webinar?         @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  invitedBy       User?            @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: SetNull)
+  acceptedBy      User?            @relation("InvitationAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, normalizedEmail, status])
+  @@index([webinarId, normalizedEmail, status])
+  @@index([expiresAt, status])
+}
+
+model ParticipantSession {
+  id                 String              @id @default(uuid()) @db.Uuid
+  webinarSessionId   String              @db.Uuid
+  registrationId     String?             @db.Uuid
+  userId             String?             @db.Uuid
+  role               WebinarRole
+  displayName        String              @db.VarChar(160)
+  livekitIdentity    String              @db.VarChar(255)
+  idempotencyKey     String?             @db.VarChar(100)
+  joinedAt           DateTime            @default(now()) @db.Timestamptz(3)
+  leftAt             DateTime?           @db.Timestamptz(3)
+  lastSeenAt         DateTime            @default(now()) @db.Timestamptz(3)
+  promotedAt         DateTime?           @db.Timestamptz(3)
+  removedAt          DateTime?           @db.Timestamptz(3)
+  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @db.Timestamptz(3)
+  webinarSession     WebinarSession      @relation(fields: [webinarSessionId], references: [id], onDelete: Cascade)
+  registration       Registration?       @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+  user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  chatMessages       ChatMessage[]
+  questions          Question[]
+  pollVotes          PollVote[]
+  moderationEvents   ModerationEvent[]   @relation("ModerationTargetParticipant")
+
+  @@unique([webinarSessionId, livekitIdentity])
+  @@unique([webinarSessionId, idempotencyKey])
+  @@index([webinarSessionId, role, leftAt])
+  @@index([registrationId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id                         String              @id @default(uuid()) @db.Uuid
+  webinarSessionId           String              @db.Uuid
+  authorParticipantSessionId String?             @db.Uuid
+  replyToId                  String?             @db.Uuid
+  body                       String              @db.Text
+  status                     MessageStatus       @default(PENDING)
+  idempotencyKey             String              @db.VarChar(100)
+  publishedAt                DateTime?           @db.Timestamptz(3)
+  blockedAt                  DateTime?           @db.Timestamptz(3)
+  editedAt                   DateTime?           @db.Timestamptz(3)
+  createdAt                  DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt                  DateTime            @updatedAt @db.Timestamptz(3)
+  deletedAt                  DateTime?           @db.Timestamptz(3)
+  webinarSession             WebinarSession      @relation(fields: [webinarSessionId], references: [id], onDelete: Cascade)
+  authorParticipantSession   ParticipantSession? @relation(fields: [authorParticipantSessionId], references: [id], onDelete: SetNull)
+  replyTo                    ChatMessage?         @relation("ChatReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies                    ChatMessage[]        @relation("ChatReplies")
+  moderationEvents           ModerationEvent[]
+
+  @@unique([webinarSessionId, idempotencyKey])
+  @@index([webinarSessionId, status, createdAt])
+  @@index([authorParticipantSessionId, createdAt])
+  @@index([replyToId])
+  @@index([deletedAt])
+}
+
+model Question {
+  id                         String              @id @default(uuid()) @db.Uuid
+  webinarSessionId           String              @db.Uuid
+  authorParticipantSessionId String?             @db.Uuid
+  answeredById               String?             @db.Uuid
+  aiUsageId                  String?             @unique @db.Uuid
+  body                       String              @db.Text
+  status                     QuestionStatus      @default(PENDING)
+  idempotencyKey             String              @db.VarChar(100)
+  upvoteCount                Int                 @default(0)
+  answerBody                 String?             @db.Text
+  answeredAt                 DateTime?           @db.Timestamptz(3)
+  createdAt                  DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt                  DateTime            @updatedAt @db.Timestamptz(3)
+  deletedAt                  DateTime?           @db.Timestamptz(3)
+  webinarSession             WebinarSession      @relation(fields: [webinarSessionId], references: [id], onDelete: Cascade)
+  authorParticipantSession   ParticipantSession? @relation(fields: [authorParticipantSessionId], references: [id], onDelete: SetNull)
+  answeredBy                 User?               @relation("QuestionAnswerer", fields: [answeredById], references: [id], onDelete: SetNull)
+  aiUsage                    AiUsage?            @relation(fields: [aiUsageId], references: [id], onDelete: SetNull)
+  moderationEvents           ModerationEvent[]
+
+  @@unique([webinarSessionId, idempotencyKey])
+  @@index([webinarSessionId, status, upvoteCount, createdAt])
+  @@index([authorParticipantSessionId])
+  @@index([deletedAt])
+}
+
+model Poll {
+  id                  String          @id @default(uuid()) @db.Uuid
+  webinarSessionId    String          @db.Uuid
+  createdById         String?         @db.Uuid
+  question            String          @db.Text
+  status              PollStatus      @default(DRAFT)
+  allowMultiple       Boolean         @default(false)
+  anonymous           Boolean         @default(false)
+  openedAt            DateTime?       @db.Timestamptz(3)
+  closedAt            DateTime?       @db.Timestamptz(3)
+  createdAt           DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime        @updatedAt @db.Timestamptz(3)
+  deletedAt           DateTime?       @db.Timestamptz(3)
+  webinarSession      WebinarSession  @relation(fields: [webinarSessionId], references: [id], onDelete: Cascade)
+  createdBy           User?           @relation("PollCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  options             PollOption[]
+  votes               PollVote[]
+
+  @@index([webinarSessionId, status, createdAt])
+  @@index([deletedAt])
+}
+
+model PollOption {
+  id        String     @id @default(uuid()) @db.Uuid
+  pollId    String     @db.Uuid
+  label     String     @db.VarChar(500)
+  position  Int
+  createdAt DateTime   @default(now()) @db.Timestamptz(3)
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+
+  @@unique([pollId, position])
+  @@unique([id, pollId])
+}
+
+model PollVote {
+  id                   String             @id @default(uuid()) @db.Uuid
+  pollId               String             @db.Uuid
+  pollOptionId         String             @db.Uuid
+  participantSessionId String             @db.Uuid
+  idempotencyKey       String             @db.VarChar(100)
+  createdAt            DateTime           @default(now()) @db.Timestamptz(3)
+  poll                 Poll               @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option               PollOption         @relation(fields: [pollOptionId, pollId], references: [id, pollId], onDelete: Cascade)
+  participantSession   ParticipantSession @relation(fields: [participantSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([pollOptionId, participantSessionId])
+  @@unique([pollId, idempotencyKey])
+  @@index([pollId, participantSessionId])
+}
+
+model Recording {
+  id               String          @id @default(uuid()) @db.Uuid
+  webinarSessionId String          @db.Uuid
+  provider         String          @db.VarChar(80)
+  externalId       String?         @db.VarChar(255)
+  status           RecordingStatus @default(PENDING)
+  storageKey       String?         @db.Text
+  playbackUrl      String?         @db.Text
+  mimeType         String?         @db.VarChar(120)
+  sizeBytes        BigInt?
+  durationSeconds  Int?
+  retentionUntil   DateTime?       @db.Timestamptz(3)
+  startedAt        DateTime?       @db.Timestamptz(3)
+  endedAt          DateTime?       @db.Timestamptz(3)
+  availableAt      DateTime?       @db.Timestamptz(3)
+  failureCode      String?         @db.VarChar(120)
+  failureMessage   String?         @db.Text
+  createdAt        DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
+  deletedAt        DateTime?       @db.Timestamptz(3)
+  webinarSession   WebinarSession  @relation(fields: [webinarSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@index([webinarSessionId, status])
+  @@index([retentionUntil, status])
+  @@index([deletedAt])
+}
+
+model WebinarResource {
+  id           String             @id @default(uuid()) @db.Uuid
+  webinarId    String             @db.Uuid
+  uploadedById String?            @db.Uuid
+  name         String             @db.VarChar(255)
+  mimeType     String             @db.VarChar(120)
+  sizeBytes    BigInt
+  storageKey   String             @db.Text
+  checksum     String?            @db.VarChar(128)
+  visibility   ResourceVisibility @default(REGISTERED_ONLY)
+  createdAt    DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @db.Timestamptz(3)
+  deletedAt    DateTime?          @db.Timestamptz(3)
+  webinar      Webinar            @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  uploadedBy   User?              @relation("ResourceUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@unique([webinarId, storageKey])
+  @@index([webinarId, visibility, deletedAt])
+  @@index([uploadedById])
+}
+
+model ModerationRule {
+  id            String             @id @default(uuid()) @db.Uuid
+  webinarId     String             @db.Uuid
+  category      ModerationCategory
+  action        ModerationAction
+  enabled       Boolean            @default(true)
+  pattern       String?            @db.Text
+  configuration Json?
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @db.Timestamptz(3)
+  deletedAt     DateTime?          @db.Timestamptz(3)
+  webinar       Webinar            @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  events        ModerationEvent[]
+
+  @@unique([webinarId, category])
+  @@index([webinarId, enabled, deletedAt])
+}
+
+model ModerationEvent {
+  id                         String               @id @default(uuid()) @db.Uuid
+  webinarSessionId           String               @db.Uuid
+  moderationRuleId           String?              @db.Uuid
+  chatMessageId              String?              @db.Uuid
+  questionId                 String?              @db.Uuid
+  targetParticipantSessionId String?              @db.Uuid
+  actorUserId                String?              @db.Uuid
+  aiUsageId                  String?              @db.Uuid
+  source                     ModerationSource
+  category                   ModerationCategory
+  action                     ModerationAction
+  reason                     String?              @db.Text
+  metadata                   Json?
+  createdAt                  DateTime             @default(now()) @db.Timestamptz(3)
+  webinarSession             WebinarSession       @relation(fields: [webinarSessionId], references: [id], onDelete: Cascade)
+  moderationRule             ModerationRule?      @relation(fields: [moderationRuleId], references: [id], onDelete: SetNull)
+  chatMessage                ChatMessage?         @relation(fields: [chatMessageId], references: [id], onDelete: SetNull)
+  question                   Question?            @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  targetParticipantSession   ParticipantSession?  @relation("ModerationTargetParticipant", fields: [targetParticipantSessionId], references: [id], onDelete: SetNull)
+  actorUser                  User?                @relation("ModerationActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  aiUsage                    AiUsage?             @relation(fields: [aiUsageId], references: [id], onDelete: SetNull)
+
+  @@index([webinarSessionId, createdAt])
+  @@index([chatMessageId])
+  @@index([questionId])
+  @@index([targetParticipantSessionId])
+  @@index([aiUsageId])
+}
+
+model AiUsage {
+  id                String            @id @default(uuid()) @db.Uuid
+  workspaceId       String            @db.Uuid
+  webinarId         String?           @db.Uuid
+  webinarSessionId  String?           @db.Uuid
+  requestedById     String?           @db.Uuid
+  feature           AiFeature
+  status            AiUsageStatus
+  provider          String            @db.VarChar(80)
+  model             String            @db.VarChar(160)
+  providerRequestId String?           @db.VarChar(255)
+  inputTokens       Int               @default(0)
+  outputTokens      Int               @default(0)
+  totalTokens       Int               @default(0)
+  latencyMs         Int?
+  errorCode         String?           @db.VarChar(120)
+  metadata          Json?
+  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  webinar           Webinar?          @relation(fields: [webinarId], references: [id], onDelete: SetNull)
+  webinarSession    WebinarSession?   @relation(fields: [webinarSessionId], references: [id], onDelete: SetNull)
+  requestedBy       User?             @relation("AiRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  questionAnswer    Question?
+  moderationEvents  ModerationEvent[]
+
+  @@unique([provider, providerRequestId])
+  @@index([workspaceId, createdAt])
+  @@index([webinarId, feature, createdAt])
+  @@index([webinarSessionId, feature, createdAt])
+  @@index([status, createdAt])
+}
+
+model Plan {
+  id                       String         @id @default(uuid()) @db.Uuid
+  code                     String         @unique @db.VarChar(50)
+  displayNameKey           String         @db.VarChar(120)
+  priceMonthlyMinor        Int?
+  priceAnnualMinor         Int?
+  currency                 String?        @db.Char(3)
+  limits                   Json
+  features                 Json
+  businessDecisionRequired Boolean        @default(true)
+  active                   Boolean        @default(false)
+  createdAt                DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
+  subscriptions            Subscription[]
+}
+
+model Subscription {
+  id                     String             @id @default(uuid()) @db.Uuid
+  workspaceId            String             @db.Uuid
+  planId                 String             @db.Uuid
+  status                 SubscriptionStatus @default(INCOMPLETE)
+  billingProvider        BillingProvider?
+  providerCustomerId     String?            @db.VarChar(255)
+  providerSubscriptionId String?            @unique @db.VarChar(255)
+  currentPeriodStart     DateTime?           @db.Timestamptz(3)
+  currentPeriodEnd       DateTime?           @db.Timestamptz(3)
+  cancelAtPeriodEnd      Boolean             @default(false)
+  trialEndsAt            DateTime?           @db.Timestamptz(3)
+  cancelledAt            DateTime?           @db.Timestamptz(3)
+  createdAt              DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime            @updatedAt @db.Timestamptz(3)
+  deletedAt              DateTime?           @db.Timestamptz(3)
+  workspace              Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                   Plan                @relation(fields: [planId], references: [id], onDelete: Restrict)
+  usageCounters          UsageCounter[]
+
+  @@index([workspaceId, status, currentPeriodEnd])
+  @@index([planId])
+  @@index([deletedAt])
+}
+
+model UsageCounter {
+  id             String        @id @default(uuid()) @db.Uuid
+  workspaceId    String        @db.Uuid
+  subscriptionId String?       @db.Uuid
+  metric         UsageMetric
+  periodStart    DateTime      @db.Timestamptz(3)
+  periodEnd      DateTime      @db.Timestamptz(3)
+  used           BigInt        @default(0)
+  reserved       BigInt        @default(0)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, metric, periodStart, periodEnd])
+  @@index([subscriptionId, metric])
+  @@index([periodEnd])
+}
+
+model Notification {
+  id          String             @id @default(uuid()) @db.Uuid
+  userId      String             @db.Uuid
+  workspaceId String?            @db.Uuid
+  webinarId   String?            @db.Uuid
+  channel     NotificationChannel
+  status      NotificationStatus @default(PENDING)
+  type        String             @db.VarChar(120)
+  titleKey    String             @db.VarChar(160)
+  bodyKey     String             @db.VarChar(160)
+  data        Json?
+  readAt      DateTime?          @db.Timestamptz(3)
+  sentAt      DateTime?          @db.Timestamptz(3)
+  failedAt    DateTime?          @db.Timestamptz(3)
+  createdAt   DateTime           @default(now()) @db.Timestamptz(3)
+  deletedAt   DateTime?          @db.Timestamptz(3)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace?         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  webinar     Webinar?           @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([status, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([webinarId, createdAt])
+  @@index([deletedAt])
+}
+
+model AuditLog {
+  id          String     @id @default(uuid()) @db.Uuid
+  workspaceId String?    @db.Uuid
+  webinarId   String?    @db.Uuid
+  actorUserId String?    @db.Uuid
+  action      String     @db.VarChar(160)
+  targetType  String     @db.VarChar(120)
+  targetId    String?    @db.VarChar(255)
+  ipAddress   String?    @db.Inet
+  userAgent   String?    @db.Text
+  metadata    Json?
+  createdAt   DateTime   @default(now()) @db.Timestamptz(3)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  webinar     Webinar?   @relation(fields: [webinarId], references: [id], onDelete: SetNull)
+  actorUser   User?      @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([webinarId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+}

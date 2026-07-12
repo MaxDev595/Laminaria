@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds and caches
+.next/
+dist/
+coverage/
+playwright-report/
+test-results/
+.turbo/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Prisma generated client
+generated/
+prisma/generated/
+apps/api/src/generated/prisma/
+
+# Local infrastructure
+.data/
+uploads/
+.vercel/
+.railway/
+
+# Logs and OS/editor files
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Codex working files
+work/
+work/npm-cache/

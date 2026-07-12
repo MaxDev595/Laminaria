@@ -1,0 +1,52 @@
+LAMINARIA DEPLOY WITHOUT GITHUB
+
+1) Open PowerShell
+
+2) Run API deploy:
+
+cd C:\Users\pc\Documents\Codex\2026-07-10\new-chat-3
+.\deploy\deploy-api-railway.ps1
+
+3) Copy the Railway API URL.
+
+4) Run Web deploy:
+
+cd C:\Users\pc\Documents\Codex\2026-07-10\new-chat-3
+.\deploy\deploy-web-vercel.ps1
+
+5) In Vercel add:
+
+NEXT_PUBLIC_APP_URL=https://your-vercel-domain.vercel.app
+NEXT_PUBLIC_API_URL=https://your-railway-api-domain.up.railway.app
+NEXT_PUBLIC_LIVEKIT_URL=https://your-livekit-domain.livekit.cloud
+
+6) In Railway add variables from:
+
+deploy\railway-api-env.example
+
+Generate TOKEN_PEPPER with:
+
+.\deploy\generate-token-pepper.ps1
+
+If something asks a question, send Codex a screenshot or copy the terminal text.
+
+If Vercel says "The specified token is not valid", run:
+
+.\deploy\fix-vercel-login.ps1
+
+If Vercel login says "TypeError: fetch failed", use token deploy instead:
+
+1. Create token: https://vercel.com/account/settings/tokens
+2. Run:
+
+.\deploy\deploy-web-vercel-token.ps1
+
+If token deploy also says "TypeError: fetch failed", run:
+
+.\deploy\check-vercel-network.ps1
+
+Then try another network/VPN if api.vercel.com fails.
+
+If Railway says "Free plan resource provision limit exceeded", open Railway dashboard and delete old unused projects/services, then run:
+
+.\deploy\deploy-api-railway.ps1

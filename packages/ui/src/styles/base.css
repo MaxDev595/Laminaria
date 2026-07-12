@@ -1,0 +1,271 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-background-deep);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-width: 20rem;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% -10%, color-mix(in srgb, var(--kelp-500) 12%, transparent), transparent 30rem),
+    linear-gradient(155deg, var(--color-background-deep), var(--color-background) 55%, var(--color-background-elevated));
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+::selection {
+  color: var(--color-primary-foreground);
+  background: var(--color-primary);
+}
+
+.lm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lm-button {
+  position: relative;
+  overflow: hidden;
+  min-height: var(--button-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--button-radius);
+  padding: 0 var(--button-padding-x);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    color var(--duration-fast),
+    background-color var(--duration-fast),
+    border-color var(--duration-fast),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.lm-button::after {
+  position: absolute;
+  inset: -45% -35%;
+  transform: translateX(-130%) rotate(12deg);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, white 34%, transparent), transparent);
+  opacity: 0;
+  transition: transform 700ms var(--ease-out), opacity var(--duration-fast);
+  pointer-events: none;
+  content: "";
+}
+
+.lm-button > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lm-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.lm-button:hover:not(:disabled)::after {
+  transform: translateX(130%) rotate(12deg);
+  opacity: 0.75;
+}
+
+.lm-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.lm-button:disabled,
+.lm-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.lm-button:focus-visible {
+  transform: translateY(-1px);
+}
+
+.lm-button--primary {
+  color: var(--color-primary-foreground);
+  background: var(--color-primary);
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.lm-button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  box-shadow: 0 12px 38px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.lm-button--coral {
+  color: var(--color-accent-foreground);
+  background: var(--color-accent);
+}
+
+.lm-button--secondary {
+  color: var(--color-foreground);
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
+  box-shadow: var(--highlight-inset);
+}
+
+.lm-button--secondary:hover:not(:disabled),
+.lm-button--ghost:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+}
+
+.lm-button--ghost {
+  color: var(--color-muted-foreground);
+  background: transparent;
+}
+
+.lm-button--danger {
+  color: var(--color-accent-foreground);
+  background: var(--color-danger);
+}
+
+.lm-button--sm {
+  --button-height: 2.25rem;
+  --button-padding-x: var(--space-4);
+}
+
+.lm-button--lg {
+  --button-height: 3.25rem;
+  --button-padding-x: var(--space-6);
+  font-size: var(--text-base);
+}
+
+.lm-button--icon {
+  width: var(--button-height);
+  padding: 0;
+}
+
+.lm-surface {
+  color: var(--color-foreground);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--card-background);
+  box-shadow: var(--highlight-inset), var(--shadow-sm);
+  backdrop-filter: blur(var(--blur-surface));
+}
+
+.lm-surface--interactive {
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    border-color var(--duration-fast),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.lm-surface--interactive:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--highlight-inset), var(--shadow-md), var(--shadow-glow);
+}
+
+.lm-surface--interactive:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.lm-badge {
+  min-height: 1.625rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  background: var(--color-surface-soft);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.lm-badge::before {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.lm-badge--success { color: var(--color-success); }
+.lm-badge--warning { color: var(--color-warning); }
+.lm-badge--danger { color: var(--color-danger); }
+.lm-badge--primary { color: var(--color-primary); }
+
+.lm-skeleton {
+  position: relative;
+  overflow: hidden;
+  min-height: 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+}
+
+.lm-skeleton::after {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--color-surface-hover), transparent);
+  animation: lm-shimmer 1.6s var(--ease-standard) infinite;
+  content: "";
+}
+
+.lm-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: lm-spin 700ms linear infinite;
+}
+
+@keyframes lm-spin { to { transform: rotate(360deg); } }
+@keyframes lm-shimmer { 100% { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+
+  .lm-button::after {
+    display: none;
+  }
+}

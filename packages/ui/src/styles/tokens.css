@@ -1,0 +1,161 @@
+/* Laminaria primitives → semantic aliases → component tokens. */
+:root {
+  color-scheme: dark;
+
+  /* Primitive color scale */
+  --ocean-950: #031117;
+  --ocean-900: #061a24;
+  --ocean-850: #08232e;
+  --ocean-800: #0b2a36;
+  --ocean-700: #103744;
+  --ocean-600: #174957;
+  --ocean-300: #6f969c;
+  --ocean-200: #9db8bc;
+  --ocean-100: #d6e6e5;
+  --ocean-50: #f4fbfa;
+  --kelp-700: #168b81;
+  --kelp-600: #20aa9d;
+  --kelp-500: #35c5b4;
+  --kelp-300: #82e5d5;
+  --kelp-100: #d8f7f0;
+  --coral-600: #dd5e50;
+  --coral-500: #ff7d6b;
+  --coral-100: #ffe4df;
+  --sand-500: #f2c46d;
+  --foam-500: #53d59a;
+  --white: #ffffff;
+  --black: #000000;
+
+  /* Primitive geometry */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-organic: 1.75rem 1.75rem 2.25rem 1.25rem;
+  --radius-pill: 999px;
+
+  /* Primitive typography */
+  --font-sans: "Segoe UI Variable", "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "SFMono-Regular", ui-monospace, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: clamp(1.75rem, 2.4vw, 2.4rem);
+  --text-display: clamp(2.65rem, 6vw, 5.75rem);
+
+  /* Primitive motion */
+  --duration-instant: 100ms;
+  --duration-fast: 160ms;
+  --duration-normal: 220ms;
+  --duration-panel: 340ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* Semantic color — dark is the signature default */
+  --color-background: var(--ocean-900);
+  --color-background-deep: var(--ocean-950);
+  --color-background-elevated: var(--ocean-850);
+  --color-surface: color-mix(in srgb, var(--ocean-700) 84%, transparent);
+  --color-surface-soft: color-mix(in srgb, var(--white) 6%, transparent);
+  --color-surface-hover: color-mix(in srgb, var(--white) 10%, transparent);
+  --color-foreground: var(--ocean-50);
+  --color-muted-foreground: var(--ocean-200);
+  --color-subtle-foreground: var(--ocean-300);
+  --color-primary: var(--kelp-500);
+  --color-primary-hover: var(--kelp-300);
+  --color-primary-active: var(--kelp-600);
+  --color-primary-foreground: var(--ocean-950);
+  --color-accent: var(--coral-500);
+  --color-accent-hover: var(--coral-100);
+  --color-accent-foreground: var(--ocean-950);
+  --color-success: var(--foam-500);
+  --color-warning: var(--sand-500);
+  --color-danger: var(--coral-500);
+  --color-border: color-mix(in srgb, var(--ocean-100) 14%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--kelp-300) 32%, transparent);
+  --color-focus: var(--kelp-300);
+  --color-overlay: color-mix(in srgb, var(--ocean-950) 74%, transparent);
+
+  /* Semantic depth */
+  --shadow-sm: 0 8px 24px color-mix(in srgb, var(--black) 16%, transparent);
+  --shadow-md: 0 22px 70px color-mix(in srgb, var(--black) 28%, transparent);
+  --shadow-glow: 0 0 44px color-mix(in srgb, var(--kelp-500) 16%, transparent);
+  --highlight-inset: inset 0 1px 0 color-mix(in srgb, var(--white) 9%, transparent);
+  --blur-surface: 20px;
+
+  /* Semantic layout */
+  --page-gutter: clamp(1rem, 4vw, 3.5rem);
+  --section-gap: clamp(3.5rem, 8vw, 8rem);
+  --content-max: 90rem;
+  --control-min: 2.75rem;
+  --focus-ring: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-focus);
+
+  /* Component tokens */
+  --button-height: 2.875rem;
+  --button-radius: var(--radius-pill);
+  --button-padding-x: var(--space-5);
+  --card-background: var(--color-surface);
+  --card-border: var(--color-border);
+  --card-radius: var(--radius-organic);
+  --card-padding: clamp(1rem, 2.2vw, 1.5rem);
+  --input-height: 3rem;
+  --input-background: color-mix(in srgb, var(--ocean-950) 34%, transparent);
+  --input-border: var(--color-border);
+  --input-radius: var(--radius-md);
+  --panel-background: color-mix(in srgb, var(--ocean-900) 90%, transparent);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-background: #eef8f6;
+  --color-background-deep: #dfeeed;
+  --color-background-elevated: #f7fcfb;
+  --color-surface: color-mix(in srgb, var(--white) 84%, transparent);
+  --color-surface-soft: color-mix(in srgb, var(--ocean-900) 5%, transparent);
+  --color-surface-hover: color-mix(in srgb, var(--ocean-900) 8%, transparent);
+  --color-foreground: #0a2932;
+  --color-muted-foreground: #526f74;
+  --color-subtle-foreground: #6f898d;
+  --color-primary: #168b81;
+  --color-primary-hover: #0f746c;
+  --color-primary-active: #0b625c;
+  --color-primary-foreground: var(--white);
+  --color-accent: #d95e50;
+  --color-accent-hover: #bd483e;
+  --color-accent-foreground: var(--white);
+  --color-border: color-mix(in srgb, var(--ocean-900) 12%, transparent);
+  --color-border-strong: color-mix(in srgb, var(--kelp-700) 35%, transparent);
+  --color-focus: var(--kelp-700);
+  --color-overlay: color-mix(in srgb, var(--ocean-950) 40%, transparent);
+  --shadow-sm: 0 8px 24px color-mix(in srgb, var(--ocean-900) 8%, transparent);
+  --shadow-md: 0 22px 70px color-mix(in srgb, var(--ocean-900) 14%, transparent);
+  --shadow-glow: 0 0 44px color-mix(in srgb, var(--kelp-500) 13%, transparent);
+  --highlight-inset: inset 0 1px 0 color-mix(in srgb, var(--white) 68%, transparent);
+  --input-background: color-mix(in srgb, var(--white) 74%, transparent);
+  --panel-background: color-mix(in srgb, var(--white) 92%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-fast: 1ms;
+    --duration-normal: 1ms;
+    --duration-panel: 1ms;
+  }
+}
