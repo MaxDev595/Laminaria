@@ -84,7 +84,11 @@ export async function registerAuthRoutes(
   }, async (request, reply) => {
     const result = await auth.signIn(signInSchema.parse(request.body));
     reply.setCookie(config.sessionCookieName, result.sessionToken, sessionCookie(config));
-    return { user: result.actor.user, sessionExpiresAt: result.actor.session.expiresAt.toISOString() };
+    return {
+      user: result.actor.user,
+      sessionExpiresAt: result.actor.session.expiresAt.toISOString(),
+      sessionToken: result.sessionToken,
+    };
   });
 
   app.post("/v1/auth/phone/start", {
@@ -105,7 +109,11 @@ export async function registerAuthRoutes(
   }, async (request, reply) => {
     const result = await auth.signInWithPhone(phoneVerifySchema.parse(request.body));
     reply.setCookie(config.sessionCookieName, result.sessionToken, sessionCookie(config));
-    return { user: result.actor.user, sessionExpiresAt: result.actor.session.expiresAt.toISOString() };
+    return {
+      user: result.actor.user,
+      sessionExpiresAt: result.actor.session.expiresAt.toISOString(),
+      sessionToken: result.sessionToken,
+    };
   });
 
   app.get("/v1/auth/google/start", {

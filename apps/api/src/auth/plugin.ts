@@ -21,10 +21,18 @@ export function authenticationPlugin(
   return fp(async (app: FastifyInstance) => {
     app.decorateRequest("actor", null);
     app.addHook("onRequest", async (request) => {
-      const token = request.cookies[config.sessionCookieName];
+      const token = request.cookies[config.sessionCookieName] ?? bearerToken(request);
       request.actor = token ? await auth.authenticate(token) : null;
     });
   }, { name: "laminaria-authentication", dependencies: ["@fastify/cookie"] });
+}
+
+function bearerToken(request: FastifyRequest): string | null {
+  const header = request.headers.authorization;
+  if (!header) return null;
+  const [scheme, token] = header.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  return token;
 }
 
 export function requireUser(request: FastifyRequest): AuthenticatedActor {
