@@ -245,21 +245,29 @@ export class PrismaUnitOfWork implements UnitOfWork {
       },
 
       createWithOwner: async (input) => {
-        const workspace = await this.#client.workspace.create({
-          data: {
-            name: input.name,
-            slug: input.slug,
-            ownerId: input.ownerId,
-            members: {
-              create: {
-                userId: input.ownerId,
-                role: "OWNER",
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          const slug = attempt === 0 ? input.slug : `${input.slug}-${attempt + 1}`;
+          try {
+            const workspace = await this.#client.workspace.create({
+              data: {
+                name: input.name,
+                slug,
+                ownerId: input.ownerId,
+                members: {
+                  create: {
+                    userId: input.ownerId,
+                    role: "OWNER",
+                  },
+                },
               },
-            },
-          },
-          select: { id: true, name: true, slug: true },
-        });
-        return { ...workspace, role: "OWNER" as const };
+              select: { id: true, name: true, slug: true },
+            });
+            return { ...workspace, role: "OWNER" as const };
+          } catch (error) {
+            if (!isUniqueConstraintError(error)) throw error;
+          }
+        }
+        throw new Error("Unable to allocate a unique workspace slug");
       },
 
       listForUser: async (userId) => {
@@ -707,6 +715,10 @@ function unsupportedTokenError(kind: OneTimeTokenKind): Error {
   return new Error(
     `One-time token kind ${kind} is not supported by the AuthToken persistence model`,
   );
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
 function missingWebinarSessionError(webinarId: string): Error {
