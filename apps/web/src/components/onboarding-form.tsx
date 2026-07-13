@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Building2, LoaderCircle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ export function OnboardingForm() {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = useState("");
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", slug: "" } });
   const name = useWatch({ control: form.control, name: "name" });
@@ -29,7 +31,13 @@ export function OnboardingForm() {
 
   async function submit(values: Values) {
     setError("");
-    try { await api.createWorkspace(values); router.replace("/dashboard"); }
+    try {
+      const result = await api.createWorkspace(values);
+      queryClient.setQueryData(["workspaces"], { workspaces: [result.workspace] });
+      await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+      router.replace("/dashboard");
+      router.refresh();
+    }
     catch (reason) { setError(friendlyError(reason, locale)); }
   }
 

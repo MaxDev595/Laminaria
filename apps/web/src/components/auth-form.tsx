@@ -57,6 +57,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
   const isSignIn = mode === "sign-in";
+  const canUsePhoneAuth = isSignIn || isSignUp;
   const title = isSignUp ? t("auth.signUp") : isForgot || isReset ? t("auth.resetPassword") : t("auth.signIn");
   const subtitle = isSignUp
     ? locale === "ru"
@@ -108,6 +109,23 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
     setServerError(null);
     try {
       if (mode === "sign-up") {
+        if (method === "phone") {
+          const phone = values.phone?.trim();
+          if (!values.name) throw new Error(locale === "ru" ? "Введите имя." : "Enter your name.");
+          if (!phone) throw new Error(locale === "ru" ? "Введите номер телефона." : "Enter your phone number.");
+          if (!phoneCodeSent) {
+            const result = await api.phoneStart({ phone, locale });
+            setDevCode(result.devCode);
+            setPhoneCodeSent(true);
+            return;
+          }
+          if (!values.code || values.code.length !== 6) {
+            throw new Error(locale === "ru" ? "Введите 6-значный код." : "Enter the 6-digit code.");
+          }
+          rememberAuthenticated(await api.phoneVerify({ phone, code: values.code, name: values.name, locale }));
+          router.replace("/dashboard");
+          return;
+        }
         if (!values.name || !values.email || !values.password || values.password.length < 12) {
           throw new Error(locale === "ru" ? "Укажите имя, email и пароль от 12 символов." : "Enter your name, email, and a password of at least 12 characters.");
         }
@@ -203,7 +221,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         <p>{subtitle}</p>
       </div>
 
-      {isSignIn ? (
+      {canUsePhoneAuth ? (
         <>
           <div className="auth-method-tabs" role="tablist" aria-label={locale === "ru" ? "Способ входа" : "Sign-in method"}>
             <button type="button" role="tab" aria-selected={method === "email"} onClick={() => setMethod("email")}>
@@ -215,10 +233,10 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
               {locale === "ru" ? "Телефон" : "Phone"}
             </button>
           </div>
-          <button type="button" className="google-auth-button" onClick={startGoogle}>
+          {isSignIn ? <button type="button" className="google-auth-button" onClick={startGoogle}>
             <span>G</span>
             {locale === "ru" ? "Войти через Google" : "Continue with Google"}
-          </button>
+          </button> : null}
         </>
       ) : null}
 
@@ -229,7 +247,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
           </Field>
         ) : null}
 
-        {isSignIn && method === "phone" ? (
+        {canUsePhoneAuth && method === "phone" ? (
           <>
             <Field
               label={locale === "ru" ? "Номер телефона" : "Phone number"}
@@ -249,7 +267,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
           </Field>
         ) : null}
 
-        {!isForgot && !(isSignIn && method === "phone") ? (
+        {!isForgot && !(canUsePhoneAuth && method === "phone") ? (
           <Field label={t("auth.password")} hint={isSignUp || isReset ? (locale === "ru" ? "Минимум 12 символов" : "At least 12 characters") : undefined}>
             <div className="password-field">
               <Input type={visible ? "text" : "password"} autoComplete={isSignUp ? "new-password" : "current-password"} {...form.register("password")} />
@@ -314,3 +332,4 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
     </motion.div>
   );
 }
+

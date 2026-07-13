@@ -11,7 +11,7 @@ export async function AuthShell({ children, locale }: { children: React.ReactNod
     <main className="auth-shell">
       <section className="auth-panel">
         <div className="auth-panel__top">
-          <Link href="/" className="brand-link"><Logo /></Link>
+          <Link href="/dashboard" className="brand-link"><Logo /></Link>
           <div><LanguageSwitcher /><ThemeToggle /></div>
         </div>
         <div className="auth-panel__content">{children}</div>

@@ -257,9 +257,9 @@ export class PrismaUnitOfWork implements UnitOfWork {
               },
             },
           },
-          select: { id: true, slug: true },
+          select: { id: true, name: true, slug: true },
         });
-        return workspace;
+        return { ...workspace, role: "OWNER" as const };
       },
 
       listForUser: async (userId) => {
