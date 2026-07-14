@@ -61,6 +61,12 @@ export interface WebinarRepository {
     webinarId: string,
     userId: string,
   ): Promise<import("../domain/models.js").ParticipantRole | null>;
+  upsertHost(input: {
+    webinarId: string;
+    userId: string;
+    role: "HOST" | "COHOST" | "MODERATOR" | "SPEAKER";
+    acceptedAt: Date;
+  }): Promise<void>;
   listByWorkspace(workspaceId: string): Promise<readonly WebinarRecord[]>;
   create(input: Omit<WebinarRecord, "id" | "version" | "createdAt" | "updatedAt" | "deletedAt">): Promise<WebinarRecord>;
   updateDraft(

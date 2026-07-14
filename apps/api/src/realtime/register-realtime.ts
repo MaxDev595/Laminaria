@@ -13,6 +13,7 @@ import {
   chatDeleteSchema,
   chatSendSchema,
   chatStateSchema,
+  moderationRestrictSchema,
   pollChangeStateSchema,
   pollCreateSchema,
   pollVoteSchema,
@@ -25,6 +26,7 @@ import {
   type ChatDeletePayload,
   type ChatSendPayload,
   type ChatStatePayload,
+  type ModerationRestrictPayload,
   type PollChangeStatePayload,
   type PollCreatePayload,
   type PollVotePayload,
@@ -40,6 +42,7 @@ import type {
   ChatDeleted,
   ChatMessage,
   ChatStateChanged,
+  ModerationRestrictionChanged,
   ModerationResult,
   ModerationService,
   Poll,
@@ -64,6 +67,14 @@ import type {
 const DEFAULT_IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1_000;
 const noOpLogger: RealtimeLogger = { error: () => undefined };
 const viewerChatEnabledByWebinar = new Map<string, boolean>();
+const moderationRestrictionsByWebinar = new Map<string, Map<string, RestrictionState>>();
+
+interface RestrictionState {
+  mutedUntil?: number | null;
+  bannedUntil?: number | null;
+  targetName: string;
+  reason?: string;
+}
 
 export type RealtimeEntityKind =
   | "chat"
@@ -242,6 +253,28 @@ function isViewerRole(role: string): boolean {
   return role === "ATTENDEE" || role === "GUEST";
 }
 
+function restrictionFor(webinarId: string, targetId: string): RestrictionState | null {
+  return moderationRestrictionsByWebinar.get(webinarId)?.get(targetId) ?? null;
+}
+
+function isRestrictionActive(until: number | null | undefined, now = Date.now()): boolean {
+  return until === null || (typeof until === "number" && until > now);
+}
+
+function assertNotBanned(webinarId: string, principal: RealtimePrincipal): void {
+  const restriction = restrictionFor(webinarId, principal.id);
+  if (restriction && isRestrictionActive(restriction.bannedUntil)) {
+    throw new RealtimeDomainError("FORBIDDEN", "You are banned from this webinar");
+  }
+}
+
+function assertNotMuted(webinarId: string, principal: RealtimePrincipal): void {
+  const restriction = restrictionFor(webinarId, principal.id);
+  if (restriction && isRestrictionActive(restriction.mutedUntil)) {
+    throw new RealtimeDomainError("FORBIDDEN", "You are muted in this webinar");
+  }
+}
+
 function toClientError(error: unknown): RealtimeErrorPayload {
   if (error instanceof RealtimeDomainError) {
     return error.toPayload();
@@ -399,6 +432,7 @@ function registerJoinHandlers(
           "join",
           false,
         );
+        assertNotBanned(webinarId, requirePrincipal(socket));
         await socket.join(webinarRoom(webinarId));
         socket.data.joinedWebinarIds?.add(webinarId);
         const participant: WebinarJoined = {
@@ -454,6 +488,8 @@ function registerChatHandlers(
           validated.webinarId,
           "join",
         );
+        const principal = requirePrincipal(socket);
+        assertNotMuted(validated.webinarId, principal);
         if (isViewerRole(access.role) && !(viewerChatEnabledByWebinar.get(validated.webinarId) ?? false)) {
           throw new RealtimeDomainError("FORBIDDEN", "Viewer chat is closed");
         }
@@ -463,7 +499,6 @@ function registerChatHandlers(
           "chat:send",
           validated,
           async () => {
-            const principal = requirePrincipal(socket);
             const id = dependencies.idFactory("chat");
             const moderated = await moderateText(dependencies, {
               webinarId: validated.webinarId,
@@ -572,6 +607,70 @@ function registerChatHandlers(
   });
 }
 
+function registerModerationHandlers(
+  socket: RealtimeSocket,
+  dependencies: ResolvedDependencies,
+): void {
+  socket.on("moderation:restrict", (payload, acknowledge) => {
+    void handleValidated<ModerationRestrictPayload, ModerationRestrictionChanged>(
+      socket,
+      dependencies,
+      "moderation:restrict",
+      moderationRestrictSchema,
+      payload,
+      acknowledge,
+      async (validated) => {
+        await authorize(socket, dependencies, validated.webinarId, "chat.moderate");
+        const stateByTarget =
+          moderationRestrictionsByWebinar.get(validated.webinarId) ?? new Map<string, RestrictionState>();
+        moderationRestrictionsByWebinar.set(validated.webinarId, stateByTarget);
+        const current = stateByTarget.get(validated.targetId) ?? { targetName: validated.targetName };
+        const until =
+          validated.action === "mute" || validated.action === "ban"
+            ? validated.durationMinutes
+              ? Date.now() + validated.durationMinutes * 60_000
+              : null
+            : undefined;
+        const next: RestrictionState = {
+          ...current,
+          targetName: validated.targetName,
+          ...(validated.reason ? { reason: validated.reason } : {}),
+        };
+        if (validated.action === "mute") next.mutedUntil = until;
+        if (validated.action === "ban") next.bannedUntil = until;
+        if (validated.action === "unmute") next.mutedUntil = undefined;
+        if (validated.action === "unban") next.bannedUntil = undefined;
+        stateByTarget.set(validated.targetId, next);
+        const event: ModerationRestrictionChanged = {
+          webinarId: validated.webinarId,
+          targetId: validated.targetId,
+          targetName: validated.targetName,
+          action: validated.action,
+          active: validated.action === "mute" || validated.action === "ban",
+          until:
+            validated.action === "mute"
+              ? typeof next.mutedUntil === "number"
+                ? new Date(next.mutedUntil).toISOString()
+                : next.mutedUntil === null
+                  ? null
+                  : null
+              : validated.action === "ban"
+                ? typeof next.bannedUntil === "number"
+                  ? new Date(next.bannedUntil).toISOString()
+                  : next.bannedUntil === null
+                    ? null
+                    : null
+                : null,
+          ...(validated.reason ? { reason: validated.reason } : {}),
+        };
+        socket.to(webinarRoom(validated.webinarId)).emit("moderation:restriction", event);
+        socket.emit("moderation:restriction", event);
+        return { data: event, replayed: false };
+      },
+    );
+  });
+}
+
 function registerQuestionHandlers(
   socket: RealtimeSocket,
   dependencies: ResolvedDependencies,
@@ -591,13 +690,14 @@ function registerQuestionHandlers(
           validated.webinarId,
           "question.ask",
         );
+        const principal = requirePrincipal(socket);
+        assertNotMuted(validated.webinarId, principal);
         return executeMutation(
           socket,
           dependencies,
           "question:ask",
           validated,
           async () => {
-            const principal = requirePrincipal(socket);
             const id = dependencies.idFactory("question");
             const moderated = await moderateText(dependencies, {
               webinarId: validated.webinarId,
@@ -942,6 +1042,7 @@ export function registerRealtime(
 
     registerJoinHandlers(socket, dependencies);
     registerChatHandlers(socket, dependencies);
+    registerModerationHandlers(socket, dependencies);
     registerQuestionHandlers(socket, dependencies);
     registerPollHandlers(socket, dependencies);
   });

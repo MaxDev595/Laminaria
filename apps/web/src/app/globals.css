@@ -3706,6 +3706,191 @@ select {
   opacity: 0.55;
 }
 
+.broadcast-stage {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.broadcast-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0.25rem;
+}
+
+.viewer-counter,
+.quality-select,
+.host-media-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 0.75rem;
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  box-shadow: var(--highlight-inset);
+}
+
+.viewer-counter span {
+  font-weight: 900;
+  color: var(--color-primary-strong);
+}
+
+.viewer-counter small,
+.quality-select span {
+  color: var(--color-muted-foreground);
+  font-size: 0.78rem;
+}
+
+.quality-select select {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-weight: 800;
+  outline: none;
+}
+
+.host-media-controls {
+  padding: 0.25rem;
+}
+
+.host-media-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 0.65rem;
+  color: var(--color-muted-foreground);
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.host-media-controls button.is-on {
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-pill);
+  padding: 0.18rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.role-chip.is-admin,
+.realtime-message.is-admin > span {
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.role-chip.is-moderator,
+.realtime-message.is-moderator > span {
+  color: #a78bfa;
+  background: color-mix(in srgb, #a78bfa 16%, transparent);
+}
+
+.message-moderation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.message-moderation-actions button,
+.restriction-list button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.28rem 0.5rem;
+  color: var(--color-muted-foreground);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.message-moderation-actions button:hover,
+.restriction-list button:hover {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+}
+
+.restriction-list {
+  display: grid;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+}
+
+.restriction-list > strong {
+  font-size: 0.78rem;
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.restriction-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.webinar-role-form {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(8rem, 11rem) auto;
+  gap: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.webinar-role-form input,
+.webinar-role-form select {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 0.7rem 0.85rem;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  outline: none;
+}
+
+.webinar-role-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  border-radius: var(--radius-pill);
+  padding: 0.7rem 0.95rem;
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.webinar-role-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .device-modal {
   position: fixed;
   inset: 0;

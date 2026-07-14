@@ -4,6 +4,7 @@ import type {
   ChatDeletePayload,
   ChatSendPayload,
   ChatStatePayload,
+  ModerationRestrictPayload,
   PollChangeStatePayload,
   PollCreatePayload,
   PollVotePayload,
@@ -290,6 +291,16 @@ export interface ChatStateChanged {
   enabled: boolean;
 }
 
+export interface ModerationRestrictionChanged {
+  webinarId: string;
+  targetId: string;
+  targetName: string;
+  action: "mute" | "ban" | "unmute" | "unban";
+  active: boolean;
+  until: string | null;
+  reason?: string;
+}
+
 export interface ClientToServerEvents {
   "webinar:join": (
     payload: WebinarJoinPayload,
@@ -310,6 +321,10 @@ export interface ClientToServerEvents {
   "chat:set_state": (
     payload: ChatStatePayload,
     acknowledge?: RealtimeAcknowledge<ChatStateChanged>,
+  ) => void;
+  "moderation:restrict": (
+    payload: ModerationRestrictPayload,
+    acknowledge?: RealtimeAcknowledge<ModerationRestrictionChanged>,
   ) => void;
   "question:ask": (
     payload: QuestionAskPayload,
@@ -351,6 +366,7 @@ export interface ServerToClientEvents {
   "chat:created": (message: ChatMessage) => void;
   "chat:deleted": (message: ChatDeleted) => void;
   "chat:state": (state: ChatStateChanged) => void;
+  "moderation:restriction": (state: ModerationRestrictionChanged) => void;
   "question:created": (question: Question) => void;
   "question:updated": (question: Question) => void;
   "poll:created": (poll: Poll) => void;

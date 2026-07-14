@@ -346,6 +346,33 @@ export class PrismaUnitOfWork implements UnitOfWork {
         return participant ? (participant.role as ParticipantRole) : null;
       },
 
+      upsertHost: async (input) => {
+        const existing = await this.#client.webinarHost.findFirst({
+          where: { webinarId: input.webinarId, userId: input.userId },
+          select: { id: true },
+        });
+        if (existing) {
+          await this.#client.webinarHost.update({
+            where: { id: existing.id },
+            data: {
+              role: input.role,
+              acceptedAt: input.acceptedAt,
+              deletedAt: null,
+            },
+          });
+          return;
+        }
+        await this.#client.webinarHost.create({
+          data: {
+            webinarId: input.webinarId,
+            userId: input.userId,
+            role: input.role,
+            invitedAt: input.acceptedAt,
+            acceptedAt: input.acceptedAt,
+          },
+        });
+      },
+
       listByWorkspace: async (workspaceId) => {
         const webinars = await this.#client.webinar.findMany({
           where: { workspaceId, deletedAt: null },

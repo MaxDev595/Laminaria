@@ -50,6 +50,17 @@ export const chatStateSchema = z
   })
   .strict();
 
+export const moderationRestrictSchema = z
+  .object({
+    ...webinarMutation,
+    targetId: identifier,
+    targetName: z.string().trim().min(1).max(160),
+    action: z.enum(["mute", "ban", "unmute", "unban"]),
+    durationMinutes: z.number().int().positive().max(43_200).nullable().optional(),
+    reason: z.string().trim().min(1).max(280).optional(),
+  })
+  .strict();
+
 export const questionAskSchema = z
   .object({
     ...webinarMutation,
@@ -122,6 +133,7 @@ export type WebinarLeavePayload = z.infer<typeof webinarLeaveSchema>;
 export type ChatSendPayload = z.infer<typeof chatSendSchema>;
 export type ChatDeletePayload = z.infer<typeof chatDeleteSchema>;
 export type ChatStatePayload = z.infer<typeof chatStateSchema>;
+export type ModerationRestrictPayload = z.infer<typeof moderationRestrictSchema>;
 export type QuestionAskPayload = z.infer<typeof questionAskSchema>;
 export type QuestionUpvotePayload = z.infer<typeof questionUpvoteSchema>;
 export type QuestionAnswerPayload = z.infer<typeof questionAnswerSchema>;

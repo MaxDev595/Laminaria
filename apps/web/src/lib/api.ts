@@ -153,6 +153,11 @@ export const api = {
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/prejoin`,
       { method: "POST" },
     ),
+  assignWebinarHost: (workspaceId: string, webinarId: string, input: { email: string; role: "COHOST" | "MODERATOR" | "SPEAKER" }) =>
+    apiFetch<{ host: { userId: string; email: string; name: string; role: "COHOST" | "MODERATOR" | "SPEAKER" } }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/hosts`,
+      { method: "POST", body: JSON.stringify(input) },
+    ),
   publicWebinar: (slug: string, signal?: AbortSignal) =>
     apiFetch<{ webinar: PublicWebinar }>(`/v1/public/webinars/${encodeURIComponent(slug)}`, { signal }),
   register: (slug: string, input: { email: string; name: string; locale: "en" | "ru" }) =>

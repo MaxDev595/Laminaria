@@ -46,6 +46,10 @@ const transitionSchema = z.object({
   status: z.enum(WEBINAR_STATUSES),
   version: z.number().int().nonnegative(),
 });
+const hostRoleSchema = z.object({
+  email: z.email().max(320),
+  role: z.enum(["COHOST", "MODERATOR", "SPEAKER"]),
+});
 
 export async function registerWebinarRoutes(
   app: FastifyInstance,
@@ -190,6 +194,34 @@ export async function registerWebinarRoutes(
           role: access.role,
         },
       };
+    },
+  );
+
+  app.post<{ Params: { workspaceId: string; webinarId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars/:webinarId/hosts",
+    { schema: { tags: ["Webinars"], summary: "Assign a webinar host role by email" } },
+    async (request, reply) => {
+      const params = paramsSchema.parse(request.params);
+      await requireWebinarPermission(request, repositories, params.webinarId, "webinar:moderate");
+      const existing = await service.find(params.webinarId);
+      assertWorkspace(existing.workspaceId, params.workspaceId);
+      const body = hostRoleSchema.parse(request.body);
+      const user = await repositories.users.findByEmail(body.email);
+      if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+      await repositories.webinars.upsertHost({
+        webinarId: existing.id,
+        userId: user.id,
+        role: body.role,
+        acceptedAt: new Date(),
+      });
+      return reply.status(201).send({
+        host: {
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+          role: body.role,
+        },
+      });
     },
   );
 

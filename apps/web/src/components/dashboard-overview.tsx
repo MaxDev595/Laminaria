@@ -10,6 +10,7 @@ import {
   Play,
   Radio,
   Square,
+  UserPlus,
   UsersRound,
   Video,
 } from "lucide-react";
@@ -110,6 +111,9 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
   const queryClient = useQueryClient();
   const router = useRouter();
   const [busy, setBusy] = useState<"start" | "studio" | "end" | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"MODERATOR" | "SPEAKER" | "COHOST">("MODERATOR");
+  const [inviteBusy, setInviteBusy] = useState(false);
   const [error, setError] = useState("");
   const tone = webinar.status === "LIVE" ? "danger" : webinar.status === "SCHEDULED" ? "primary" : webinar.status === "ENDED" ? "success" : "neutral";
   const canStart = webinar.status === "SCHEDULED";
@@ -163,6 +167,21 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
     }
   }
 
+  async function assignHostRole() {
+    const email = inviteEmail.trim();
+    if (!email) return;
+    setInviteBusy(true);
+    setError("");
+    try {
+      await api.assignWebinarHost(workspace.id, webinar.id, { email, role: inviteRole });
+      setInviteEmail("");
+    } catch (reason) {
+      setError(friendlyError(reason, locale));
+    } finally {
+      setInviteBusy(false);
+    }
+  }
+
   return (
     <motion.article className="webinar-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
       <div className="webinar-card__date">
@@ -203,6 +222,23 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
         {webinar.status === "SCHEDULED" || webinar.status === "LIVE" ? (
           <Link className="webinar-card__open" href={`/w/${webinar.slug}`} aria-label={locale === "ru" ? "Открыть страницу вебинара" : "Open webinar page"}><ArrowUpRight size={18} /></Link>
         ) : null}
+      </div>
+      <div className="webinar-role-form">
+        <input
+          value={inviteEmail}
+          onChange={(event) => setInviteEmail(event.target.value)}
+          placeholder={locale === "ru" ? "email модератора" : "moderator email"}
+          type="email"
+        />
+        <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as "MODERATOR" | "SPEAKER" | "COHOST")}>
+          <option value="MODERATOR">{locale === "ru" ? "Модератор" : "Moderator"}</option>
+          <option value="SPEAKER">{locale === "ru" ? "Спикер" : "Speaker"}</option>
+          <option value="COHOST">{locale === "ru" ? "Со-ведущий" : "Co-host"}</option>
+        </select>
+        <button type="button" onClick={() => void assignHostRole()} disabled={inviteBusy || !inviteEmail.trim()}>
+          {inviteBusy ? <LoaderCircle className="spin" size={15} /> : <UserPlus size={15} />}
+          {locale === "ru" ? "Назначить" : "Assign"}
+        </button>
       </div>
     </motion.article>
   );

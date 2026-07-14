@@ -39,6 +39,7 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       findById: unavailable,
       findPublicBySlug: unavailable,
       findParticipantRole: unavailable,
+      upsertHost: unavailable,
       listByWorkspace: unavailable,
       create: unavailable,
       updateDraft: unavailable,
