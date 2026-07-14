@@ -98,6 +98,7 @@ export async function buildApplication(
     participants,
     config.tokenPepper,
     config.webAppUrl,
+    config.skipEmailVerification,
   );
   const io = new SocketIoServer<
     ClientToServerEvents,

@@ -1,10 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, CalendarCheck, Check, LoaderCircle, LockKeyhole, Radio, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Check, Copy, ExternalLink, LoaderCircle, LockKeyhole, Radio, Save, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -35,6 +35,7 @@ export function CreateWebinarForm() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [created, setCreated] = useState<{ title: string; slug: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -53,6 +54,10 @@ export function CreateWebinarForm() {
   const scheduledStartAt = useWatch({ control: form.control, name: "scheduledStartAt" });
   const allowGuests = useWatch({ control: form.control, name: "allowGuests" });
   const requireEmailRegistration = useWatch({ control: form.control, name: "requireEmailRegistration" });
+  const publicUrl = useMemo(() => {
+    if (!created || typeof window === "undefined") return "";
+    return new URL(`/${locale}/w/${created.slug}`, window.location.origin).toString();
+  }, [created, locale]);
 
   useEffect(() => {
     if (!form.formState.dirtyFields.slug) form.setValue("slug", slugify(title));
@@ -75,13 +80,28 @@ export function CreateWebinarForm() {
   }
 
   if (created) {
+    async function copyPublicUrl() {
+      if (!publicUrl) return;
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    }
+
     return (
       <motion.div className="creation-success" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
         <span><Check size={28} /></span>
         <h1>{t("webinar.draftCreated")}</h1>
         <p>{t("webinar.createdBody", { title: created.title })}</p>
+        <div className="share-link-card">
+          <small>{locale === "ru" ? "Ссылка для участников" : "Participant link"}</small>
+          <code>{publicUrl}</code>
+          <Button type="button" variant="secondary" onClick={() => void copyPublicUrl()}>
+            <Copy size={17} />
+            {copied ? (locale === "ru" ? "Скопировано" : "Copied") : (locale === "ru" ? "Скопировать" : "Copy")}
+          </Button>
+        </div>
         <div>
-          <Link href={`/w/${created.slug}`}><Button>{t("webinar.openPage")}</Button></Link>
+          <Link href={`/w/${created.slug}`}><Button>{t("webinar.openPage")}<ExternalLink size={17} /></Button></Link>
           <Button variant="secondary" onClick={() => router.push("/dashboard/drafts")}>{t("nav.drafts")}</Button>
         </div>
       </motion.div>

@@ -15,6 +15,7 @@ export class PublicRegistrationService {
     private readonly participants: ParticipantTokenService,
     private readonly tokenPepper: string,
     private readonly webAppUrl: string,
+    private readonly skipEmailVerification: boolean,
   ) {}
 
   public async publicWebinar(slug: string): Promise<WebinarRecord> {
@@ -42,7 +43,8 @@ export class PublicRegistrationService {
     if (webinar.status !== "SCHEDULED" && webinar.status !== "LIVE") {
       throw new AppError(409, "CONFLICT", "Registration is closed", { status: webinar.status });
     }
-    if (webinar.requireEmailRegistration && !this.mail.configured) {
+    const confirmationRequired = webinar.requireEmailRegistration && !this.skipEmailVerification && this.mail.configured;
+    if (webinar.requireEmailRegistration && !this.skipEmailVerification && !this.mail.configured) {
       throw new ServiceNotConfiguredError("Mail");
     }
     const normalizedEmail = input.email.trim().toLocaleLowerCase("en-US");
@@ -50,17 +52,25 @@ export class PublicRegistrationService {
       throw new AppError(409, "CONFLICT", "This email is already registered");
     }
     const accessToken = createOpaqueToken();
-    const status = webinar.requireEmailRegistration ? "PENDING" : "CONFIRMED";
-    const registration = await this.repositories.registrations.create({
-      webinarId: webinar.id,
-      ...(input.userId ? { userId: input.userId } : {}),
-      email: normalizedEmail,
-      name: input.name.trim(),
-      locale: input.locale,
-      status,
-      tokenHash: hashOpaqueToken(accessToken, this.tokenPepper),
-    });
-    if (status === "PENDING") {
+    const status = confirmationRequired ? "PENDING" : "CONFIRMED";
+    let registration: RegistrationRecord;
+    try {
+      registration = await this.repositories.registrations.create({
+        webinarId: webinar.id,
+        ...(input.userId ? { userId: input.userId } : {}),
+        email: normalizedEmail,
+        name: input.name.trim(),
+        locale: input.locale,
+        status,
+        tokenHash: hashOpaqueToken(accessToken, this.tokenPepper),
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new AppError(409, "CONFLICT", "This email is already registered");
+      }
+      throw error;
+    }
+    if (confirmationRequired) {
       await this.mail.sendWebinarRegistration({
         to: registration.email,
         name: registration.name,
@@ -72,7 +82,7 @@ export class PublicRegistrationService {
     return {
       registration,
       accessToken: status === "CONFIRMED" ? accessToken : null,
-      confirmationRequired: status === "PENDING",
+      confirmationRequired,
     };
   }
 
@@ -135,4 +145,13 @@ export class PublicRegistrationService {
       participant: { identity, displayName, role },
     };
   }
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
 }

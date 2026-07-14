@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api, friendlyError } from "@/lib/api";
 import { formatLocalDate, localTimezone } from "@/lib/text";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Badge, Button, Logo, Skeleton } from "@laminaria/ui";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
@@ -20,8 +20,8 @@ const schema = z.object({ name: z.string().trim().min(1).max(100), email: z.emai
 type Values = z.infer<typeof schema>;
 
 export function PublicWebinar({ slug }: { slug: string }) {
-  const locale = useLocale() as "en" | "ru"; const t = useTranslations(); const query = useQuery({ queryKey: ["public-webinar", slug], queryFn: ({ signal }) => api.publicWebinar(slug, signal) }); const [success, setSuccess] = useState<{ confirmationRequired: boolean; hasAccess: boolean } | null>(null); const [error, setError] = useState(""); const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", email: "" } });
-  async function submit(values: Values) { setError(""); try { const result = await api.register(slug, { ...values, locale }); if (result.accessToken) sessionStorage.setItem(`laminaria-access:${slug}`, result.accessToken); setSuccess({ confirmationRequired: result.confirmationRequired, hasAccess: Boolean(result.accessToken) }); } catch (reason) { setError(friendlyError(reason, locale)); } }
+  const locale = useLocale() as "en" | "ru"; const t = useTranslations(); const router = useRouter(); const query = useQuery({ queryKey: ["public-webinar", slug], queryFn: ({ signal }) => api.publicWebinar(slug, signal) }); const [success, setSuccess] = useState<{ confirmationRequired: boolean; hasAccess: boolean } | null>(null); const [error, setError] = useState(""); const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", email: "" } });
+  async function submit(values: Values) { setError(""); try { const result = await api.register(slug, { ...values, locale }); if (result.accessToken) { sessionStorage.setItem(`laminaria-access:${slug}`, result.accessToken); router.replace(`/w/${slug}/waiting`); return; } setSuccess({ confirmationRequired: result.confirmationRequired, hasAccess: Boolean(result.accessToken) }); } catch (reason) { setError(friendlyError(reason, locale)); } }
   if (query.isLoading) return <PublicWebinarSkeleton />;
   if (query.isError) return <PublicError locale={locale} message={friendlyError(query.error, locale)} retry={() => void query.refetch()} />;
   const webinar = query.data!.webinar; const registrationClosed = !["SCHEDULED", "LIVE"].includes(webinar.status);
