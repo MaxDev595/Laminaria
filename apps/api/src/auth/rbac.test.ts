@@ -20,6 +20,13 @@ describe("RBAC", () => {
     );
   });
 
+  it("keeps viewer chat closed unless a privileged role sends", () => {
+    expect(hasWebinarPermission("ATTENDEE", "chat:write")).toBe(false);
+    expect(hasWebinarPermission("GUEST", "chat:write")).toBe(false);
+    expect(hasWebinarPermission("MODERATOR", "chat:write")).toBe(true);
+    expect(hasWebinarPermission("HOST", "chat:write")).toBe(true);
+  });
+
   it("lets moderators moderate without publishing media", () => {
     expect(hasWebinarPermission("MODERATOR", "webinar:moderate")).toBe(true);
     expect(hasWebinarPermission("MODERATOR", "webinar:publish_media")).toBe(false);

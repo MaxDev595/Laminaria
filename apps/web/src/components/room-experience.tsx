@@ -3,12 +3,14 @@
 import {
   ConnectionStateToast,
   LiveKitRoom,
+  ParticipantTile,
   RoomAudioRenderer,
   VideoConference,
   useConnectionState,
   useRoomContext,
+  useTracks,
 } from "@livekit/components-react";
-import { ConnectionState } from "livekit-client";
+import { ConnectionState, Track } from "livekit-client";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -26,6 +28,7 @@ import {
   Settings2,
   Signal,
   Sparkles,
+  Tv,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -111,15 +114,15 @@ export function RoomExperience({ slug }: { slug: string }) {
       token={session.media.token}
       serverUrl={session.media.url}
       connect
-      audio={session.preferences?.micOn ?? false}
-      video={session.preferences?.cameraOn ?? false}
+      audio={canPublishMedia(session.participant.role) && (session.preferences?.micOn ?? false)}
+      video={canPublishMedia(session.participant.role) && (session.preferences?.cameraOn ?? false)}
       data-lk-theme="default"
       className="webinar-room"
     >
       <RoomTopbar slug={slug} role={session.participant.role} />
       <div className="webinar-room__body">
         <section className="live-stage">
-          <VideoConference />
+          {canPublishMedia(session.participant.role) ? <VideoConference /> : <ViewerStage />}
           <RoomAudioRenderer />
           <ConnectionStateToast />
         </section>
@@ -172,6 +175,42 @@ function RoomEnded({ slug, status }: { slug: string; status: EndedStatus }) {
   );
 }
 
+function ViewerStage() {
+  const locale = useLocale();
+  const tracks = useTracks(
+    [
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+      { source: Track.Source.Camera, withPlaceholder: false },
+    ],
+    { onlySubscribed: true },
+  );
+
+  if (tracks.length === 0) {
+    return (
+      <div className="viewer-stage-empty">
+        <Tv size={34} />
+        <h2>{locale === "ru" ? "Ожидаем ведущего" : "Waiting for the host"}</h2>
+        <p>
+          {locale === "ru"
+            ? "Вы подключены как зритель. Камера и микрофон выключены."
+            : "You are connected as a viewer. Camera and microphone are off."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="viewer-stage-grid">
+      {tracks.map((trackRef) => (
+        <ParticipantTile
+          key={`${trackRef.participant.identity}:${trackRef.source}:${trackRef.publication?.trackSid ?? "track"}`}
+          trackRef={trackRef}
+        />
+      ))}
+    </div>
+  );
+}
+
 function RoomTopbar({ slug, role }: { slug: string; role: string }) {
   const state = useConnectionState();
   const room = useRoomContext();
@@ -186,6 +225,25 @@ function RoomTopbar({ slug, role }: { slug: string; role: string }) {
     sessionStorage.removeItem(`laminaria-room:${slug}`);
     await room.disconnect();
     router.replace("/dashboard");
+  }
+
+  if (!canPublishMedia(role)) {
+    return (
+      <header className="room-topbar">
+        <Logo />
+        <div className={`room-connection ${connected ? "is-connected" : reconnecting ? "is-reconnecting" : ""}`}>
+          <Signal size={16} />
+          <span>{connected ? t("room.connected") : reconnecting ? t("room.reconnecting") : t("room.connecting")}</span>
+        </div>
+        <div className="room-topbar__actions">
+          <Badge tone="neutral">{role}</Badge>
+          <button type="button" className="room-leave" onClick={() => void leaveRoom()}>
+            <X size={17} />
+            {t("room.leave")}
+          </button>
+        </div>
+      </header>
+    );
   }
 
   return (
@@ -439,6 +497,18 @@ function isQuestion(item: ChatMessage | Question): item is Question {
   return "upvoteCount" in item && typeof item.upvoteCount === "number";
 }
 
+function canPublishMedia(role: string): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "SPEAKER";
+}
+
+function isViewerRole(role: string): boolean {
+  return role === "ATTENDEE" || role === "GUEST";
+}
+
+function canModerate(role: string): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
+}
+
 function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (status: EndedStatus) => void }) {
   const locale = useLocale();
   const t = useTranslations();
@@ -449,7 +519,11 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
   const [connected, setConnected] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [viewerChatEnabled, setViewerChatEnabled] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  const viewer = isViewerRole(session.participant.role);
+  const canModerateChat = canModerate(session.participant.role);
+  const chatLocked = viewer && tab === "chat" && !viewerChatEnabled;
 
   useEffect(() => {
     const socket = io(api.origin, {
@@ -471,6 +545,9 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
     socket.on("connect_error", (reason) => setError(reason.message));
     socket.on("realtime:error", (payload: { message: string }) => setError(payload.message));
     socket.on("webinar:ended", (payload: { status: EndedStatus }) => onEnded(payload.status));
+    socket.on("chat:state", (state: { webinarId: string; enabled: boolean }) => {
+      if (state.webinarId === session.webinarId) setViewerChatEnabled(state.enabled);
+    });
     socket.on("chat:created", (message: ChatMessage) =>
       setMessages((current) => (current.some((item) => item.id === message.id) ? current : [...current, message])),
     );
@@ -493,7 +570,7 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
   async function send() {
     const body = text.trim();
     const socket = socketRef.current;
-    if (!body || !socket?.connected) return;
+    if (!body || !socket?.connected || chatLocked) return;
     setSending(true);
     setError("");
     const event = tab === "chat" ? "chat:send" : "question:ask";
@@ -505,6 +582,23 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
       }
       setText("");
     });
+  }
+
+  function toggleViewerChat() {
+    const socket = socketRef.current;
+    if (!socket?.connected || !canModerateChat) return;
+    const next = !viewerChatEnabled;
+    socket.emit(
+      "chat:set_state",
+      { webinarId: session.webinarId, idempotencyKey: crypto.randomUUID(), enabled: next },
+      (ack: Ack<{ webinarId: string; enabled: boolean }>) => {
+        if (!ack.ok) {
+          setError(ack.error.message);
+          return;
+        }
+        setViewerChatEnabled(ack.data.enabled);
+      },
+    );
   }
 
   const items = tab === "chat" ? messages : questions;
@@ -535,6 +629,17 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
             ? "Восстанавливаем realtime..."
             : "Restoring realtime..."}
       </div>
+      {canModerateChat ? (
+        <button type="button" className="chat-gate-toggle" onClick={toggleViewerChat} disabled={!connected}>
+          {viewerChatEnabled
+            ? locale === "ru"
+              ? "Закрыть чат зрителям"
+              : "Close viewer chat"
+            : locale === "ru"
+              ? "Открыть чат зрителям"
+              : "Open viewer chat"}
+        </button>
+      ) : null}
       <div className="realtime-list" role="log" aria-live="polite">
         <AnimatePresence initial={false}>
           {items.length === 0 ? (
@@ -624,16 +729,24 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
           placeholder={tab === "chat" ? t("room.sendMessage") : t("room.askQuestion")}
           maxLength={2000}
           rows={2}
-          disabled={!connected || sending}
+          disabled={!connected || sending || chatLocked}
         />
         <button
           type="submit"
-          disabled={!connected || sending || !text.trim()}
+          disabled={!connected || sending || !text.trim() || chatLocked}
           aria-label={tab === "chat" ? t("room.sendMessage") : t("room.askQuestion")}
         >
           {sending ? <LoaderCircle className="spin" size={18} /> : <Send size={18} />}
         </button>
       </form>
+      {chatLocked ? (
+        <div className="realtime-error" role="status">
+          <AlertTriangle size={15} />
+          {locale === "ru"
+            ? "Чат для зрителей закрыт. Его может открыть организатор или модератор."
+            : "Viewer chat is closed. A host or moderator can open it."}
+        </div>
+      ) : null}
       <div className="ai-room-note">
         <Sparkles size={14} />
         <span>{locale === "ru" ? "AI-ответы всегда будут явно помечены" : "AI answers will always be clearly labeled"}</span>

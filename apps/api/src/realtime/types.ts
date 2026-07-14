@@ -3,6 +3,7 @@ import type { Server, Socket } from "socket.io";
 import type {
   ChatDeletePayload,
   ChatSendPayload,
+  ChatStatePayload,
   PollChangeStatePayload,
   PollCreatePayload,
   PollVotePayload,
@@ -284,6 +285,11 @@ export interface ChatDeleted {
   deletedAt: string;
 }
 
+export interface ChatStateChanged {
+  webinarId: string;
+  enabled: boolean;
+}
+
 export interface ClientToServerEvents {
   "webinar:join": (
     payload: WebinarJoinPayload,
@@ -300,6 +306,10 @@ export interface ClientToServerEvents {
   "chat:delete": (
     payload: ChatDeletePayload,
     acknowledge?: RealtimeAcknowledge<ChatDeleted>,
+  ) => void;
+  "chat:set_state": (
+    payload: ChatStatePayload,
+    acknowledge?: RealtimeAcknowledge<ChatStateChanged>,
   ) => void;
   "question:ask": (
     payload: QuestionAskPayload,
@@ -340,6 +350,7 @@ export interface ServerToClientEvents {
   "webinar:ended": (event: WebinarEnded) => void;
   "chat:created": (message: ChatMessage) => void;
   "chat:deleted": (message: ChatDeleted) => void;
+  "chat:state": (state: ChatStateChanged) => void;
   "question:created": (question: Question) => void;
   "question:updated": (question: Question) => void;
   "poll:created": (poll: Poll) => void;

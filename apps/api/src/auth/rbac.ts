@@ -91,8 +91,8 @@ const webinarPermissions: Readonly<Record<ParticipantRole, ReadonlySet<WebinarPe
     "qa:write",
     "poll:vote",
   ]),
-  ATTENDEE: new Set(["webinar:join", "chat:write", "qa:write", "poll:vote"]),
-  GUEST: new Set(["webinar:join", "chat:write", "qa:write", "poll:vote"]),
+  ATTENDEE: new Set(["webinar:join", "qa:write", "poll:vote"]),
+  GUEST: new Set(["webinar:join", "qa:write", "poll:vote"]),
 };
 
 export function hasWorkspacePermission(role: WorkspaceRole, permission: WorkspacePermission): boolean {

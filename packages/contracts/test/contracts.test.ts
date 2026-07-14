@@ -14,6 +14,8 @@ describe("webinar state machine", () => {
 describe("RBAC", () => {
   it("never grants attendee publishing permissions", () => {
     expect(hasPermission({ webinarRole: "ATTENDEE" }, "media.publish.audio")).toBe(false);
+    expect(hasPermission({ webinarRole: "ATTENDEE" }, "chat.send")).toBe(false);
+    expect(hasPermission({ webinarRole: "MODERATOR" }, "chat.send")).toBe(true);
     expect(liveKitGrantForRole("ATTENDEE").canPublish).toBe(false);
     expect(liveKitGrantForRole("SPEAKER").canPublish).toBe(true);
   });

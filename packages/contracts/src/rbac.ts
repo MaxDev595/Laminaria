@@ -99,8 +99,8 @@ const webinarPermissions: Record<WebinarRole, ReadonlySet<Permission>> = {
     "question.submit",
     "poll.vote",
   ]),
-  ATTENDEE: new Set(["webinar.read", "media.subscribe", "chat.send", "question.submit", "poll.vote"]),
-  GUEST: new Set(["webinar.read", "media.subscribe", "chat.send", "question.submit", "poll.vote"]),
+  ATTENDEE: new Set(["webinar.read", "media.subscribe", "question.submit", "poll.vote"]),
+  GUEST: new Set(["webinar.read", "media.subscribe", "question.submit", "poll.vote"]),
 };
 
 export interface AccessContext {

@@ -68,7 +68,7 @@ export class LiveKitTokenService {
       room: input.webinar.livekitRoomName,
       canSubscribe: true,
       canPublish,
-      canPublishData: true,
+      canPublishData: canPublish || canModerate,
       canUpdateOwnMetadata: false,
       ...(canPublish
         ? {

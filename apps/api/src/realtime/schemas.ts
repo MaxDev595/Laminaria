@@ -43,6 +43,13 @@ export const chatDeleteSchema = z
   })
   .strict();
 
+export const chatStateSchema = z
+  .object({
+    ...webinarMutation,
+    enabled: z.boolean(),
+  })
+  .strict();
+
 export const questionAskSchema = z
   .object({
     ...webinarMutation,
@@ -114,6 +121,7 @@ export type WebinarJoinPayload = z.infer<typeof webinarJoinSchema>;
 export type WebinarLeavePayload = z.infer<typeof webinarLeaveSchema>;
 export type ChatSendPayload = z.infer<typeof chatSendSchema>;
 export type ChatDeletePayload = z.infer<typeof chatDeleteSchema>;
+export type ChatStatePayload = z.infer<typeof chatStateSchema>;
 export type QuestionAskPayload = z.infer<typeof questionAskSchema>;
 export type QuestionUpvotePayload = z.infer<typeof questionUpvoteSchema>;
 export type QuestionAnswerPayload = z.infer<typeof questionAnswerSchema>;
@@ -121,4 +129,3 @@ export type QuestionModeratePayload = z.infer<typeof questionModerateSchema>;
 export type PollCreatePayload = z.infer<typeof pollCreateSchema>;
 export type PollChangeStatePayload = z.infer<typeof pollChangeStateSchema>;
 export type PollVotePayload = z.infer<typeof pollVoteSchema>;
-

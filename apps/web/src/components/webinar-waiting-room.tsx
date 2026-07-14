@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, CalendarPlus, CheckCircle2, Clock3, LoaderCircle, Radio } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarPlus, CheckCircle2, Clock3, Radio } from "lucide-react";
 import { motion } from "motion/react";
 import { useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -94,7 +94,7 @@ export function WebinarWaitingRoom({ slug }: { slug: string }) {
           <div className="waiting-live-note">
             <Radio size={20} />
             <strong>{locale === "ru" ? "Вебинар уже должен начаться" : "The webinar should be starting now"}</strong>
-            <span>{locale === "ru" ? "Проверьте камеру и микрофон перед входом." : "Check your camera and microphone before joining."}</span>
+            <span>{locale === "ru" ? "Вход для зрителя: камера и микрофон не нужны." : "Viewer entry: camera and microphone are not needed."}</span>
           </div>
         )}
 
@@ -102,7 +102,7 @@ export function WebinarWaitingRoom({ slug }: { slug: string }) {
           {accessToken ? (
             <Link href={`/w/${slug}/prejoin`}>
               <Button size="lg">
-                {isLiveOrReady ? (locale === "ru" ? "Войти в вебинар" : "Join webinar") : (locale === "ru" ? "Проверить устройства" : "Check devices")}
+                {isLiveOrReady ? (locale === "ru" ? "Войти в вебинар" : "Join webinar") : (locale === "ru" ? "Перейти ко входу" : "Continue to entry")}
                 <ArrowRight size={18} />
               </Button>
             </Link>

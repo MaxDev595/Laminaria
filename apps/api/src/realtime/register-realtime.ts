@@ -12,6 +12,7 @@ import { RuleBasedModerationService } from "./moderation.js";
 import {
   chatDeleteSchema,
   chatSendSchema,
+  chatStateSchema,
   pollChangeStateSchema,
   pollCreateSchema,
   pollVoteSchema,
@@ -23,6 +24,7 @@ import {
   webinarLeaveSchema,
   type ChatDeletePayload,
   type ChatSendPayload,
+  type ChatStatePayload,
   type PollChangeStatePayload,
   type PollCreatePayload,
   type PollVotePayload,
@@ -37,6 +39,7 @@ import type {
   ActorSnapshot,
   ChatDeleted,
   ChatMessage,
+  ChatStateChanged,
   ModerationResult,
   ModerationService,
   Poll,
@@ -60,6 +63,7 @@ import type {
 
 const DEFAULT_IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1_000;
 const noOpLogger: RealtimeLogger = { error: () => undefined };
+const viewerChatEnabledByWebinar = new Map<string, boolean>();
 
 export type RealtimeEntityKind =
   | "chat"
@@ -234,6 +238,10 @@ function actorFrom(
   };
 }
 
+function isViewerRole(role: string): boolean {
+  return role === "ATTENDEE" || role === "GUEST";
+}
+
 function toClientError(error: unknown): RealtimeErrorPayload {
   if (error instanceof RealtimeDomainError) {
     return error.toPayload();
@@ -401,6 +409,10 @@ function registerJoinHandlers(
         socket
           .to(webinarRoom(webinarId))
           .emit("webinar:participant_joined", participant);
+        socket.emit("chat:state", {
+          webinarId,
+          enabled: viewerChatEnabledByWebinar.get(webinarId) ?? false,
+        });
         return { data: participant, replayed: false };
       },
     );
@@ -440,8 +452,11 @@ function registerChatHandlers(
           socket,
           dependencies,
           validated.webinarId,
-          "chat.send",
+          "join",
         );
+        if (isViewerRole(access.role) && !(viewerChatEnabledByWebinar.get(validated.webinarId) ?? false)) {
+          throw new RealtimeDomainError("FORBIDDEN", "Viewer chat is closed");
+        }
         return executeMutation(
           socket,
           dependencies,
@@ -479,6 +494,30 @@ function registerChatHandlers(
             return created;
           },
         );
+      },
+    );
+  });
+
+  socket.on("chat:set_state", (payload, acknowledge) => {
+    void handleValidated<ChatStatePayload, ChatStateChanged>(
+      socket,
+      dependencies,
+      "chat:set_state",
+      chatStateSchema,
+      payload,
+      acknowledge,
+      async (validated) => {
+        await authorize(
+          socket,
+          dependencies,
+          validated.webinarId,
+          "chat.moderate",
+        );
+        const state = { webinarId: validated.webinarId, enabled: validated.enabled };
+        viewerChatEnabledByWebinar.set(validated.webinarId, validated.enabled);
+        socket.to(webinarRoom(validated.webinarId)).emit("chat:state", state);
+        socket.emit("chat:state", state);
+        return { data: state, replayed: false };
       },
     );
   });
