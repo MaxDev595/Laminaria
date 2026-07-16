@@ -218,7 +218,13 @@ class MemoryUnitOfWork implements UnitOfWork {
 
   public readonly workspaces = {
     findMember: async (): Promise<WorkspaceMemberRecord | null> => null,
-    createWithOwner: async (): Promise<{ id: string; slug: string }> => ({ id: this.nextId("workspace"), slug: "test" }),
+    upsertMember: async (): Promise<WorkspaceMemberRecord> => ({ workspaceId: this.nextId("workspace"), userId: this.nextId("user"), role: "MEMBER" }),
+    createWithOwner: async (): Promise<{ id: string; name: string; slug: string; role: WorkspaceRole }> => ({
+      id: this.nextId("workspace"),
+      name: "Test",
+      slug: "test",
+      role: "OWNER",
+    }),
     listForUser: async (): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]> => [],
   };
 

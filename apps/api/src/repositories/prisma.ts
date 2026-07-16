@@ -244,6 +244,36 @@ export class PrismaUnitOfWork implements UnitOfWork {
         return member ? mapWorkspaceMember(member) : null;
       },
 
+      upsertMember: async (input) => {
+        const existing = await this.#client.workspaceMember.findUnique({
+          where: {
+            workspaceId_userId: {
+              workspaceId: input.workspaceId,
+              userId: input.userId,
+            },
+          },
+        });
+        if (existing) {
+          const role = existing.role === "OWNER" || existing.role === "ADMIN" ? existing.role : input.role;
+          const member = await this.#client.workspaceMember.update({
+            where: { id: existing.id },
+            data: {
+              role,
+              deletedAt: null,
+            },
+          });
+          return mapWorkspaceMember(member);
+        }
+        const member = await this.#client.workspaceMember.create({
+          data: {
+            workspaceId: input.workspaceId,
+            userId: input.userId,
+            role: input.role,
+          },
+        });
+        return mapWorkspaceMember(member);
+      },
+
       createWithOwner: async (input) => {
         for (let attempt = 0; attempt < 8; attempt += 1) {
           const slug = attempt === 0 ? input.slug : `${input.slug}-${attempt + 1}`;

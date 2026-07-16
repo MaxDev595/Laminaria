@@ -32,6 +32,7 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
     },
     workspaces: {
       findMember: unavailable,
+      upsertMember: unavailable,
       createWithOwner: unavailable,
       listForUser: unavailable,
     },

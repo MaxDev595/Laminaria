@@ -72,8 +72,19 @@ export async function registerWebinarRoutes(
   app.get<{ Params: { workspaceId: string } }>("/v1/workspaces/:workspaceId/webinars", {
     schema: { tags: ["Webinars"], summary: "List webinars in a workspace" },
   }, async (request) => {
-    await requireWorkspacePermission(request, repositories, request.params.workspaceId, "webinar:read");
-    return { webinars: await repositories.webinars.listByWorkspace(request.params.workspaceId) };
+    const actor = requireUser(request);
+    const membership = await requireWorkspacePermission(request, repositories, request.params.workspaceId, "webinar:read");
+    const webinars = await repositories.webinars.listByWorkspace(request.params.workspaceId);
+    const withRoles = await Promise.all(webinars.map(async (webinar) => {
+      const explicitRole = await repositories.webinars.findParticipantRole(webinar.id, actor.user.id);
+      const currentUserRole = membership.role === "OWNER" || membership.role === "ADMIN" ? "OWNER" : explicitRole;
+      return { ...webinar, currentUserRole };
+    }));
+    return {
+      webinars: membership.role === "OWNER" || membership.role === "ADMIN"
+        ? withRoles
+        : withRoles.filter((webinar) => webinar.currentUserRole),
+    };
   });
 
   app.post<{ Params: { workspaceId: string } }>("/v1/workspaces/:workspaceId/webinars", {
@@ -136,7 +147,7 @@ export async function registerWebinarRoutes(
     { schema: { tags: ["Webinars"], summary: "Transition the webinar state machine" } },
     async (request) => {
       const params = paramsSchema.parse(request.params);
-      await requireWorkspacePermission(request, repositories, params.workspaceId, "webinar:update");
+      await requireWebinarPermission(request, repositories, params.webinarId, "webinar:transition");
       const existing = await service.find(params.webinarId);
       assertWorkspace(existing.workspaceId, params.workspaceId);
       const body = transitionSchema.parse(request.body);
@@ -205,12 +216,17 @@ export async function registerWebinarRoutes(
     { schema: { tags: ["Webinars"], summary: "Assign a webinar host role by email" } },
     async (request, reply) => {
       const params = paramsSchema.parse(request.params);
-      await requireWebinarPermission(request, repositories, params.webinarId, "webinar:moderate");
+      await requireWebinarPermission(request, repositories, params.webinarId, "webinar:manage_stage");
       const existing = await service.find(params.webinarId);
       assertWorkspace(existing.workspaceId, params.workspaceId);
       const body = hostRoleSchema.parse(request.body);
       const user = await repositories.users.findByEmail(body.email);
       if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+      await repositories.workspaces.upsertMember({
+        workspaceId: existing.workspaceId,
+        userId: user.id,
+        role: "MEMBER",
+      });
       await repositories.webinars.upsertHost({
         webinarId: existing.id,
         userId: user.id,

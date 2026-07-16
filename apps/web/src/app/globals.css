@@ -4301,6 +4301,13 @@ select {
   opacity: 0.5;
 }
 
+.webinar-role-form__status {
+  grid-column: 1 / -1;
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  font-weight: 760;
+}
+
 .webinar-card__banner {
   grid-column: 1 / -1;
   min-height: 9rem;

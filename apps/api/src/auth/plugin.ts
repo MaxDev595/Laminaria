@@ -64,7 +64,7 @@ export async function requireWebinarPermission(
   if (!webinar) throw new AppError(404, "NOT_FOUND", "Webinar not found");
   const membership = await repositories.workspaces.findMember(webinar.workspaceId, actor.user.id);
   const explicitRole = await repositories.webinars.findParticipantRole(webinar.id, actor.user.id);
-  const role = membership?.role === "OWNER" ? "OWNER" : explicitRole;
+  const role = membership?.role === "OWNER" || membership?.role === "ADMIN" ? "OWNER" : explicitRole;
   if (!role) throw new AppError(404, "NOT_FOUND", "Webinar not found");
   assertWebinarPermission(role, permission);
   return { actor, webinar, role };

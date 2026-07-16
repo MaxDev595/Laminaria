@@ -39,7 +39,7 @@ const workspacePermissions: Readonly<Record<WorkspaceRole, ReadonlySet<Workspace
     "webinar:update",
     "webinar:delete",
   ]),
-  MEMBER: new Set(["workspace:read", "webinar:create", "webinar:read"]),
+  MEMBER: new Set(["workspace:read", "webinar:read"]),
 };
 
 const webinarPermissions: Readonly<Record<ParticipantRole, ReadonlySet<WebinarPermission>>> = {

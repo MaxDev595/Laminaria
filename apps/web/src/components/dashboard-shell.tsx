@@ -102,6 +102,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const workspace = workspaces.data?.workspaces[0];
   if (!me.data || !workspace) return <DashboardSkeleton />;
+  const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN";
 
   async function signOut() {
     try {
@@ -199,12 +200,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="topbar-actions">
               <LanguageSwitcher />
               <ThemeToggle />
-              <Link href="/dashboard/webinars/new">
-                <Button size="sm">
-                  <Plus size={17} />
-                  {t("nav.newWebinar")}
-                </Button>
-              </Link>
+              {canCreateWebinars ? (
+                <Link href="/dashboard/webinars/new">
+                  <Button size="sm">
+                    <Plus size={17} />
+                    {t("nav.newWebinar")}
+                  </Button>
+                </Link>
+              ) : null}
               <span className="user-avatar" title={me.data.user.name}>
                 {me.data.user.name.slice(0, 1).toUpperCase()}
               </span>

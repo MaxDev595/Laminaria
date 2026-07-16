@@ -18,7 +18,7 @@ import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { api, friendlyError, type Webinar } from "@/lib/api";
+import { api, friendlyError, type Webinar, type WebinarRole } from "@/lib/api";
 import { formatLocalDate } from "@/lib/text";
 import { Badge, Button, Skeleton } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
@@ -46,6 +46,7 @@ export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" | "
   }
 
   const all = query.data!.webinars;
+  const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN";
   const now = query.dataUpdatedAt;
   const visible = filter === "upcoming"
     ? all.filter((webinar) => webinar.status === "SCHEDULED" || webinar.status === "LIVE")
@@ -69,7 +70,7 @@ export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" | "
         eyebrow={workspace.name}
         title={title}
         body={filter ? (locale === "ru" ? "Все данные загружаются из вашего рабочего пространства." : "Everything here comes from your workspace.") : t("dashboard.subtitle")}
-        action={<Link href="/dashboard/webinars/new"><Button><CalendarPlus size={17} />{t("nav.newWebinar")}</Button></Link>}
+        action={canCreateWebinars ? <Link href="/dashboard/webinars/new"><Button><CalendarPlus size={17} />{t("nav.newWebinar")}</Button></Link> : null}
       />
       {!filter ? (
         <div className="metrics-grid">
@@ -114,11 +115,15 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"MODERATOR" | "SPEAKER" | "COHOST">("MODERATOR");
   const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState("");
   const [error, setError] = useState("");
   const tone = webinar.status === "LIVE" ? "danger" : webinar.status === "SCHEDULED" ? "primary" : webinar.status === "ENDED" ? "success" : "neutral";
-  const canStart = webinar.status === "SCHEDULED";
-  const canJoinStudio = webinar.status === "LIVE";
-  const canEnd = webinar.status === "LIVE";
+  const currentRole = webinar.currentUserRole ?? null;
+  const canManageLive = canTransitionWebinar(currentRole);
+  const canManageRoles = canModerateWebinar(currentRole);
+  const canStart = webinar.status === "SCHEDULED" && canManageLive;
+  const canJoinStudio = webinar.status === "LIVE" && canJoinStudioRole(currentRole);
+  const canEnd = webinar.status === "LIVE" && canManageLive;
 
   async function refreshWebinars() {
     await queryClient.invalidateQueries({ queryKey: ["webinars", workspace.id] });
@@ -172,9 +177,15 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
     if (!email) return;
     setInviteBusy(true);
     setError("");
+    setInviteSuccess("");
     try {
       await api.assignWebinarHost(workspace.id, webinar.id, { email, role: inviteRole });
       setInviteEmail("");
+      setInviteSuccess(
+        locale === "ru"
+          ? `Роль назначена. Пользователь увидит вебинар в своём кабинете.`
+          : "Role assigned. The user will see this webinar in their dashboard.",
+      );
     } catch (reason) {
       setError(friendlyError(reason, locale));
     } finally {
@@ -224,25 +235,40 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
           <Link className="webinar-card__open" href={`/w/${webinar.slug}`} aria-label={locale === "ru" ? "Открыть страницу вебинара" : "Open webinar page"}><ArrowUpRight size={18} /></Link>
         ) : null}
       </div>
-      <div className="webinar-role-form">
-        <input
-          value={inviteEmail}
-          onChange={(event) => setInviteEmail(event.target.value)}
-          placeholder={locale === "ru" ? "email модератора" : "moderator email"}
-          type="email"
-        />
-        <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as "MODERATOR" | "SPEAKER" | "COHOST")}>
-          <option value="MODERATOR">{locale === "ru" ? "Модератор" : "Moderator"}</option>
-          <option value="SPEAKER">{locale === "ru" ? "Спикер" : "Speaker"}</option>
-          <option value="COHOST">{locale === "ru" ? "Со-ведущий" : "Co-host"}</option>
-        </select>
-        <button type="button" onClick={() => void assignHostRole()} disabled={inviteBusy || !inviteEmail.trim()}>
-          {inviteBusy ? <LoaderCircle className="spin" size={15} /> : <UserPlus size={15} />}
-          {locale === "ru" ? "Назначить" : "Assign"}
-        </button>
-      </div>
+      {canManageRoles ? (
+        <div className="webinar-role-form">
+          <input
+            value={inviteEmail}
+            onChange={(event) => setInviteEmail(event.target.value)}
+            placeholder={locale === "ru" ? "email модератора" : "moderator email"}
+            type="email"
+          />
+          <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value as "MODERATOR" | "SPEAKER" | "COHOST")}>
+            <option value="MODERATOR">{locale === "ru" ? "Модератор" : "Moderator"}</option>
+            <option value="SPEAKER">{locale === "ru" ? "Спикер" : "Speaker"}</option>
+            <option value="COHOST">{locale === "ru" ? "Со-ведущий" : "Co-host"}</option>
+          </select>
+          <button type="button" onClick={() => void assignHostRole()} disabled={inviteBusy || !inviteEmail.trim()}>
+            {inviteBusy ? <LoaderCircle className="spin" size={15} /> : <UserPlus size={15} />}
+            {locale === "ru" ? "Назначить" : "Assign"}
+          </button>
+          {inviteSuccess ? <small className="webinar-role-form__status">{inviteSuccess}</small> : null}
+        </div>
+      ) : null}
     </motion.article>
   );
+}
+
+function canJoinStudioRole(role: WebinarRole | null): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR" || role === "SPEAKER";
+}
+
+function canModerateWebinar(role: WebinarRole | null): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST";
+}
+
+function canTransitionWebinar(role: WebinarRole | null): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST";
 }
 
 function EmptyWebinars({ locale, t }: { locale: string; t: ReturnType<typeof useTranslations> }) {

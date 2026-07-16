@@ -211,6 +211,7 @@ export interface Workspace {
 }
 
 export type WebinarStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED" | "ARCHIVED";
+export type WebinarRole = "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
 
 export interface Webinar {
   id: string;
@@ -227,6 +228,7 @@ export interface Webinar {
   allowGuests: boolean;
   requireEmailRegistration: boolean;
   version: number;
+  currentUserRole?: WebinarRole | null;
 }
 
 export type PublicWebinar = Pick<
@@ -261,7 +263,7 @@ export interface PrejoinPayload {
   participant: {
     identity: string;
     displayName: string;
-    role: "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
+    role: WebinarRole;
   };
 }
 

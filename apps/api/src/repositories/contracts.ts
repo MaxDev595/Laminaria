@@ -50,6 +50,7 @@ export interface OneTimeTokenRepository {
 
 export interface WorkspaceRepository {
   findMember(workspaceId: string, userId: string): Promise<WorkspaceMemberRecord | null>;
+  upsertMember(input: { workspaceId: string; userId: string; role: WorkspaceRole }): Promise<WorkspaceMemberRecord>;
   createWithOwner(input: { name: string; slug: string; ownerId: string }): Promise<{ id: string; name: string; slug: string; role: WorkspaceRole }>;
   listForUser(userId: string): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]>;
 }
