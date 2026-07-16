@@ -113,13 +113,6 @@ export const api = {
       storeSessionToken(payload.sessionToken);
       return payload;
     }),
-  phoneStart: (input: { phone: string; locale: "en" | "ru" }) =>
-    apiFetch<PhoneStartPayload>("/v1/auth/phone/start", { method: "POST", body: JSON.stringify(input) }),
-  phoneVerify: (input: { phone: string; code: string; name?: string; locale: "en" | "ru" }) =>
-    apiFetch<AuthPayload>("/v1/auth/phone/verify", { method: "POST", body: JSON.stringify(input) }).then((payload) => {
-      storeSessionToken(payload.sessionToken);
-      return payload;
-    }),
   googleStartUrl: (locale: "en" | "ru") => `${API_ORIGIN}/v1/auth/google/start?locale=${encodeURIComponent(locale)}`,
   signUp: (input: { name: string; email: string; password: string; locale: "en" | "ru" }) =>
     apiFetch<{ user: User; verificationRequired: boolean }>("/v1/auth/sign-up", {
@@ -196,14 +189,7 @@ export interface AuthPayload {
 }
 
 export interface AuthProvidersPayload {
-  phone: { enabled: boolean; delivery: "dev" | "sms"; devCode: string | null };
   google: { enabled: boolean };
-}
-
-export interface PhoneStartPayload {
-  accepted: true;
-  delivery: "dev" | "sms";
-  devCode: string | null;
 }
 
 export interface ServiceStatus {

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, CalendarCheck, Check, Copy, ExternalLink, LoaderCircle, LockKeyhole, Radio, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Check, Copy, ExternalLink, LoaderCircle, LockKeyhole, Radio, Save } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -177,7 +177,6 @@ export function CreateWebinarForm() {
             <span><Check />{t("webinar.qa")}</span>
             <span><Check />{t("webinar.polls")}</span>
             <span><Check />{t("webinar.reactions")}</span>
-            <span className="is-pending"><Sparkles />{t("webinar.aiModeration")} · {t("common.notConfigured")}</span>
           </div>
         </section>
         <AnimatePresence>{error ? <motion.div className="form-alert form-alert--box" role="alert" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{error}</motion.div> : null}</AnimatePresence>

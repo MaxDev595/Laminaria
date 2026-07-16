@@ -28,7 +28,6 @@ import {
   ShieldCheck,
   Signal,
   SlidersHorizontal,
-  Sparkles,
   Tv,
   UsersRound,
   VolumeX,
@@ -581,7 +580,6 @@ function RealtimePanel({ slug, session, onEnded }: { slug: string; session: Stor
           {locale === "ru" ? "Чат для зрителей закрыт. Его может открыть организатор или модератор." : "Viewer chat is closed. A host or moderator can open it."}
         </div>
       ) : null}
-      <div className="ai-room-note"><Sparkles size={14} /><span>{locale === "ru" ? "AI-ответы всегда будут явно помечены" : "AI answers will always be clearly labeled"}</span></div>
     </aside>
   );
 }

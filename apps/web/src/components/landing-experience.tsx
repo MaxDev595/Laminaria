@@ -13,7 +13,6 @@ import {
   Mic2,
   Radio,
   ShieldCheck,
-  Sparkles,
   UsersRound,
   Video,
   Waves,
@@ -100,7 +99,7 @@ export function LandingExperience() {
             <FeatureTile icon={<Video />} title={locale === "ru" ? "Сцена и трансляция" : "Stage and media"} body={locale === "ru" ? "LiveKit управляет только медиапотоками и качеством соединения." : "LiveKit owns media and connection quality — nothing more."} />
             <FeatureTile icon={<UsersRound />} title={locale === "ru" ? "Точные роли" : "Precise roles"} body={locale === "ru" ? "Зритель остаётся зрителем, пока ведущий явно не пригласит его на сцену." : "An attendee stays receive-only until a host explicitly invites them on stage."} />
             <FeatureTile icon={<MessageCircleMore />} title={locale === "ru" ? "Чистый разговор" : "A cleaner conversation"} body={locale === "ru" ? "Чат, вопросы и опросы проверяются сервером до публикации." : "Chat, Q&A, and polls are server-validated before they reach the room."} />
-            <FeatureTile icon={<Sparkles />} title={locale === "ru" ? "AI с границами" : "AI with boundaries"} body={locale === "ru" ? "Ассистент всегда отмечен, учитывает материалы и честно говорит, когда данных мало." : "The assistant is always labeled, grounded in materials, and explicit about uncertainty."} />
+            <FeatureTile icon={<ChartNoAxesCombined />} title={locale === "ru" ? "Аналитика заявок" : "Registration analytics"} body={locale === "ru" ? "После регистрации организатор видит имя, email, телефон и статус участника." : "After registration, the host sees attendee name, email, phone, and registration status."} />
           </motion.div>
         </section>
 

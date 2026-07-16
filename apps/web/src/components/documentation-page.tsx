@@ -60,125 +60,103 @@ const sectionIcons = {
 
 const commercialMvpCardsEn: DocCard[] = [
   {
-    title: "Core platform",
+    title: "Account and workspace",
     body:
-      "Registration, sign-in, Google OAuth, GitHub OAuth, password recovery, persistent sessions, profile, avatar, name, bio, language, timezone and organization onboarding.",
-    items: ["Workspace creation", "Owner, Admin, Moderator, Member", "Invitations and role management"],
+      "The MVP keeps only the account flow needed to run webinars: email registration, sign-in, Google OAuth, password recovery, persistent sessions and workspace onboarding.",
+    items: ["Create workspace", "Owner/Admin/Moderator/Member roles", "Stay signed in after refresh"],
   },
   {
-    title: "Webinar management",
+    title: "Webinar scheduling",
     body:
-      "Title, description, banner, date, time, duration, timezone, public/private mode, password, participant limit, edit, delete, duplicate and save as template.",
-    items: ["Waiting page", "Mic/camera/internet test", "Reusable templates"],
+      "Organizers create a real webinar with title, description, banner, date, time, duration, timezone, visibility and participant limit.",
+    items: ["Public registration link", "Countdown/waiting page", "Edit core webinar data"],
+  },
+  {
+    title: "Viewer registration",
+    body:
+      "The public registration flow collects the data needed for sales and marketing without making viewers create a full host account.",
+    items: ["Name, email, phone", "One registration per email/phone pair", "Registration status in analytics"],
   },
   {
     title: "Live room",
     body:
-      "Camera, microphone, screen sharing, multiple presenters, camera/microphone switching and host control over participants.",
-    items: ["Host-only mode", "Multi-host mode", "Free mode"],
+      "The host can run the webinar with camera, microphone, screen sharing and stable viewer mode. Viewers stay receive-only unless explicitly invited.",
+    items: ["Host camera and screen", "Viewer counter", "Mobile-safe room layout"],
   },
   {
-    title: "Chat and moderation",
+    title: "Chat, Q&A and polls",
     body:
-      "Messages, emoji, replies, pinned messages, links, images, deleted messages, mutes and bans. Viewers write only when moderation settings allow it.",
+      "The MVP needs basic engagement tools that make the webinar feel alive without adding unfinished complexity.",
+    items: ["Chat messages", "Questions and answered state", "Simple polls and reactions"],
+  },
+  {
+    title: "Moderation",
+    body:
+      "Admins and moderators must be able to protect the room during a live event.",
     items: ["Delete message", "Temporary mute", "Kick and ban"],
   },
   {
-    title: "AI differentiation",
+    title: "Analytics",
     body:
-      "AI Moderator, AI Assistant and AI Summary are the main Laminaria moat, so they move from vague future ideas into MVP+ priorities.",
-    items: ["Spam/link/profanity filtering", "Answers from webinar materials", "Summary, Q&A list and homework"],
+      "After registration and attendance, the organizer sees the basic business data needed to follow up with leads.",
+    items: ["Registrations", "Name/email/phone details", "Webinar-level attendee list"],
   },
   {
-    title: "Engagement tools",
+    title: "MVP cleanup rule",
     body:
-      "A commercial webinar needs Q&A, polls and reactions so the event feels alive and measurable.",
-    items: ["Question likes and answered status", "Single/multiple-choice polls", "👍 ❤️ 👏 😂 🎉 reactions"],
-  },
-  {
-    title: "Recording and files",
-    body:
-      "MVP should support recording, playback, download and file sharing during the webinar.",
-    items: ["PDF, DOCX, PPTX, ZIP", "Future AI chapters", "Future transcript and search"],
-  },
-  {
-    title: "Email and webinar landing page",
-    body:
-      "Every webinar gets a public page and automated email flow: invitation, reminder, webinar started, finished and thank-you messages.",
-    items: ["Banner, host, date, registration", "Public share link", "Future branded emails"],
-  },
-  {
-    title: "Analytics, dashboard and admin",
-    body:
-      "Dashboard needs upcoming webinars, recent recordings, stats and AI recommendations. Admin needs users, roles, webinars, recordings, analytics and tariff controls.",
-    items: ["Registrations and attendees", "Average watch time", "Peak online"],
-  },
-  {
-    title: "Premium and post-MVP",
-    body:
-      "Premium adds custom branding, domain, AI features, extra themes, branded emails, multiple organizations, API and webhooks. Later: Stage Mode, Whiteboard, Breakout Rooms, realtime translation, captions, RTMP, OBS, Zapier, CRM/LMS and mobile apps.",
+      "Anything that is not ready or not required for the first webinar loop is hidden from navigation and docs until it becomes real product value.",
+    items: ["No empty paid modules", "No empty media catalog", "No unfinished helper modules"],
   },
 ];
 
 const commercialMvpCardsRu: DocCard[] = [
   {
-    title: "Основа платформы",
+    title: "Аккаунт и workspace",
     body:
-      "Регистрация, вход, Google OAuth, GitHub OAuth, восстановление пароля, сохранение сессии, профиль, аватар, имя, описание, язык, часовой пояс и онбординг организации.",
-    items: ["Создание Workspace", "Owner, Admin, Moderator, Member", "Приглашения и управление ролями"],
+      "MVP оставляет только тот account flow, который нужен для проведения вебинаров: регистрация по почте, вход, Google OAuth, восстановление пароля, сохранение сессии и создание workspace.",
+    items: ["Создать workspace", "Owner/Admin/Moderator/Member", "Аккаунт сохраняется после обновления"],
   },
   {
-    title: "Управление вебинарами",
+    title: "Планирование вебинара",
     body:
-      "Название, описание, баннер, дата, время, длительность, часовой пояс, публичный/приватный режим, пароль, лимит участников, редактирование, удаление, копирование и сохранение как шаблон.",
-    items: ["Страница ожидания", "Тест микрофона/камеры/интернета", "Шаблоны вебинаров"],
+      "Организатор создаёт реальный вебинар: название, описание, баннер, дата, время, длительность, часовой пояс, видимость и лимит участников.",
+    items: ["Публичная ссылка регистрации", "Countdown/waiting page", "Редактирование основных данных"],
   },
   {
-    title: "Комната вебинара",
+    title: "Регистрация зрителя",
     body:
-      "Камера, микрофон, демонстрация экрана, несколько ведущих, смена камеры/микрофона и управление правами участников.",
-    items: ["Только ведущий", "Несколько ведущих", "Свободный режим"],
+      "Публичная регистрация собирает данные для продаж и рекламы, не заставляя зрителя создавать полноценный аккаунт ведущего.",
+    items: ["Имя, email, телефон", "Одна регистрация на связку email/телефон", "Статус регистрации в аналитике"],
   },
   {
-    title: "Чат и модерация",
+    title: "Комната эфира",
     body:
-      "Сообщения, эмодзи, ответы, закрепы, ссылки, изображения, удаление сообщений, муты и баны. Зрители пишут только когда это разрешено настройками модерации.",
+      "Ведущий проводит вебинар с камерой, микрофоном, демонстрацией экрана и стабильным режимом зрителей. Зритель остаётся receive-only, пока его явно не пригласили.",
+    items: ["Камера и экран ведущего", "Счётчик зрителей", "Адаптивная комната"],
+  },
+  {
+    title: "Чат, Q&A и опросы",
+    body:
+      "MVP нужны базовые инструменты вовлечения, чтобы эфир был живым, но без лишней недоделанной сложности.",
+    items: ["Сообщения чата", "Вопросы и статус отвечено", "Простые опросы и реакции"],
+  },
+  {
+    title: "Модерация",
+    body:
+      "Админ и модератор должны защищать комнату во время эфира.",
     items: ["Удалить сообщение", "Временный мут", "Кик и бан"],
   },
   {
-    title: "AI как отличие",
+    title: "Аналитика",
     body:
-      "AI Moderator, AI Assistant и AI Summary — главный шанс выделить Laminaria, поэтому они переходят из далёкого будущего в приоритеты MVP+.",
-    items: ["Фильтр спама, ссылок и мата", "Ответы по материалам вебинара", "Саммари, Q&A и домашнее задание"],
+      "После регистрации и посещения организатор видит базовые бизнес-данные для follow-up.",
+    items: ["Регистрации", "Имя/email/телефон", "Список зрителей по вебинару"],
   },
   {
-    title: "Интерактив",
+    title: "Правило очистки MVP",
     body:
-      "Коммерческому вебинару нужны Q&A, опросы и реакции, чтобы эфир ощущался живым и измеримым.",
-    items: ["Лайки вопросов и статус отвечено", "Один или несколько вариантов ответа", "👍 ❤️ 👏 😂 🎉 реакции"],
-  },
-  {
-    title: "Запись и файлы",
-    body:
-      "MVP должен поддерживать запись вебинара, просмотр записи, скачивание и файлы во время эфира.",
-    items: ["PDF, DOCX, PPTX, ZIP", "Будущие AI-главы", "Будущая транскрипция и поиск"],
-  },
-  {
-    title: "Email и лендинг вебинара",
-    body:
-      "Каждый вебинар получает публичную страницу и автоматическую email-цепочку: приглашение, напоминание, старт, окончание и спасибо за участие.",
-    items: ["Баннер, ведущий, дата, регистрация", "Публичная ссылка", "Брендирование писем позже"],
-  },
-  {
-    title: "Аналитика, dashboard и админка",
-    body:
-      "Dashboard показывает ближайшие вебинары, последние записи, статистику и AI-рекомендации. Админка — пользователей, роли, вебинары, записи, аналитику и тариф.",
-    items: ["Регистрации и посетители", "Среднее время просмотра", "Пик онлайна"],
-  },
-  {
-    title: "Premium и после MVP",
-    body:
-      "Premium добавляет собственный бренд, домен, AI-функции, темы, брендированные письма, несколько организаций, API и webhooks. Дальше: Stage Mode, Whiteboard, Breakout Rooms, realtime-перевод, captions, RTMP, OBS, Zapier, CRM/LMS и mobile apps.",
+      "Всё, что не готово или не нужно для первого webinar loop, скрывается из навигации и документации до момента, когда станет реальной ценностью.",
+    items: ["Без пустых платных модулей", "Без пустого медиа-каталога", "Без недоделанных помощников"],
   },
 ];
 
@@ -187,7 +165,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
     badge: "Product & technical documentation",
     title: "Laminaria documentation",
     lead:
-      "A paid-ready product plan for a webinar SaaS that can compete with Zoom, WebinarJam and Livestorm through AI, moderation and a fully animated ocean interface.",
+      "A focused MVP plan for a webinar SaaS that can compete through a smooth live room, strong moderation, useful analytics and a fully animated ocean interface.",
     updated: "Updated to the commercial MVP roadmap",
     primaryCta: "Open the app",
     secondaryCta: "Back to landing",
@@ -228,7 +206,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "User system",
             body:
-              "Email and Google sign-in, GitHub OAuth target, password recovery, persistent sessions, onboarding, profile, avatar, language, timezone and workspace creation.",
+              "Email and Google sign-in, password recovery, persistent sessions, onboarding, profile basics, language, timezone and workspace creation.",
             items: ["Organizer accounts", "Viewer participation", "Team roles"],
           },
           {
@@ -250,9 +228,9 @@ const docs: Record<"en" | "ru", DocsContent> = {
             items: ["Temporary mute", "Temporary or permanent ban", "Unban and unmute lists"],
           },
           {
-            title: "AI layer",
+            title: "MVP boundaries",
             body:
-              "AI Moderator, AI Assistant and AI Summary define the MVP+ differentiation: fewer manual tasks for hosts and more value after the event.",
+              "The product should not show unfinished modules. If a feature is not part of the first webinar loop, it stays out of the main UI.",
           },
           {
             title: "Analytics and notifications",
@@ -285,13 +263,13 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Creator · $15/month",
             body:
-              "For solo creators and experts who need branded webinars, recording, analytics and a reliable production workflow.",
+              "For solo creators and experts who need branded webinars, analytics and a reliable production workflow.",
             items: ["More attendees", "Branding", "Analytics"],
           },
           {
             title: "Business · $49/month",
             body:
-              "For teams that need roles, moderation, recordings, admin controls, deeper analytics, automation and integrations.",
+              "For teams that need roles, moderation, admin controls, deeper analytics and team workflows.",
             items: ["Teams", "Advanced moderation", "Commercial analytics"],
           },
         ],
@@ -311,7 +289,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Core pages",
             body:
-              "Landing, auth, dashboard, webinar creation, public registration, countdown, prejoin, live room, teams, admin, recordings and analytics.",
+              "Landing, auth, dashboard, webinar creation, public registration, countdown, prejoin, live room, teams, admin and analytics.",
           },
           {
             title: "Responsive UX",
@@ -374,7 +352,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Data model",
             body:
-              "Main entities include users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, recordings, chat messages, bans, mutes and analytics events.",
+              "Main entities include users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, chat messages, bans, mutes and analytics events.",
           },
         ],
       },
@@ -412,20 +390,20 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "MVP v1.0",
             body:
-              "Authorization and workspace, webinar creation, webinar room, video/audio, screen sharing, chat, Q&A, polls, recording, webinar landing page, email notifications, analytics and dashboard.",
+              "Authorization and workspace, webinar creation, webinar room, video/audio, screen sharing, chat, Q&A, polls, webinar landing page, basic email, analytics and dashboard.",
             items: ["Core SaaS loop", "Host + viewer flow", "Commercial webinar baseline"],
           },
           {
-            title: "MVP+ differentiators",
+            title: "After MVP validation",
             body:
-              "AI Moderator, AI Assistant, AI Summary, additional themes, fully animated ocean interface, extended analytics, recording search, AI chapters and webinar transcription.",
-            items: ["AI as the main moat", "Marine design as brand identity", "Better post-event value"],
+              "Only after the first webinar loop is stable, add larger modules one by one based on user demand and ability to charge for them.",
+            items: ["One feature at a time", "No placeholder pages", "User demand first"],
           },
           {
-            title: "After MVP revenue",
+            title: "MVP cleanup rule",
             body:
-              "Stage Mode, Whiteboard, Breakout Rooms, AI Translator, Live Captions, RTMP, OBS integration, API, Zapier, CRM/LMS integrations and mobile apps.",
-            items: ["Expansion features", "Integrations", "Enterprise readiness"],
+              "Hide anything that does not help the user create, promote, run or analyze the first webinar.",
+            items: ["No empty paid modules", "No empty media catalog", "No unfinished helper modules"],
           },
         ],
       },
@@ -435,7 +413,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
     badge: "Продуктовая и техническая документация",
     title: "Документация Laminaria",
     lead:
-      "Коммерческий план webinar SaaS, который может конкурировать с Zoom, WebinarJam и Livestorm за счёт AI, модерации и полностью анимированного морского интерфейса.",
+      "Сфокусированный MVP-план webinar SaaS, который может конкурировать за счёт плавной комнаты эфира, сильной модерации, полезной аналитики и полностью анимированного морского интерфейса.",
     updated: "Обновлено под коммерческую MVP-дорожную карту",
     primaryCta: "Открыть приложение",
     secondaryCta: "Назад на лендинг",
@@ -476,7 +454,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Система пользователей",
             body:
-              "Вход по почте и через Google, цель по GitHub OAuth, восстановление пароля, сохранение сессии, онбординг, профиль, аватар, язык, часовой пояс и создание workspace.",
+              "Вход по почте и через Google, восстановление пароля, сохранение сессии, онбординг, базовый профиль, язык, часовой пояс и создание workspace.",
             items: ["Аккаунты организаторов", "Участие зрителей", "Командные роли"],
           },
           {
@@ -498,9 +476,9 @@ const docs: Record<"en" | "ru", DocsContent> = {
             items: ["Временный мут", "Временный или вечный бан", "Списки разбана и размута"],
           },
           {
-            title: "AI-слой",
+            title: "Границы MVP",
             body:
-              "AI Moderator, AI Assistant и AI Summary — главные отличия MVP+: меньше ручной работы для ведущего и больше пользы после эфира.",
+              "Продукт не должен показывать недоделанные модули. Если функция не входит в первый webinar loop, она не попадает в основной интерфейс.",
           },
           {
             title: "Аналитика и уведомления",
@@ -533,13 +511,13 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Creator · $15/мес",
             body:
-              "Для создателей и экспертов, которым нужны брендирование, записи, аналитика и более надёжный рабочий процесс.",
+              "Для создателей и экспертов, которым нужны брендирование, аналитика и более надёжный рабочий процесс.",
             items: ["Больше участников", "Брендинг", "Аналитика"],
           },
           {
             title: "Business · $49/мес",
             body:
-              "Для команд: роли, модерация, записи, админ-контроль, расширенная аналитика, автоматизация и интеграции.",
+              "Для команд: роли, модерация, админ-контроль, расширенная аналитика и командная работа.",
             items: ["Команды", "Продвинутая модерация", "Коммерческая аналитика"],
           },
         ],
@@ -559,7 +537,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Главные страницы",
             body:
-              "Лендинг, вход, регистрация, дашборд, создание вебинара, публичная регистрация, обратный отсчёт, prejoin, эфир, команды, админка, записи и аналитика.",
+              "Лендинг, вход, регистрация, дашборд, создание вебинара, публичная регистрация, обратный отсчёт, prejoin, эфир, команды, админка и аналитика.",
           },
           {
             title: "Адаптивность",
@@ -622,7 +600,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "Модель данных",
             body:
-              "Основные сущности: users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, recordings, chat messages, bans, mutes и analytics events.",
+              "Основные сущности: users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, chat messages, bans, mutes и analytics events.",
           },
         ],
       },
@@ -660,20 +638,20 @@ const docs: Record<"en" | "ru", DocsContent> = {
           {
             title: "MVP v1.0",
             body:
-              "Авторизация и Workspace, создание вебинаров, комната вебинара, видео/аудио, демонстрация экрана, чат, Q&A, опросы, запись, лендинг вебинара, email-уведомления, аналитика и Dashboard.",
+              "Авторизация и Workspace, создание вебинаров, комната вебинара, видео/аудио, демонстрация экрана, чат, Q&A, опросы, лендинг вебинара, базовый email, аналитика и Dashboard.",
             items: ["Core SaaS loop", "Путь ведущего и зрителя", "Коммерческая база вебинара"],
           },
           {
-            title: "MVP+ отличия",
+            title: "После проверки MVP",
             body:
-              "AI Moderator, AI Assistant, AI Summary, дополнительные темы, полностью анимированный морской интерфейс, расширенная аналитика, поиск по записям, AI-главы и транскрипция.",
-            items: ["AI как главный moat", "Морской дизайн как бренд", "Больше пользы после эфира"],
+              "Только после стабильного первого webinar loop добавляем большие модули по одному — по спросу пользователей и способности брать оплату.",
+            items: ["Одна фича за раз", "Без пустых страниц", "Сначала спрос"],
           },
           {
-            title: "После первых денег",
+            title: "Правило очистки MVP",
             body:
-              "Stage Mode, Whiteboard, Breakout Rooms, AI Translator, Live Captions, RTMP, OBS Integration, API, Zapier, CRM/LMS интеграции и мобильные приложения.",
-            items: ["Расширение продукта", "Интеграции", "Готовность к enterprise"],
+              "Скрываем всё, что не помогает пользователю создать, продвинуть, провести или проанализировать первый вебинар.",
+            items: ["Без пустых платных модулей", "Без пустого медиа-каталога", "Без недоделанных помощников"],
           },
         ],
       },
