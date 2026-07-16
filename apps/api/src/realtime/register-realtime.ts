@@ -636,10 +636,10 @@ function registerModerationHandlers(
           targetName: validated.targetName,
           ...(validated.reason ? { reason: validated.reason } : {}),
         };
-        if (validated.action === "mute") next.mutedUntil = until;
-        if (validated.action === "ban") next.bannedUntil = until;
-        if (validated.action === "unmute") next.mutedUntil = undefined;
-        if (validated.action === "unban") next.bannedUntil = undefined;
+        if (validated.action === "mute") next.mutedUntil = until ?? null;
+        if (validated.action === "ban") next.bannedUntil = until ?? null;
+        if (validated.action === "unmute") delete next.mutedUntil;
+        if (validated.action === "unban") delete next.bannedUntil;
         stateByTarget.set(validated.targetId, next);
         const event: ModerationRestrictionChanged = {
           webinarId: validated.webinarId,

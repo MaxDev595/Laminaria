@@ -77,6 +77,7 @@ export interface WebinarRepository {
         WebinarRecord,
         | "title"
         | "description"
+        | "coverImageUrl"
         | "scheduledStartAt"
         | "timezone"
         | "language"
