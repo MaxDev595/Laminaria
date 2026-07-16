@@ -19,7 +19,6 @@ export function MarketingHeader() {
     [`/${locale}#global`, t("shell.global")],
     [`/${locale}#security`, t("shell.security")],
   ] as const;
-  const docsLabel = locale === "ru" ? "Документация" : "Docs";
 
   return (
     <header className="marketing-header">
@@ -33,7 +32,6 @@ export function MarketingHeader() {
         <div className="header-actions">
           <LanguageSwitcher />
           <ThemeToggle />
-          <Link href="/docs" className="header-signin">{docsLabel}</Link>
           <Link href="/sign-in" className="header-signin">{t("auth.signIn")}</Link>
           <Link href="/sign-up" className="header-cta"><Button size="sm">{t("auth.signUp")}</Button></Link>
           <button
@@ -57,7 +55,6 @@ export function MarketingHeader() {
             exit={{ opacity: 0, height: 0 }}
           >
             {nav.map(([href, label]) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a>)}
-            <Link href="/docs" onClick={() => setOpen(false)}>{docsLabel}</Link>
             <Link href="/sign-in" onClick={() => setOpen(false)}>{t("auth.signIn")}</Link>
             <Link href="/sign-up" onClick={() => setOpen(false)}>{t("auth.signUp")}</Link>
           </motion.nav>
