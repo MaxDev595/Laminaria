@@ -4049,6 +4049,11 @@ select {
   padding: 0.25rem;
 }
 
+.host-media-controls-wrap {
+  display: grid;
+  gap: 0.3rem;
+}
+
 .host-media-controls button {
   display: inline-flex;
   align-items: center;
@@ -4062,9 +4067,22 @@ select {
   cursor: pointer;
 }
 
+.host-media-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .host-media-controls button.is-on {
   color: var(--color-primary-strong);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.host-media-controls__error {
+  margin: 0;
+  max-width: 24rem;
+  color: var(--color-danger);
+  font-size: 0.72rem;
+  font-weight: 750;
 }
 
 .role-chip {

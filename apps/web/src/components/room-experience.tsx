@@ -136,15 +136,13 @@ export function RoomExperience({ slug }: { slug: string }) {
     );
   }
 
-  const publishAllowed = canPublishMedia(session.participant.role);
-
   return (
     <LiveKitRoom
       token={session.media.token}
       serverUrl={session.media.url}
       connect
-      audio={publishAllowed && (session.preferences?.micOn ?? false)}
-      video={publishAllowed && (session.preferences?.cameraOn ?? false)}
+      audio={false}
+      video={false}
       options={{
         adaptiveStream: true,
         dynacast: true,
@@ -159,7 +157,7 @@ export function RoomExperience({ slug }: { slug: string }) {
       data-lk-theme="default"
       className="webinar-room"
     >
-      <RoomTopbar slug={slug} role={session.participant.role} />
+      <RoomTopbar slug={slug} role={session.participant.role} preferences={session.preferences} />
       <div className="webinar-room__body">
         <section className="live-stage">
           <BroadcastStage currentRole={session.participant.role} />
@@ -253,7 +251,7 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
   );
 }
 
-function RoomTopbar({ slug, role }: { slug: string; role: Role }) {
+function RoomTopbar({ slug, role, preferences }: { slug: string; role: Role; preferences?: StoredRoom["preferences"] }) {
   const state = useConnectionState();
   const room = useRoomContext();
   const router = useRouter();
@@ -276,7 +274,7 @@ function RoomTopbar({ slug, role }: { slug: string; role: Role }) {
       </div>
       <div className="room-topbar__actions">
         <RoleBadge role={role} />
-        {canPublishMedia(role) ? <HostMediaControls /> : null}
+        {canPublishMedia(role) ? <HostMediaControls preferences={preferences} /> : null}
         <button type="button" className="room-leave" onClick={() => void leaveRoom()}>
           <X size={17} />
           {t("room.leave")}
@@ -286,45 +284,100 @@ function RoomTopbar({ slug, role }: { slug: string; role: Role }) {
   );
 }
 
-function HostMediaControls() {
+function HostMediaControls({ preferences }: { preferences?: StoredRoom["preferences"] }) {
   const locale = useLocale();
   const room = useRoomContext();
+  const connectionState = useConnectionState();
   const [cameraOn, setCameraOn] = useState(room.localParticipant.isCameraEnabled);
   const [micOn, setMicOn] = useState(room.localParticipant.isMicrophoneEnabled);
   const [screenOn, setScreenOn] = useState(room.localParticipant.isScreenShareEnabled);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const initialMediaApplied = useRef(false);
+  const connected = connectionState === ConnectionState.Connected;
+
+  useEffect(() => {
+    if (!connected || initialMediaApplied.current) return;
+    initialMediaApplied.current = true;
+
+    let cancelled = false;
+
+    async function applyInitialMedia() {
+      try {
+        if (preferences?.micOn) {
+          await room.localParticipant.setMicrophoneEnabled(true);
+          if (!cancelled) setMicOn(true);
+        }
+        if (preferences?.cameraOn) {
+          await room.localParticipant.setCameraEnabled(true);
+          if (!cancelled) setCameraOn(true);
+        }
+      } catch (reason) {
+        if (!cancelled) {
+          setMediaError(reason instanceof Error ? reason.message : locale === "ru" ? "Не удалось включить медиа." : "Could not enable media.");
+        }
+      }
+    }
+
+    void applyInitialMedia();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, locale, preferences?.cameraOn, preferences?.micOn, room.localParticipant]);
 
   async function toggleCamera() {
+    if (!connected) return;
     const next = !cameraOn;
-    setCameraOn(next);
-    await room.localParticipant.setCameraEnabled(next);
+    try {
+      await room.localParticipant.setCameraEnabled(next);
+      setCameraOn(next);
+      setMediaError(null);
+    } catch (reason) {
+      setMediaError(reason instanceof Error ? reason.message : locale === "ru" ? "Камера пока недоступна." : "Camera is not available yet.");
+    }
   }
 
   async function toggleMic() {
+    if (!connected) return;
     const next = !micOn;
-    setMicOn(next);
-    await room.localParticipant.setMicrophoneEnabled(next);
+    try {
+      await room.localParticipant.setMicrophoneEnabled(next);
+      setMicOn(next);
+      setMediaError(null);
+    } catch (reason) {
+      setMediaError(reason instanceof Error ? reason.message : locale === "ru" ? "Микрофон пока недоступен." : "Microphone is not available yet.");
+    }
   }
 
   async function toggleScreen() {
+    if (!connected) return;
     const next = !screenOn;
-    setScreenOn(next);
-    await room.localParticipant.setScreenShareEnabled(next);
+    try {
+      await room.localParticipant.setScreenShareEnabled(next);
+      setScreenOn(next);
+      setMediaError(null);
+    } catch (reason) {
+      setMediaError(reason instanceof Error ? reason.message : locale === "ru" ? "Демонстрация экрана пока недоступна." : "Screen sharing is not available yet.");
+    }
   }
 
   return (
-    <div className="host-media-controls">
-      <button type="button" className={cameraOn ? "is-on" : ""} onClick={() => void toggleCamera()}>
+    <div className="host-media-controls-wrap">
+      <div className="host-media-controls">
+      <button type="button" className={cameraOn ? "is-on" : ""} onClick={() => void toggleCamera()} disabled={!connected}>
         {cameraOn ? <Camera size={17} /> : <CameraOff size={17} />}
         {locale === "ru" ? "Камера" : "Camera"}
       </button>
-      <button type="button" className={micOn ? "is-on" : ""} onClick={() => void toggleMic()}>
+      <button type="button" className={micOn ? "is-on" : ""} onClick={() => void toggleMic()} disabled={!connected}>
         {micOn ? <Mic size={17} /> : <MicOff size={17} />}
         {locale === "ru" ? "Микрофон" : "Mic"}
       </button>
-      <button type="button" className={screenOn ? "is-on" : ""} onClick={() => void toggleScreen()}>
+      <button type="button" className={screenOn ? "is-on" : ""} onClick={() => void toggleScreen()} disabled={!connected}>
         <MonitorUp size={17} />
         {locale === "ru" ? "Экран" : "Screen"}
       </button>
+      </div>
+      {mediaError ? <p className="host-media-controls__error">{mediaError}</p> : null}
     </div>
   );
 }
