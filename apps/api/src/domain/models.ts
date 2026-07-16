@@ -92,6 +92,7 @@ export interface RegistrationRecord {
   webinarId: string;
   userId: string | null;
   email: string;
+  phone: string;
   name: string;
   locale: Locale;
   status: "PENDING" | "CONFIRMED" | "CANCELLED";

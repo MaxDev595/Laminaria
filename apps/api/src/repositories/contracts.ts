@@ -97,11 +97,13 @@ export interface RegistrationRepository {
   findById(id: string): Promise<RegistrationRecord | null>;
   findByWebinarAndEmail(webinarId: string, email: string): Promise<RegistrationRecord | null>;
   findByTokenHash(tokenHash: string): Promise<RegistrationRecord | null>;
+  listByWebinar(webinarId: string): Promise<readonly RegistrationRecord[]>;
   confirmByTokenHash(tokenHash: string, confirmedAt: Date): Promise<RegistrationRecord | null>;
   create(input: {
     webinarId: string;
     userId?: string;
     email: string;
+    phone: string;
     name: string;
     locale: "en" | "ru";
     status: "PENDING" | "CONFIRMED";

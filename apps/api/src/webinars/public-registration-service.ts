@@ -35,6 +35,7 @@ export class PublicRegistrationService {
   public async register(input: {
     slug: string;
     email: string;
+    phone: string;
     name: string;
     locale: Locale;
     userId?: string;
@@ -59,6 +60,7 @@ export class PublicRegistrationService {
         webinarId: webinar.id,
         ...(input.userId ? { userId: input.userId } : {}),
         email: normalizedEmail,
+        phone: input.phone.trim(),
         name: input.name.trim(),
         locale: input.locale,
         status,

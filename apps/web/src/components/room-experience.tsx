@@ -10,7 +10,7 @@ import {
   useRoomContext,
   useTracks,
 } from "@livekit/components-react";
-import { ConnectionState, Track } from "livekit-client";
+import { ConnectionState, Track, VideoQuality } from "livekit-client";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -167,7 +167,7 @@ export function RoomExperience({ slug }: { slug: string }) {
           <RoomAudioRenderer />
           <ConnectionStateToast />
         </section>
-        <RealtimePanel session={session} onEnded={handleEnded} />
+        <RealtimePanel slug={slug} session={session} onEnded={handleEnded} />
       </div>
     </LiveKitRoom>
   );
@@ -241,7 +241,7 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
           </p>
         </div>
       ) : (
-        <div className="viewer-stage-grid">
+        <div className={`viewer-stage-grid ${tracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare) ? "has-screen-share" : ""}`}>
           {tracks.map((trackRef) => (
             <ParticipantTile
               key={`${trackRef.participant.identity}:${trackRef.source}:${trackRef.publication?.trackSid ?? "track"}`}
@@ -330,9 +330,11 @@ function HostMediaControls() {
   );
 }
 
-function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (status: EndedStatus) => void }) {
+function RealtimePanel({ slug, session, onEnded }: { slug: string; session: StoredRoom; onEnded: (status: EndedStatus) => void }) {
   const locale = useLocale();
   const t = useTranslations();
+  const room = useRoomContext();
+  const router = useRouter();
   const [tab, setTab] = useState<"chat" | "questions">("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -375,6 +377,15 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
       if (restriction.targetId === currentActorId(session)) setError(restrictionMessage(restriction, locale));
       setRestrictions((current) => upsertRestriction(current, restriction));
     });
+    socket.on("moderation:kicked", (restriction: Restriction) => {
+      if (restriction.targetId !== currentActorId(session)) return;
+      setError(restrictionMessage(restriction, locale));
+      sessionStorage.removeItem(`laminaria-room:${slug}`);
+      void room.disconnect().finally(() => {
+        socket.disconnect();
+        router.replace(`/w/${slug}`);
+      });
+    });
     socket.on("chat:created", (message: ChatMessage) =>
       setMessages((current) => (current.some((item) => item.id === message.id) ? current : [...current, message])),
     );
@@ -392,7 +403,7 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [locale, onEnded, session]);
+  }, [locale, onEnded, room, router, session, slug]);
 
   async function send() {
     const body = text.trim();
@@ -723,19 +734,19 @@ function canModerate(role: string): boolean {
 function applyViewerQuality(publication: unknown, quality: QualityPreset): void {
   const preferred = qualityToLiveKitPreference(quality);
   const target = publication as {
-    setVideoQuality?: (quality: string) => void;
-    setSubscribedQuality?: (quality: string) => void;
+    setVideoQuality?: (quality: VideoQuality) => void;
+    setSubscribedQuality?: (quality: VideoQuality) => void;
     setVideoDimensions?: (dimensions: { width: number; height: number }) => void;
   };
   target.setVideoDimensions?.(qualityToDimensions(quality));
   target.setSubscribedQuality?.(preferred);
-  target.setVideoQuality?.(preferred.toLowerCase());
+  target.setVideoQuality?.(preferred);
 }
 
-function qualityToLiveKitPreference(quality: QualityPreset): "LOW" | "MEDIUM" | "HIGH" {
-  if (quality === "144p" || quality === "240p") return "LOW";
-  if (quality === "480p") return "MEDIUM";
-  return "HIGH";
+function qualityToLiveKitPreference(quality: QualityPreset): VideoQuality {
+  if (quality === "144p" || quality === "240p") return VideoQuality.LOW;
+  if (quality === "480p") return VideoQuality.MEDIUM;
+  return VideoQuality.HIGH;
 }
 
 function qualityToDimensions(quality: QualityPreset): { width: number; height: number } {

@@ -158,9 +158,13 @@ export const api = {
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/hosts`,
       { method: "POST", body: JSON.stringify(input) },
     ),
+  listWebinarRegistrations: (workspaceId: string, webinarId: string) =>
+    apiFetch<{ registrations: Registration[] }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/registrations`,
+    ),
   publicWebinar: (slug: string, signal?: AbortSignal) =>
     apiFetch<{ webinar: PublicWebinar }>(`/v1/public/webinars/${encodeURIComponent(slug)}`, { signal }),
-  register: (slug: string, input: { email: string; name: string; locale: "en" | "ru" }) =>
+  register: (slug: string, input: { email: string; phone: string; name: string; locale: "en" | "ru" }) =>
     apiFetch<RegistrationPayload>(
       `/v1/public/webinars/${encodeURIComponent(slug)}/registrations`,
       { method: "POST", body: JSON.stringify(input) },
@@ -279,6 +283,7 @@ export interface Registration {
   id: string;
   webinarId: string;
   email: string;
+  phone: string;
   name: string;
   locale: "en" | "ru";
   status: "PENDING" | "CONFIRMED" | "CANCELLED";

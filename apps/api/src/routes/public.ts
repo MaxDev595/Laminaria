@@ -6,6 +6,7 @@ import { PublicRegistrationService } from "../webinars/public-registration-servi
 const slugParams = z.object({ slug: z.string().min(1).max(100) });
 const registerSchema = z.object({
   email: z.email().max(320),
+  phone: z.string().trim().min(5).max(40),
   name: z.string().min(1).max(100).transform((value) => normalizePlainText(value, 100)),
   locale: z.enum(["en", "ru"]).default("en"),
 });

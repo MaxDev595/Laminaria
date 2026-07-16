@@ -51,6 +51,7 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       findById: unavailable,
       findByWebinarAndEmail: unavailable,
       findByTokenHash: unavailable,
+      listByWebinar: unavailable,
       confirmByTokenHash: unavailable,
       create: unavailable,
     },

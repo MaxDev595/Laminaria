@@ -28,7 +28,11 @@ import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { Field, Input, ServiceState } from "./ui";
 
-const schema = z.object({ name: z.string().trim().min(1).max(100), email: z.email() });
+const schema = z.object({
+  name: z.string().trim().min(1).max(100),
+  email: z.email(),
+  phone: z.string().trim().min(5).max(40),
+});
 type Values = z.infer<typeof schema>;
 
 export function PublicWebinar({ slug }: { slug: string }) {
@@ -41,7 +45,7 @@ export function PublicWebinar({ slug }: { slug: string }) {
   });
   const [success, setSuccess] = useState<{ confirmationRequired: boolean; hasAccess: boolean } | null>(null);
   const [error, setError] = useState("");
-  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", email: "" } });
+  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", phone: "" } });
 
   async function submit(values: Values) {
     setError("");
@@ -169,6 +173,9 @@ export function PublicWebinar({ slug }: { slug: string }) {
                 </Field>
                 <Field label={t("auth.email")} error={form.formState.errors.email?.message}>
                   <Input type="email" autoComplete="email" disabled={registrationClosed} {...form.register("email")} />
+                </Field>
+                <Field label={locale === "ru" ? "Телефон" : "Phone"} error={form.formState.errors.phone?.message}>
+                  <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 555 000 0000" disabled={registrationClosed} {...form.register("phone")} />
                 </Field>
                 {error ? <div className="form-alert"><AlertTriangle size={17} />{error}</div> : null}
                 <Button type="submit" size="lg" disabled={registrationClosed || form.formState.isSubmitting}>

@@ -367,6 +367,7 @@ export interface ServerToClientEvents {
   "chat:deleted": (message: ChatDeleted) => void;
   "chat:state": (state: ChatStateChanged) => void;
   "moderation:restriction": (state: ModerationRestrictionChanged) => void;
+  "moderation:kicked": (state: ModerationRestrictionChanged) => void;
   "question:created": (question: Question) => void;
   "question:updated": (question: Question) => void;
   "poll:created": (poll: Poll) => void;

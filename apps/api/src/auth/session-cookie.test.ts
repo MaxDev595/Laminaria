@@ -240,6 +240,7 @@ class MemoryUnitOfWork implements UnitOfWork {
     findById: async (): Promise<RegistrationRecord | null> => null,
     findByWebinarAndEmail: async (): Promise<RegistrationRecord | null> => null,
     findByTokenHash: async (): Promise<RegistrationRecord | null> => null,
+    listByWebinar: async (): Promise<readonly RegistrationRecord[]> => [],
     confirmByTokenHash: async (): Promise<RegistrationRecord | null> => null,
     create: async (): Promise<RegistrationRecord> => {
       throw new Error("registrations.create is not used in this test");

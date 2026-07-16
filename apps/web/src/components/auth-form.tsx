@@ -2,17 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  ArrowRight,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  LoaderCircle,
-  Mail,
-  MessageSquareText,
-  Smartphone,
-} from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, LoaderCircle, Mail } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -24,13 +14,10 @@ import { api, friendlyError, type AuthPayload, type AuthProvidersPayload } from 
 import { Button, Field, Input } from "./ui";
 
 type AuthMode = "sign-in" | "sign-up" | "forgot" | "reset";
-type SignInMethod = "email" | "phone";
 
 const schema = z.object({
   name: z.string().trim().max(100).optional(),
   email: z.email().optional().or(z.literal("")),
-  phone: z.string().trim().max(32).optional(),
-  code: z.string().trim().max(6).optional(),
   password: z.string().optional(),
 });
 
@@ -44,25 +31,21 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
   const [visible, setVisible] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [method, setMethod] = useState<SignInMethod>("email");
-  const [phoneCodeSent, setPhoneCodeSent] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
   const [providers, setProviders] = useState<AuthProvidersPayload | null>(null);
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", phone: "", code: "", password: "" },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const isSignUp = mode === "sign-up";
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
   const isSignIn = mode === "sign-in";
-  const canUsePhoneAuth = isSignIn || isSignUp;
   const title = isSignUp ? t("auth.signUp") : isForgot || isReset ? t("auth.resetPassword") : t("auth.signIn");
   const subtitle = isSignUp
     ? locale === "ru"
-      ? "Создайте защищённый аккаунт и первое рабочее пространство."
-      : "Create your secure account and first workspace."
+      ? "Создайте аккаунт через email или Google."
+      : "Create your account with email or Google."
     : isForgot
       ? locale === "ru"
         ? "Мы отправим защищённую ссылку, если аккаунт существует."
@@ -72,8 +55,8 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
           ? "Придумайте новый пароль длиной не менее 12 символов."
           : "Choose a new password with at least 12 characters."
         : locale === "ru"
-          ? "Вернитесь в своё рабочее пространство."
-          : "Return to your workspace.";
+          ? "Войдите через email или Google."
+          : "Sign in with email or Google.";
 
   useEffect(() => {
     let active = true;
@@ -109,23 +92,6 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
     setServerError(null);
     try {
       if (mode === "sign-up") {
-        if (method === "phone") {
-          const phone = values.phone?.trim();
-          if (!values.name) throw new Error(locale === "ru" ? "Введите имя." : "Enter your name.");
-          if (!phone) throw new Error(locale === "ru" ? "Введите номер телефона." : "Enter your phone number.");
-          if (!phoneCodeSent) {
-            const result = await api.phoneStart({ phone, locale });
-            setDevCode(result.devCode);
-            setPhoneCodeSent(true);
-            return;
-          }
-          if (!values.code || values.code.length !== 6) {
-            throw new Error(locale === "ru" ? "Введите 6-значный код." : "Enter the 6-digit code.");
-          }
-          rememberAuthenticated(await api.phoneVerify({ phone, code: values.code, name: values.name, locale }));
-          router.replace("/dashboard");
-          return;
-        }
         if (!values.name || !values.email || !values.password || values.password.length < 12) {
           throw new Error(locale === "ru" ? "Укажите имя, email и пароль от 12 символов." : "Enter your name, email, and a password of at least 12 characters.");
         }
@@ -137,22 +103,6 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         rememberAuthenticated(await api.signIn({ email: values.email, password: values.password }));
         router.replace("/dashboard");
       } else if (mode === "sign-in") {
-        if (method === "phone") {
-          const phone = values.phone?.trim();
-          if (!phone) throw new Error(locale === "ru" ? "Введите номер телефона." : "Enter your phone number.");
-          if (!phoneCodeSent) {
-            const result = await api.phoneStart({ phone, locale });
-            setDevCode(result.devCode);
-            setPhoneCodeSent(true);
-            return;
-          }
-          if (!values.code || values.code.length !== 6) {
-            throw new Error(locale === "ru" ? "Введите 6-значный код." : "Enter the 6-digit code.");
-          }
-          rememberAuthenticated(await api.phoneVerify({ phone, code: values.code, name: values.name, locale }));
-          router.replace("/dashboard");
-          return;
-        }
         if (!values.email || !values.password) {
           throw new Error(locale === "ru" ? "Введите email и пароль." : "Enter your email and password.");
         }
@@ -191,9 +141,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
   if (success) {
     return (
       <motion.div className="auth-success" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
-        <span>
-          <CheckCircle2 size={28} />
-        </span>
+        <span><CheckCircle2 size={28} /></span>
         <h1>{isForgot ? (locale === "ru" ? "Проверьте почту" : "Check your inbox") : (locale === "ru" ? "Пароль обновлён" : "Password updated")}</h1>
         <p>
           {isForgot
@@ -205,10 +153,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
               : "You can now sign in with your new password."}
         </p>
         <Link href="/sign-in">
-          <Button>
-            {t("auth.signIn")}
-            <ArrowRight size={17} />
-          </Button>
+          <Button>{t("auth.signIn")}<ArrowRight size={17} /></Button>
         </Link>
       </motion.div>
     );
@@ -221,23 +166,11 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         <p>{subtitle}</p>
       </div>
 
-      {canUsePhoneAuth ? (
-        <>
-          <div className="auth-method-tabs" role="tablist" aria-label={locale === "ru" ? "Способ входа" : "Sign-in method"}>
-            <button type="button" role="tab" aria-selected={method === "email"} onClick={() => setMethod("email")}>
-              <Mail size={16} />
-              Email
-            </button>
-            <button type="button" role="tab" aria-selected={method === "phone"} onClick={() => setMethod("phone")}>
-              <Smartphone size={16} />
-              {locale === "ru" ? "Телефон" : "Phone"}
-            </button>
-          </div>
-          {isSignIn ? <button type="button" className="google-auth-button" onClick={startGoogle}>
-            <span>G</span>
-            {locale === "ru" ? "Войти через Google" : "Continue with Google"}
-          </button> : null}
-        </>
+      {(isSignIn || isSignUp) ? (
+        <button type="button" className="google-auth-button" onClick={startGoogle}>
+          <span>G</span>
+          {locale === "ru" ? "Продолжить через Google" : "Continue with Google"}
+        </button>
       ) : null}
 
       <form className="auth-form" onSubmit={form.handleSubmit(submit)} noValidate>
@@ -247,30 +180,16 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
           </Field>
         ) : null}
 
-        {canUsePhoneAuth && method === "phone" ? (
-          <>
-            <Field
-              label={locale === "ru" ? "Номер телефона" : "Phone number"}
-              hint={locale === "ru" ? "Для локальной разработки код: 000000" : "For local development, use code: 000000"}
-            >
-              <Input type="tel" autoComplete="tel" inputMode="tel" placeholder="+7 777 000 00 00" {...form.register("phone")} />
-            </Field>
-            {phoneCodeSent ? (
-              <Field label={locale === "ru" ? "Код из SMS" : "SMS code"} hint={devCode ? `${locale === "ru" ? "Dev-код" : "Dev code"}: ${devCode}` : undefined}>
-                <Input inputMode="numeric" maxLength={6} placeholder="000000" {...form.register("code")} />
-              </Field>
-            ) : null}
-          </>
-        ) : !isReset ? (
+        {!isReset ? (
           <Field label={t("auth.email")} error={form.formState.errors.email?.message}>
             <Input type="email" autoComplete="email" inputMode="email" {...form.register("email")} />
           </Field>
         ) : null}
 
-        {!isForgot && !(canUsePhoneAuth && method === "phone") ? (
+        {!isForgot ? (
           <Field label={t("auth.password")} hint={isSignUp || isReset ? (locale === "ru" ? "Минимум 12 символов" : "At least 12 characters") : undefined}>
             <div className="password-field">
-              <Input type={visible ? "text" : "password"} autoComplete={isSignUp ? "new-password" : "current-password"} {...form.register("password")} />
+              <Input type={visible ? "text" : "password"} autoComplete={isSignUp || isReset ? "new-password" : "current-password"} {...form.register("password")} />
               <button
                 type="button"
                 onClick={() => setVisible((value) => !value)}
@@ -282,19 +201,8 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
           </Field>
         ) : null}
 
-        {isSignIn && method === "phone" && phoneCodeSent ? (
-          <Field
-            label={locale === "ru" ? "Имя в аккаунте" : "Account name"}
-            hint={locale === "ru" ? "Нужно только при первом входе по телефону" : "Only needed the first time you use phone sign-in"}
-          >
-            <Input autoComplete="name" {...form.register("name")} />
-          </Field>
-        ) : null}
-
-        {mode === "sign-in" && method === "email" ? (
-          <Link href="/forgot-password" className="form-link">
-            {t("auth.forgotPassword")}
-          </Link>
+        {isSignIn ? (
+          <Link href="/forgot-password" className="form-link">{t("auth.forgotPassword")}</Link>
         ) : null}
 
         <AnimatePresence>
@@ -307,20 +215,14 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         </AnimatePresence>
 
         <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : isForgot ? <Mail size={18} /> : isSignIn && method === "phone" ? <MessageSquareText size={18} /> : null}
+          {form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : isForgot ? <Mail size={18} /> : null}
           {isSignUp
             ? t("auth.signUp")
             : isForgot
-              ? locale === "ru"
-                ? "Отправить ссылку"
-                : "Send reset link"
+              ? locale === "ru" ? "Отправить ссылку" : "Send reset link"
               : isReset
                 ? t("auth.resetPassword")
-                : isSignIn && method === "phone" && !phoneCodeSent
-                  ? locale === "ru"
-                    ? "Получить код"
-                    : "Get code"
-                  : t("auth.signIn")}
+                : t("auth.signIn")}
           {!form.formState.isSubmitting && !isForgot ? <ArrowRight size={18} /> : null}
         </Button>
       </form>
@@ -332,4 +234,3 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
     </motion.div>
   );
 }
-

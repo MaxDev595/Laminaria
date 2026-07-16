@@ -439,6 +439,7 @@ model Registration {
   userId          String?            @db.Uuid
   email           String             @db.VarChar(320)
   normalizedEmail String             @db.VarChar(320)
+  phone           String             @default("") @db.VarChar(40)
   displayName     String             @db.VarChar(160)
   locale          Locale             @default(EN)
   status          RegistrationStatus @default(PENDING)

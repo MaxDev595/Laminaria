@@ -228,6 +228,19 @@ export async function registerWebinarRoutes(
     },
   );
 
+  app.get<{ Params: { workspaceId: string; webinarId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars/:webinarId/registrations",
+    { schema: { tags: ["Webinars"], summary: "List webinar registrations for analytics" } },
+    async (request) => {
+      const params = paramsSchema.parse(request.params);
+      await requireWebinarPermission(request, repositories, params.webinarId, "webinar:moderate");
+      const existing = await service.find(params.webinarId);
+      assertWorkspace(existing.workspaceId, params.workspaceId);
+      const registrations = await repositories.registrations.listByWebinar(existing.id);
+      return { registrations };
+    },
+  );
+
   app.delete<{ Params: { workspaceId: string; webinarId: string } }>(
     "/v1/workspaces/:workspaceId/webinars/:webinarId",
     { schema: { tags: ["Webinars"], summary: "Soft-delete a webinar" } },

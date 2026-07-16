@@ -665,6 +665,10 @@ function registerModerationHandlers(
         };
         socket.to(webinarRoom(validated.webinarId)).emit("moderation:restriction", event);
         socket.emit("moderation:restriction", event);
+        if (validated.action === "ban") {
+          socket.to(webinarRoom(validated.webinarId)).emit("moderation:kicked", event);
+          socket.emit("moderation:kicked", event);
+        }
         return { data: event, replayed: false };
       },
     );

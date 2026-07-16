@@ -549,6 +549,14 @@ export class PrismaUnitOfWork implements UnitOfWork {
         return registration ? mapRegistration(registration) : null;
       },
 
+      listByWebinar: async (webinarId) => {
+        const registrations = await this.#client.registration.findMany({
+          where: { webinarId, deletedAt: null },
+          orderBy: { createdAt: "desc" },
+        });
+        return registrations.map(mapRegistration);
+      },
+
       confirmByTokenHash: async (tokenHash, confirmedAt) => {
         return this.#client.$transaction(async (transaction) => {
           const result = await transaction.registration.updateMany({
@@ -578,6 +586,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
             ...(input.userId === undefined ? {} : { userId: input.userId }),
             email: input.email.trim(),
             normalizedEmail: normalizeEmail(input.email),
+            phone: input.phone.trim(),
             displayName: input.name,
             locale: toDatabaseLocale(input.locale),
             status: input.status,
@@ -692,6 +701,7 @@ function mapRegistration(registration: Registration): RegistrationRecord {
     webinarId: registration.webinarId,
     userId: registration.userId,
     email: registration.email,
+    phone: registration.phone,
     name: registration.displayName,
     locale: fromDatabaseLocale(registration.locale),
     status: toDomainRegistrationStatus(registration.status),
