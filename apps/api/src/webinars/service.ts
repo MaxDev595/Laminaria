@@ -10,6 +10,7 @@ export interface CreateWebinarInput {
   slug: string;
   title: string;
   description: string;
+  coverImageUrl: string | null;
   scheduledStartAt: Date | null;
   timezone: string;
   language: Locale;

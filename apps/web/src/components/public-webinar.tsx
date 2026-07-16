@@ -107,6 +107,11 @@ export function PublicWebinar({ slug }: { slug: string }) {
             </Badge>
             <span>{webinar.visibility === "PUBLIC" ? t("webinar.public") : t("webinar.private")}</span>
           </div>
+          {webinar.coverImageUrl ? (
+            <div className="event-banner" style={{ backgroundImage: `url(${webinar.coverImageUrl})` }}>
+              <span>{webinar.status === "LIVE" ? "LIVE" : "WEBINAR"}</span>
+            </div>
+          ) : null}
           <h1>{webinar.title}</h1>
           <p className="event-description">{webinar.description}</p>
           <dl className="event-details">

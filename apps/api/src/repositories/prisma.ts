@@ -391,6 +391,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
             slug: input.slug,
             title: input.title,
             description: input.description,
+            coverImageUrl: input.coverImageUrl,
             language: toDatabaseLocale(input.language),
             timezone: input.timezone,
             status: input.status,
@@ -428,6 +429,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
 
           if (patch.title !== undefined) data.title = patch.title;
           if (patch.description !== undefined) data.description = patch.description;
+          if (patch.coverImageUrl !== undefined) data.coverImageUrl = patch.coverImageUrl;
           if (patch.scheduledStartAt !== undefined) {
             data.scheduledStartAt = patch.scheduledStartAt;
           }
@@ -666,6 +668,7 @@ function mapWebinar(webinar: WebinarWithSession): WebinarRecord {
     slug: webinar.slug,
     title: webinar.title,
     description: webinar.description ?? "",
+    coverImageUrl: webinar.coverImageUrl,
     status: webinar.status,
     scheduledStartAt: webinar.scheduledStartAt,
     timezone: webinar.timezone,

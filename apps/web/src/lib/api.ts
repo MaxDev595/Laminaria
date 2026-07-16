@@ -228,6 +228,7 @@ export interface Webinar {
   slug: string;
   title: string;
   description: string;
+  coverImageUrl: string | null;
   status: WebinarStatus;
   scheduledStartAt: string | null;
   timezone: string;
@@ -240,13 +241,14 @@ export interface Webinar {
 
 export type PublicWebinar = Pick<
   Webinar,
-  "slug" | "title" | "description" | "status" | "scheduledStartAt" | "timezone" | "language" | "visibility" | "allowGuests" | "requireEmailRegistration"
+  "slug" | "title" | "description" | "coverImageUrl" | "status" | "scheduledStartAt" | "timezone" | "language" | "visibility" | "allowGuests" | "requireEmailRegistration"
 >;
 
 export interface CreateWebinarInput {
   slug: string;
   title: string;
   description: string;
+  coverImageUrl: string | null;
   scheduledStartAt: string | null;
   timezone: string;
   language: "en" | "ru";
@@ -291,6 +293,11 @@ export interface RegistrationPayload {
 export function friendlyError(error: unknown, locale: string) {
   const code = error instanceof ApiError ? error.code : "UNKNOWN";
   const russian = locale === "ru";
+  if (error instanceof ApiError && error.status === 409) {
+    return russian
+      ? "Эта почта или ссылка уже занята. Используйте другую или войдите через уже созданную."
+      : "This email or link is already used. Use another one or sign in with the existing account.";
+  }
   if (error instanceof ApiError && code === "SERVICE_NOT_CONFIGURED") {
     return serviceNotConfiguredMessage(error.message, russian);
   }

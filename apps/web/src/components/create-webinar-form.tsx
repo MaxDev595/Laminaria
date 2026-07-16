@@ -19,6 +19,7 @@ const schema = z.object({
   title: z.string().trim().min(3).max(180),
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(100),
   description: z.string().max(10_000),
+  coverImageUrl: z.string().url().or(z.literal("")),
   scheduledStartAt: z.string(),
   language: z.enum(["en", "ru"]),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
@@ -42,6 +43,7 @@ export function CreateWebinarForm() {
       title: "",
       slug: "",
       description: "",
+      coverImageUrl: "",
       scheduledStartAt: "",
       language: locale,
       visibility: "PUBLIC",
@@ -68,6 +70,7 @@ export function CreateWebinarForm() {
     try {
       const result = await api.createWebinar(workspace.id, {
         ...values,
+        coverImageUrl: values.coverImageUrl.trim() || null,
         scheduledStartAt: values.scheduledStartAt ? new Date(values.scheduledStartAt).toISOString() : null,
         timezone: localTimezone(),
         maxAttendees: null,
@@ -130,6 +133,13 @@ export function CreateWebinarForm() {
             <Field label={t("webinar.title")} error={form.formState.errors.title?.message}><Input autoFocus {...form.register("title")} /></Field>
             <Field label={t("webinar.slug")} hint={`laminaria.app/${locale}/w/${slug || "your-webinar"}`} error={form.formState.errors.slug?.message}><Input {...form.register("slug")} /></Field>
             <Field label={t("webinar.description")}><Textarea {...form.register("description")} /></Field>
+            <Field
+              label={locale === "ru" ? "Баннер / обложка вебинара" : "Webinar banner / cover"}
+              hint={locale === "ru" ? "Вставьте ссылку на картинку 16:9 или 3:1" : "Paste an image URL, ideally 16:9 or 3:1"}
+              error={form.formState.errors.coverImageUrl?.message}
+            >
+              <Input placeholder="https://..." {...form.register("coverImageUrl")} />
+            </Field>
           </div>
         </section>
         <section className="form-section">

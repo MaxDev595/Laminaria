@@ -3851,6 +3851,124 @@ select {
   font-size: 0.82rem;
 }
 
+.moderation-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.moderation-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--ocean-950) 78%, transparent);
+  backdrop-filter: blur(16px);
+  cursor: pointer;
+}
+
+.moderation-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(34rem, 100%);
+  max-height: min(42rem, calc(100svh - 2rem));
+  overflow: auto;
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 1.35rem;
+  padding: var(--space-4);
+  color: var(--color-foreground);
+  background: color-mix(in srgb, var(--ocean-900) 92%, var(--color-surface));
+  box-shadow: var(--shadow-md), var(--highlight-inset);
+}
+
+.moderation-modal__panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.moderation-modal__panel > header > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.moderation-modal__panel > header span {
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  font-weight: 950;
+}
+
+.moderation-modal__panel h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.moderation-modal__panel p {
+  margin: 0.15rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.86rem;
+}
+
+.moderation-modal__panel > header button {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-muted-foreground);
+  background: var(--color-surface-soft);
+  cursor: pointer;
+}
+
+.moderation-modal__panel section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.moderation-modal__panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.83rem;
+}
+
+.moderation-modal__panel section > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.moderation-modal__panel section button {
+  min-height: 2.45rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-foreground);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.moderation-modal__panel section button:hover {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 38%, var(--color-border));
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
 .webinar-role-form {
   grid-column: 1 / -1;
   display: grid;
@@ -3889,6 +4007,50 @@ select {
 .webinar-role-form button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.webinar-card__banner {
+  grid-column: 1 / -1;
+  min-height: 9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.1rem;
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--highlight-inset);
+}
+
+.event-banner {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(12rem, 28vw, 19rem);
+  margin: var(--space-4) 0;
+  border: 1px solid var(--color-border);
+  border-radius: 1.5rem;
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow-md), var(--highlight-inset);
+}
+
+.event-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--ocean-950) 58%, transparent));
+}
+
+.event-banner span {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 1;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
+  border-radius: var(--radius-pill);
+  padding: 0.42rem 0.75rem;
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--ocean-950) 68%, transparent);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
 }
 
 .device-modal {
@@ -4375,6 +4537,30 @@ select {
 }
 
 @media (max-width: 46rem) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .public-event {
+    grid-template-columns: 1fr;
+  }
+
+  .public-event-nav,
+  .public-event-footer {
+    width: min(100% - 1rem, var(--container-max));
+  }
+
+  .event-story,
+  .registration-card {
+    border-radius: 1.1rem;
+    padding: var(--space-4);
+  }
+
+  .event-banner {
+    min-height: 11rem;
+    border-radius: 1rem;
+  }
+
   .countdown-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4401,6 +4587,8 @@ select {
 
   .room-topbar {
     grid-template-columns: auto 1fr auto;
+    gap: 0.35rem;
+    padding: 0 0.45rem;
   }
 
   .room-topbar .lm-logo strong {
@@ -4413,6 +4601,19 @@ select {
 
   .room-topbar__actions .lm-badge {
     display: none;
+  }
+
+  .host-media-controls {
+    gap: 0.15rem;
+    padding: 0.15rem;
+  }
+
+  .host-media-controls button {
+    width: 2.35rem;
+    height: 2.35rem;
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
   }
 
   .room-device-test {
@@ -4430,11 +4631,64 @@ select {
   }
 
   .webinar-room__body {
-    grid-template-rows: minmax(0, 1fr) 16rem;
+    grid-template-rows: minmax(0, 1fr) min(42svh, 22rem);
   }
 
   .live-stage {
     padding: .35rem;
+  }
+
+  .broadcast-toolbar {
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .viewer-counter,
+  .quality-select {
+    flex: 1 1 8rem;
+    justify-content: center;
+  }
+
+  .viewer-stage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .realtime-list {
+    padding: 0.5rem;
+  }
+
+  .realtime-message {
+    min-width: min(82vw, 18rem);
+  }
+
+  .realtime-composer {
+    padding: 0.5rem;
+  }
+
+  .restriction-list {
+    max-height: 7rem;
+    overflow: auto;
+    margin: 0 0.5rem;
+  }
+
+  .moderation-modal {
+    align-items: end;
+    padding: 0;
+  }
+
+  .moderation-modal__panel {
+    width: 100%;
+    max-height: 86svh;
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
+  .moderation-modal__panel section > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .webinar-role-form {
+    grid-template-columns: 1fr;
   }
 
   .live-stage .lk-video-conference {

@@ -188,6 +188,7 @@ function WebinarCard({ webinar, locale, index }: { webinar: Webinar; locale: str
         <strong>{webinar.scheduledStartAt ? new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", { day: "2-digit" }).format(new Date(webinar.scheduledStartAt)) : "—"}</strong>
         <span>{webinar.scheduledStartAt ? new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", { month: "short" }).format(new Date(webinar.scheduledStartAt)) : locale === "ru" ? "Дата" : "Date"}</span>
       </div>
+      {webinar.coverImageUrl ? <div className="webinar-card__banner" style={{ backgroundImage: `url(${webinar.coverImageUrl})` }} /> : null}
       <div className="webinar-card__main">
         <div>
           <Badge tone={tone as "neutral" | "primary" | "success" | "danger"}>{webinar.status}</Badge>

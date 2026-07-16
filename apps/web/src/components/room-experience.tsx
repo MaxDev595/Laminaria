@@ -23,13 +23,13 @@ import {
   MessageCircleMore,
   Mic,
   MicOff,
-  Radio,
+  MonitorUp,
   Send,
   ShieldCheck,
   Signal,
+  SlidersHorizontal,
   Sparkles,
   Tv,
-  UserRoundX,
   UsersRound,
   VolumeX,
   X,
@@ -82,7 +82,10 @@ interface Restriction {
 
 type Role = "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
 type EndedStatus = "ENDED" | "CANCELLED" | "ARCHIVED";
+type QualityPreset = "144p" | "240p" | "480p" | "720p" | "1080p";
 type Ack<T> = { ok: true; data: T; replayed: boolean } | { ok: false; error: { code: string; message: string } };
+
+const QUALITY_PRESETS = ["144p", "240p", "480p", "720p", "1080p"] as const;
 
 export function RoomExperience({ slug }: { slug: string }) {
   const locale = useLocale();
@@ -144,12 +147,14 @@ export function RoomExperience({ slug }: { slug: string }) {
       audio={publishAllowed && (session.preferences?.micOn ?? false)}
       video={publishAllowed && (session.preferences?.cameraOn ?? false)}
       options={{
+        adaptiveStream: true,
+        dynacast: true,
         videoCaptureDefaults: {
-          resolution: { width: 1280, height: 720 },
+          resolution: { width: 1920, height: 1080 },
         },
         publishDefaults: {
           simulcast: true,
-          videoEncoding: { maxBitrate: 2_500_000 },
+          videoEncoding: { maxBitrate: 4_500_000 },
         },
       }}
       data-lk-theme="default"
@@ -191,7 +196,7 @@ function RoomEnded({ slug, status }: { slug: string; status: EndedStatus }) {
 
 function BroadcastStage({ currentRole }: { currentRole: Role }) {
   const locale = useLocale();
-  const [quality, setQuality] = useState<"low" | "medium" | "high">("high");
+  const [quality, setQuality] = useState<QualityPreset>("720p");
   const participants = useParticipants();
   const tracks = useTracks(
     [
@@ -202,10 +207,7 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
   );
 
   useEffect(() => {
-    for (const trackRef of tracks) {
-      const publication = trackRef.publication as unknown as { setVideoQuality?: (quality: string) => void };
-      publication.setVideoQuality?.(quality);
-    }
+    for (const trackRef of tracks) applyViewerQuality(trackRef.publication, quality);
   }, [quality, tracks]);
 
   const viewerCount = participants.filter((participant) => isViewerRole(roleFromMetadata(participant.metadata))).length;
@@ -221,10 +223,8 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
         {!canPublishMedia(currentRole) ? (
           <label className="quality-select">
             <span>{locale === "ru" ? "Качество" : "Quality"}</span>
-            <select value={quality} onChange={(event) => setQuality(event.target.value as "low" | "medium" | "high")}>
-              <option value="low">{locale === "ru" ? "Эконом" : "Low"}</option>
-              <option value="medium">{locale === "ru" ? "Среднее" : "Medium"}</option>
-              <option value="high">{locale === "ru" ? "Максимум" : "High"}</option>
+            <select value={quality} onChange={(event) => setQuality(event.target.value as QualityPreset)}>
+              {QUALITY_PRESETS.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
         ) : null}
@@ -236,8 +236,8 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
           <h2>{locale === "ru" ? "Ожидаем ведущего" : "Waiting for the host"}</h2>
           <p>
             {locale === "ru"
-              ? "Зрительские подключения не создают плитки на сцене. Здесь появится только камера или демонстрация ведущего."
-              : "Viewer connections do not create stage tiles. Only host camera or screen share appears here."}
+              ? "Зрители не создают плитки на сцене. Здесь появится только камера, экран или спикер эфира."
+              : "Viewers do not create stage tiles. Only host camera, screen share, or speakers appear here."}
           </p>
         </div>
       ) : (
@@ -292,6 +292,7 @@ function HostMediaControls() {
   const room = useRoomContext();
   const [cameraOn, setCameraOn] = useState(room.localParticipant.isCameraEnabled);
   const [micOn, setMicOn] = useState(room.localParticipant.isMicrophoneEnabled);
+  const [screenOn, setScreenOn] = useState(room.localParticipant.isScreenShareEnabled);
 
   async function toggleCamera() {
     const next = !cameraOn;
@@ -305,6 +306,12 @@ function HostMediaControls() {
     await room.localParticipant.setMicrophoneEnabled(next);
   }
 
+  async function toggleScreen() {
+    const next = !screenOn;
+    setScreenOn(next);
+    await room.localParticipant.setScreenShareEnabled(next);
+  }
+
   return (
     <div className="host-media-controls">
       <button type="button" className={cameraOn ? "is-on" : ""} onClick={() => void toggleCamera()}>
@@ -314,6 +321,10 @@ function HostMediaControls() {
       <button type="button" className={micOn ? "is-on" : ""} onClick={() => void toggleMic()}>
         {micOn ? <Mic size={17} /> : <MicOff size={17} />}
         {locale === "ru" ? "Микрофон" : "Mic"}
+      </button>
+      <button type="button" className={screenOn ? "is-on" : ""} onClick={() => void toggleScreen()}>
+        <MonitorUp size={17} />
+        {locale === "ru" ? "Экран" : "Screen"}
       </button>
     </div>
   );
@@ -331,6 +342,7 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [viewerChatEnabled, setViewerChatEnabled] = useState(false);
+  const [moderationTarget, setModerationTarget] = useState<Actor | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const viewer = isViewerRole(session.participant.role);
   const canModerateChat = canModerate(session.participant.role);
@@ -430,7 +442,11 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
         durationMinutes,
       },
       (ack: Ack<Restriction>) => {
-        if (!ack.ok) setError(ack.error.message);
+        if (!ack.ok) {
+          setError(ack.error.message);
+          return;
+        }
+        if (action === "ban" || action === "mute") setModerationTarget(null);
       },
     );
   }
@@ -485,10 +501,7 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
                   <p>{item.body}</p>
                   {canModerateChat && !canModerate(item.author.role) ? (
                     <div className="message-moderation-actions">
-                      <button type="button" onClick={() => restrict(item.author, "mute", 10)}><VolumeX size={13} />10m</button>
-                      <button type="button" onClick={() => restrict(item.author, "mute", 60)}><VolumeX size={13} />1h</button>
-                      <button type="button" onClick={() => restrict(item.author, "ban", 60)}><Ban size={13} />1h</button>
-                      <button type="button" onClick={() => restrict(item.author, "ban", null)}><UserRoundX size={13} />∞</button>
+                      <button type="button" onClick={() => setModerationTarget(item.author)}><SlidersHorizontal size={13} />{locale === "ru" ? "Модерация" : "Moderate"}</button>
                     </div>
                   ) : null}
                   {isQuestion(item) ? (
@@ -522,13 +535,24 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
           <strong>{locale === "ru" ? "Ограничения эфира" : "Live restrictions"}</strong>
           {restrictions.map((restriction) => (
             <div key={`${restriction.targetId}:${restriction.action}`}>
-              <span>{restriction.targetName} · {restriction.action}</span>
+              <span>{restriction.targetName} · {restriction.action}{restriction.until ? ` · ${formatRestrictionUntil(restriction.until, locale)}` : ""}</span>
               {restriction.action === "mute" ? <button type="button" onClick={() => restrict({ id: restriction.targetId, displayName: restriction.targetName, role: "ATTENDEE" }, "unmute")}>unmute</button> : null}
               {restriction.action === "ban" ? <button type="button" onClick={() => restrict({ id: restriction.targetId, displayName: restriction.targetName, role: "ATTENDEE" }, "unban")}>unban</button> : null}
             </div>
           ))}
         </div>
       ) : null}
+
+      <AnimatePresence>
+        {moderationTarget ? (
+          <ModerationDialog
+            actor={moderationTarget}
+            locale={locale}
+            onClose={() => setModerationTarget(null)}
+            onRestrict={(action, duration) => restrict(moderationTarget, action, duration)}
+          />
+        ) : null}
+      </AnimatePresence>
 
       {error ? <div className="realtime-error" role="alert"><AlertTriangle size={15} />{error}</div> : null}
 
@@ -548,6 +572,75 @@ function RealtimePanel({ session, onEnded }: { session: StoredRoom; onEnded: (st
       ) : null}
       <div className="ai-room-note"><Sparkles size={14} /><span>{locale === "ru" ? "AI-ответы всегда будут явно помечены" : "AI answers will always be clearly labeled"}</span></div>
     </aside>
+  );
+}
+
+function ModerationDialog({
+  actor,
+  locale,
+  onClose,
+  onRestrict,
+}: {
+  actor: Actor;
+  locale: string;
+  onClose: () => void;
+  onRestrict: (action: "mute" | "ban", durationMinutes: number | null) => void;
+}) {
+  const muteDurations = [
+    { label: "10m", value: 10 },
+    { label: "30m", value: 30 },
+    { label: "1h", value: 60 },
+    { label: "2h", value: 120 },
+    { label: "3h", value: 180 },
+    { label: locale === "ru" ? "Навсегда" : "Forever", value: null },
+  ];
+  const banDurations = [
+    { label: "1h", value: 60 },
+    { label: "3h", value: 180 },
+    { label: "24h", value: 1_440 },
+    { label: "3d", value: 4_320 },
+    { label: "7d", value: 10_080 },
+    { label: "14d", value: 20_160 },
+    { label: "30d", value: 43_200 },
+    { label: locale === "ru" ? "Навсегда" : "Forever", value: null },
+  ];
+
+  return (
+    <motion.div className="moderation-modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <button className="moderation-modal__backdrop" type="button" onClick={onClose} aria-label="Close" />
+      <motion.div className="moderation-modal__panel" initial={{ y: 20, scale: 0.98 }} animate={{ y: 0, scale: 1 }} exit={{ y: 12, scale: 0.98 }}>
+        <header>
+          <div>
+            <span>{actor.displayName.slice(0, 1).toUpperCase()}</span>
+            <div>
+              <h2>{locale === "ru" ? "Модерация зрителя" : "Viewer moderation"}</h2>
+              <p>{actor.displayName}</p>
+            </div>
+          </div>
+          <button type="button" onClick={onClose}><X size={17} /></button>
+        </header>
+        <section>
+          <h3><VolumeX size={16} />{locale === "ru" ? "Мьют: зритель не сможет писать в чат" : "Mute: viewer cannot write in chat"}</h3>
+          <div>
+            {muteDurations.map((duration) => (
+              <button key={`mute-${duration.label}`} type="button" onClick={() => onRestrict("mute", duration.value)}>
+                {duration.label}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section>
+          <h3><Ban size={16} />{locale === "ru" ? "Бан: зритель не сможет заходить в эфир" : "Ban: viewer cannot enter the webinar"}</h3>
+          <div>
+            {banDurations.map((duration) => (
+              <button key={`ban-${duration.label}`} type="button" onClick={() => onRestrict("ban", duration.value)}>
+                {duration.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -596,9 +689,19 @@ function restrictionMessage(restriction: Restriction, locale: string): string {
 }
 
 function upsertRestriction(current: Restriction[], next: Restriction): Restriction[] {
-  const without = current.filter((item) => !(item.targetId === next.targetId && item.action.replace("un", "") === next.action.replace("un", "")));
+  const normalizedAction = next.action.replace("un", "");
+  const without = current.filter((item) => !(item.targetId === next.targetId && item.action.replace("un", "") === normalizedAction));
   if (!next.active) return without;
   return [...without, next];
+}
+
+function formatRestrictionUntil(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function isQuestion(item: ChatMessage | Question): item is Question {
@@ -615,4 +718,27 @@ function isViewerRole(role: string): boolean {
 
 function canModerate(role: string): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
+}
+
+function applyViewerQuality(publication: unknown, quality: QualityPreset): void {
+  const preferred = qualityToLiveKitPreference(quality);
+  const target = publication as {
+    setVideoQuality?: (quality: string) => void;
+    setSubscribedQuality?: (quality: string) => void;
+    setVideoDimensions?: (dimensions: { width: number; height: number }) => void;
+  };
+  target.setVideoDimensions?.(qualityToDimensions(quality));
+  target.setSubscribedQuality?.(preferred);
+  target.setVideoQuality?.(preferred.toLowerCase());
+}
+
+function qualityToLiveKitPreference(quality: QualityPreset): "LOW" | "MEDIUM" | "HIGH" {
+  if (quality === "144p" || quality === "240p") return "LOW";
+  if (quality === "480p") return "MEDIUM";
+  return "HIGH";
+}
+
+function qualityToDimensions(quality: QualityPreset): { width: number; height: number } {
+  const height = Number.parseInt(quality, 10);
+  return { width: Math.round((height * 16) / 9), height };
 }

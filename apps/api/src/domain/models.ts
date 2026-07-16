@@ -70,6 +70,7 @@ export interface WebinarRecord {
   slug: string;
   title: string;
   description: string;
+  coverImageUrl: string | null;
   status: WebinarStatus;
   scheduledStartAt: Date | null;
   timezone: string;

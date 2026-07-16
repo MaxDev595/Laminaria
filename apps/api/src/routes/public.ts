@@ -57,6 +57,7 @@ function publicProjection(webinar: Awaited<ReturnType<PublicRegistrationService[
     slug: webinar.slug,
     title: webinar.title,
     description: webinar.description,
+    coverImageUrl: webinar.coverImageUrl,
     status: webinar.status,
     scheduledStartAt: webinar.scheduledStartAt,
     timezone: webinar.timezone,

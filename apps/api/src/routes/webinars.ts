@@ -18,6 +18,7 @@ const nullableDate = z.union([z.iso.datetime({ offset: true }).transform((value)
 const fields = {
   title: z.string().trim().min(1).max(180),
   description: z.string().trim().max(10_000).default(""),
+  coverImageUrl: z.url().nullable().default(null),
   scheduledStartAt: nullableDate.default(null),
   timezone: z.string().min(1).max(100).default("UTC"),
   language: z.enum(["en", "ru"]).default("en"),
@@ -34,6 +35,7 @@ const updateSchema = z.object({
   version: z.number().int().nonnegative(),
   title: fields.title.optional(),
   description: fields.description.optional(),
+  coverImageUrl: fields.coverImageUrl.optional(),
   scheduledStartAt: nullableDate.optional(),
   timezone: fields.timezone.optional(),
   language: fields.language.optional(),
@@ -112,6 +114,7 @@ export async function registerWebinarRoutes(
         version: body.version,
         ...(body.title !== undefined ? { title: body.title } : {}),
         ...(body.description !== undefined ? { description: body.description } : {}),
+        ...(body.coverImageUrl !== undefined ? { coverImageUrl: body.coverImageUrl } : {}),
         ...(body.scheduledStartAt !== undefined
           ? { scheduledStartAt: body.scheduledStartAt }
           : {}),
