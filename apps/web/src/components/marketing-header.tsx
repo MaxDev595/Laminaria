@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button, Logo } from "@laminaria/ui";
@@ -11,13 +11,15 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function MarketingHeader() {
   const t = useTranslations();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const nav = [
-    ["#product", t("shell.product")],
-    ["#workflow", t("shell.workflow")],
-    ["#global", t("shell.global")],
-    ["#security", t("shell.security")],
+    [`/${locale}#product`, t("shell.product")],
+    [`/${locale}#workflow`, t("shell.workflow")],
+    [`/${locale}#global`, t("shell.global")],
+    [`/${locale}#security`, t("shell.security")],
   ] as const;
+  const docsLabel = locale === "ru" ? "Документация" : "Docs";
 
   return (
     <header className="marketing-header">
@@ -31,6 +33,7 @@ export function MarketingHeader() {
         <div className="header-actions">
           <LanguageSwitcher />
           <ThemeToggle />
+          <Link href="/docs" className="header-signin">{docsLabel}</Link>
           <Link href="/sign-in" className="header-signin">{t("auth.signIn")}</Link>
           <Link href="/sign-up" className="header-cta"><Button size="sm">{t("auth.signUp")}</Button></Link>
           <button
@@ -54,6 +57,7 @@ export function MarketingHeader() {
             exit={{ opacity: 0, height: 0 }}
           >
             {nav.map(([href, label]) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a>)}
+            <Link href="/docs" onClick={() => setOpen(false)}>{docsLabel}</Link>
             <Link href="/sign-in" onClick={() => setOpen(false)}>{t("auth.signIn")}</Link>
             <Link href="/sign-up" onClick={() => setOpen(false)}>{t("auth.signUp")}</Link>
           </motion.nav>

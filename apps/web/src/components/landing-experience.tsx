@@ -168,7 +168,7 @@ export function LandingExperience() {
       <footer className="marketing-footer section-wrap">
         <Logo />
         <p>© 2026 Laminaria. {locale === "ru" ? "Комната для идей, которым нужен масштаб." : "Room for ideas that need to travel."}</p>
-        <div><Link href="/sign-in">{t("auth.signIn")}</Link><a href="#security">{t("shell.security")}</a></div>
+        <div><Link href="/docs">{locale === "ru" ? "Документация" : "Docs"}</Link><Link href="/sign-in">{t("auth.signIn")}</Link><a href="#security">{t("shell.security")}</a></div>
       </footer>
     </div>
   );
