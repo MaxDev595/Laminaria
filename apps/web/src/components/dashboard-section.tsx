@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  BarChart3,
   CheckCircle2,
   DatabaseZap,
   Mail,
