@@ -141,6 +141,10 @@ export const api = {
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/transitions`,
       { method: "POST", body: JSON.stringify({ status, version }) },
     ),
+  endWebinar: (webinarId: string) =>
+    apiFetch<{ webinar: Webinar }>(`/v1/webinars/${encodeURIComponent(webinarId)}/end`, {
+      method: "POST",
+    }),
   hostPrejoin: (workspaceId: string, webinarId: string) =>
     apiFetch<PrejoinPayload>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/prejoin`,

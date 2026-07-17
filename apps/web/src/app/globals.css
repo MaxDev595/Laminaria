@@ -3850,6 +3850,7 @@ select {
 }
 
 .room-leave,
+.room-end,
 .room-device-test {
   min-height: 2.5rem;
   display: flex;
@@ -3863,6 +3864,29 @@ select {
   font-size: var(--text-xs);
   cursor: pointer;
   transition: color var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+}
+
+.room-end {
+  color: white;
+  border-color: color-mix(in srgb, var(--color-danger) 70%, transparent);
+  background: var(--color-danger);
+}
+
+.room-end:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.room-end:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.room-end-error {
+  max-width: 14rem;
+  color: var(--color-danger);
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .room-device-test:hover {
@@ -5121,6 +5145,17 @@ select {
     padding: 0;
     justify-content: center;
     font-size: 0;
+  }
+
+  .room-end {
+    width: 2.5rem;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .room-end-error {
+    display: none;
   }
 
   .webinar-room__body {

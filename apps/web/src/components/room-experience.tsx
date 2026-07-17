@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Signal,
   SlidersHorizontal,
+  Square,
   Tv,
   UsersRound,
   VolumeX,
@@ -157,7 +158,7 @@ export function RoomExperience({ slug }: { slug: string }) {
       data-lk-theme="default"
       className="webinar-room"
     >
-      <RoomTopbar slug={slug} role={session.participant.role} preferences={session.preferences} />
+      <RoomTopbar slug={slug} session={session} />
       <div className="webinar-room__body">
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
@@ -303,11 +304,15 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
   );
 }
 
-function RoomTopbar({ slug, role, preferences }: { slug: string; role: Role; preferences?: StoredRoom["preferences"] }) {
+function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
   const state = useConnectionState();
   const room = useRoomContext();
   const router = useRouter();
   const t = useTranslations();
+  const locale = useLocale();
+  const [ending, setEnding] = useState(false);
+  const [endError, setEndError] = useState("");
+  const role = session.participant.role;
   const connected = state === ConnectionState.Connected;
   const reconnecting = state === ConnectionState.Reconnecting;
 
@@ -315,6 +320,27 @@ function RoomTopbar({ slug, role, preferences }: { slug: string; role: Role; pre
     sessionStorage.removeItem(`laminaria-room:${slug}`);
     await room.disconnect();
     router.replace("/dashboard");
+  }
+
+  async function endWebinar() {
+    if (ending || !canEndWebinar(role)) return;
+    const confirmed = window.confirm(
+      locale === "ru"
+        ? "Завершить эфир для всех участников?"
+        : "End the webinar for every participant?",
+    );
+    if (!confirmed) return;
+    setEnding(true);
+    setEndError("");
+    try {
+      await api.endWebinar(session.webinarId);
+      sessionStorage.removeItem(`laminaria-room:${slug}`);
+      await room.disconnect();
+      router.replace("/dashboard");
+    } catch (reason) {
+      setEndError(reason instanceof Error ? reason.message : locale === "ru" ? "Не удалось завершить эфир." : "Could not end the webinar.");
+      setEnding(false);
+    }
   }
 
   return (
@@ -326,11 +352,24 @@ function RoomTopbar({ slug, role, preferences }: { slug: string; role: Role; pre
       </div>
       <div className="room-topbar__actions">
         <RoleBadge role={role} />
-        {canPublishMedia(role) ? <HostMediaControls preferences={preferences} /> : null}
+        {canPublishMedia(role) ? <HostMediaControls preferences={session.preferences} /> : null}
+        {canEndWebinar(role) ? (
+          <button
+            type="button"
+            className="room-end"
+            onClick={() => void endWebinar()}
+            disabled={ending}
+            title={locale === "ru" ? "Завершить эфир для всех" : "End webinar for everyone"}
+          >
+            {ending ? <LoaderCircle className="spin" size={17} /> : <Square size={16} />}
+            {locale === "ru" ? "Завершить эфир" : "End webinar"}
+          </button>
+        ) : null}
         <button type="button" className="room-leave" onClick={() => void leaveRoom()}>
           <X size={17} />
           {t("room.leave")}
         </button>
+        {endError ? <span className="room-end-error" role="alert">{endError}</span> : null}
       </div>
     </header>
   );
@@ -824,6 +863,10 @@ function isQuestion(item: ChatMessage | Question): item is Question {
 
 function canPublishMedia(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "SPEAKER";
+}
+
+function canEndWebinar(role: Role): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST";
 }
 
 function isViewerRole(role: string): boolean {

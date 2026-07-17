@@ -211,6 +211,30 @@ export async function registerWebinarRoutes(
     },
   );
 
+  app.post<{ Params: { webinarId: string } }>(
+    "/v1/webinars/:webinarId/end",
+    { schema: { tags: ["Webinars"], summary: "End a live webinar from the studio" } },
+    async (request) => {
+      const access = await requireWebinarPermission(
+        request,
+        repositories,
+        request.params.webinarId,
+        "webinar:transition",
+      );
+      if (access.webinar.status !== "LIVE") {
+        throw new AppError(409, "CONFLICT", "The webinar is not live");
+      }
+      await roomAccess.livekit.closeRoom(access.webinar.livekitRoomName);
+      const webinar = await service.transition(
+        access.webinar.id,
+        "ENDED",
+        access.webinar.version,
+      );
+      roomAccess.realtime?.webinarEnded({ webinarId: webinar.id, status: "ENDED" });
+      return { webinar };
+    },
+  );
+
   app.post<{ Params: { workspaceId: string; webinarId: string } }>(
     "/v1/workspaces/:workspaceId/webinars/:webinarId/hosts",
     { schema: { tags: ["Webinars"], summary: "Assign a webinar host role by email" } },

@@ -7,11 +7,13 @@ $files = @(
   "apps/api/src/realtime/register-realtime.ts",
   "apps/api/src/realtime/types.ts",
   "apps/api/src/realtime/register-realtime.test.ts",
+  "apps/api/src/routes/webinars.ts",
   "apps/web/src/app/globals.css",
   "apps/web/src/components/dashboard-overview.tsx",
   "apps/web/src/components/dashboard-section.tsx",
   "apps/web/src/components/dashboard-shell.tsx",
   "apps/web/src/components/room-experience.tsx",
+  "apps/web/src/lib/api.ts",
   "deploy/publish-mvp-fix.ps1"
 )
 
