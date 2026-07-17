@@ -55,6 +55,7 @@ import type {
   RealtimeLogger,
   RealtimePrincipal,
   RealtimeRepositories,
+  RealtimeRole,
   RealtimeServer,
   RealtimeSocket,
   WebinarAccessDecision,
@@ -253,6 +254,10 @@ function isViewerRole(role: string): boolean {
   return role === "ATTENDEE" || role === "GUEST";
 }
 
+function isProtectedModerationRole(role: RealtimeRole | undefined): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
+}
+
 function restrictionFor(webinarId: string, targetId: string): RestrictionState | null {
   return moderationRestrictionsByWebinar.get(webinarId)?.get(targetId) ?? null;
 }
@@ -435,6 +440,7 @@ function registerJoinHandlers(
         assertNotBanned(webinarId, requirePrincipal(socket));
         await socket.join(webinarRoom(webinarId));
         socket.data.joinedWebinarIds?.add(webinarId);
+        socket.data.webinarRoles?.set(webinarId, access.role);
         const participant: WebinarJoined = {
           webinarId,
           participantId: access.participantId,
@@ -463,6 +469,7 @@ function registerJoinHandlers(
       async ({ webinarId }) => {
         await socket.leave(webinarRoom(webinarId));
         socket.data.joinedWebinarIds?.delete(webinarId);
+        socket.data.webinarRoles?.delete(webinarId);
         return { data: { webinarId }, replayed: false };
       },
     );
@@ -621,6 +628,16 @@ function registerModerationHandlers(
       acknowledge,
       async (validated) => {
         await authorize(socket, dependencies, validated.webinarId, "chat.moderate");
+        const roomSockets = await socket.nsp.in(webinarRoom(validated.webinarId)).fetchSockets();
+        const targetSockets = roomSockets.filter(
+          (candidate) => candidate.data.principal?.id === validated.targetId,
+        );
+        const targetRole = targetSockets
+          .map((candidate) => candidate.data.webinarRoles?.get(validated.webinarId))
+          .find((role) => role !== undefined);
+        if (isProtectedModerationRole(targetRole)) {
+          throw new RealtimeDomainError("FORBIDDEN", "Privileged participants cannot be restricted");
+        }
         const stateByTarget =
           moderationRestrictionsByWebinar.get(validated.webinarId) ?? new Map<string, RestrictionState>();
         moderationRestrictionsByWebinar.set(validated.webinarId, stateByTarget);
@@ -663,11 +680,12 @@ function registerModerationHandlers(
                 : null,
           ...(validated.reason ? { reason: validated.reason } : {}),
         };
-        socket.to(webinarRoom(validated.webinarId)).emit("moderation:restriction", event);
-        socket.emit("moderation:restriction", event);
+        socket.nsp.to(webinarRoom(validated.webinarId)).emit("moderation:restriction", event);
         if (validated.action === "ban") {
-          socket.to(webinarRoom(validated.webinarId)).emit("moderation:kicked", event);
-          socket.emit("moderation:kicked", event);
+          for (const targetSocket of targetSockets) {
+            targetSocket.emit("moderation:kicked", event);
+            targetSocket.disconnect(true);
+          }
         }
         return { data: event, replayed: false };
       },
@@ -1026,6 +1044,7 @@ export function registerRealtime(
         }
         socket.data.principal = principal;
         socket.data.joinedWebinarIds = new Set<string>();
+        socket.data.webinarRoles = new Map<string, RealtimeRole>();
         next();
       } catch (error) {
         dependencies.logger.error("Realtime authentication failed", {
@@ -1043,6 +1062,7 @@ export function registerRealtime(
       return;
     }
     socket.data.joinedWebinarIds ??= new Set<string>();
+    socket.data.webinarRoles ??= new Map<string, RealtimeRole>();
 
     registerJoinHandlers(socket, dependencies);
     registerChatHandlers(socket, dependencies);

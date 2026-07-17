@@ -160,6 +160,7 @@ export function RoomExperience({ slug }: { slug: string }) {
       <RoomTopbar slug={slug} role={session.participant.role} preferences={session.preferences} />
       <div className="webinar-room__body">
         <section className="live-stage">
+          <RoomConnectionGuard session={session} />
           <BroadcastStage currentRole={session.participant.role} />
           <RoomAudioRenderer />
           <ConnectionStateToast />
@@ -167,6 +168,57 @@ export function RoomExperience({ slug }: { slug: string }) {
         <RealtimePanel slug={slug} session={session} onEnded={handleEnded} />
       </div>
     </LiveKitRoom>
+  );
+}
+
+function RoomConnectionGuard({ session }: { session: StoredRoom }) {
+  const locale = useLocale();
+  const room = useRoomContext();
+  const state = useConnectionState();
+  const [timedOut, setTimedOut] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const connected = state === ConnectionState.Connected;
+
+  useEffect(() => {
+    if (connected) {
+      setTimedOut(false);
+      return;
+    }
+    const timeout = window.setTimeout(() => setTimedOut(true), 12_000);
+    return () => window.clearTimeout(timeout);
+  }, [connected, state]);
+
+  async function retry() {
+    if (retrying) return;
+    setRetrying(true);
+    setTimedOut(false);
+    try {
+      await room.disconnect();
+      await room.connect(session.media.url, session.media.token);
+    } catch {
+      setTimedOut(true);
+    } finally {
+      setRetrying(false);
+    }
+  }
+
+  if (!timedOut || connected) return null;
+  return (
+    <div className="room-connection-alert" role="alert">
+      <AlertTriangle size={18} />
+      <div>
+        <strong>{locale === "ru" ? "LiveKit не отвечает" : "LiveKit is not responding"}</strong>
+        <span>
+          {locale === "ru"
+            ? "Браузер не смог подключиться к медиасерверу. Проверьте сеть или VPN и повторите."
+            : "The browser could not reach the media server. Check your network or VPN and retry."}
+        </span>
+      </div>
+      <button type="button" onClick={() => void retry()} disabled={retrying}>
+        {retrying ? <LoaderCircle className="spin" size={16} /> : null}
+        {locale === "ru" ? "Повторить" : "Retry"}
+      </button>
+    </div>
   );
 }
 

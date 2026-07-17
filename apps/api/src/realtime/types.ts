@@ -382,6 +382,7 @@ export interface InterServerEvents {
 export interface RealtimeSocketData {
   principal?: RealtimePrincipal;
   joinedWebinarIds?: Set<string>;
+  webinarRoles?: Map<string, RealtimeRole>;
 }
 
 export type RealtimeServer = Server<

@@ -88,7 +88,7 @@ export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" | "
           {!filter ? <Link href="/dashboard/upcoming">{locale === "ru" ? "Все предстоящие" : "View all"}<ArrowUpRight size={16} /></Link> : null}
         </div>
         {visible.length === 0 ? (
-          <EmptyWebinars locale={locale} t={t} />
+          <EmptyWebinars locale={locale} t={t} canCreate={canCreateWebinars} />
         ) : (
           <div className="webinar-list">
             {visible.map((webinar, index) => <WebinarCard key={webinar.id} webinar={webinar} locale={locale} index={index} />)}
@@ -271,13 +271,13 @@ function canTransitionWebinar(role: WebinarRole | null): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST";
 }
 
-function EmptyWebinars({ locale, t }: { locale: string; t: ReturnType<typeof useTranslations> }) {
+function EmptyWebinars({ locale, t, canCreate }: { locale: string; t: ReturnType<typeof useTranslations>; canCreate: boolean }) {
   return (
     <div className="empty-webinars">
       <div className="empty-illustration" aria-hidden="true"><span /><span /><span /></div>
       <h3>{t("dashboard.noUpcoming")}</h3>
       <p>{t("dashboard.noUpcomingBody")}</p>
-      <Link href="/dashboard/webinars/new"><Button><CalendarPlus size={17} />{t("nav.newWebinar")}</Button></Link>
+      {canCreate ? <Link href="/dashboard/webinars/new"><Button><CalendarPlus size={17} />{t("nav.newWebinar")}</Button></Link> : null}
       <small>{locale === "ru" ? "Здесь не используются демонстрационные вебинары: появятся только ваши реальные данные." : "No demo webinars are inserted here: only your real data will appear."}</small>
     </div>
   );

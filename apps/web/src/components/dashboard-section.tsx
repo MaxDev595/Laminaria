@@ -166,7 +166,9 @@ function ServiceStatusGrid() {
 
 function ServiceCard({ service, loading }: { service: ServiceStatus; loading: boolean }) {
   const t = useTranslations();
-  const Icon = serviceIcon[service.key] ?? DatabaseZap;
+  const Icon = service.key in serviceIcon
+    ? serviceIcon[service.key as keyof typeof serviceIcon]
+    : DatabaseZap;
   const configured = !loading && service.configured;
 
   return (

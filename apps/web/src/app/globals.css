@@ -1771,6 +1771,7 @@ select {
 }
 
 .workspace-chip {
+  position: relative;
   min-height: 3.75rem;
   padding: 0 var(--space-3);
   display: grid;
@@ -1781,6 +1782,21 @@ select {
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
   box-shadow: var(--highlight-inset);
+  cursor: pointer;
+}
+
+.workspace-chip select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.workspace-chip:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 .workspace-chip>span,
@@ -3875,6 +3891,52 @@ select {
   padding: var(--space-3);
 }
 
+.room-connection-alert {
+  position: absolute;
+  z-index: 12;
+  top: var(--space-4);
+  left: 50%;
+  width: min(42rem, calc(100% - 2rem));
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  transform: translateX(-50%);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+  border-radius: var(--radius-md);
+  color: var(--color-foreground);
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-danger));
+  box-shadow: var(--shadow-lg);
+}
+
+.room-connection-alert > svg {
+  color: var(--color-danger);
+}
+
+.room-connection-alert div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.room-connection-alert span {
+  color: var(--color-subtle-foreground);
+  font-size: var(--text-xs);
+}
+
+.room-connection-alert button {
+  min-height: 2.25rem;
+  padding: 0 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-foreground);
+  background: var(--color-surface-soft);
+  font-weight: 700;
+}
+
 .live-stage .lk-video-conference {
   height: 100%;
   border: 1px solid var(--color-border);
@@ -5018,6 +5080,16 @@ select {
 
   .room-connection span {
     display: none;
+  }
+
+  .room-connection-alert {
+    top: 0.65rem;
+    grid-template-columns: auto 1fr;
+  }
+
+  .room-connection-alert button {
+    grid-column: 1 / -1;
+    justify-content: center;
   }
 
   .room-topbar__actions .lm-badge {
