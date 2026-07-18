@@ -12,6 +12,7 @@ import type {
   QuestionAskPayload,
   QuestionModeratePayload,
   QuestionUpvotePayload,
+  StageLayoutPayload,
   WebinarJoinPayload,
   WebinarLeavePayload,
 } from "./schemas.js";
@@ -180,6 +181,7 @@ export interface RealtimeAuthResolver {
 
 export type WebinarAction =
   | "join"
+  | "stage.manage"
   | "chat.send"
   | "chat.moderate"
   | "question.ask"
@@ -284,6 +286,12 @@ export interface ChatStateChanged {
   enabled: boolean;
 }
 
+export interface StageLayoutChanged {
+  webinarId: string;
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  sizePercent: number;
+}
+
 export interface ModerationRestrictionChanged {
   webinarId: string;
   targetId: string;
@@ -311,6 +319,10 @@ export interface ClientToServerEvents {
   "chat:set_state": (
     payload: ChatStatePayload,
     acknowledge?: RealtimeAcknowledge<ChatStateChanged>,
+  ) => void;
+  "stage:set_layout": (
+    payload: StageLayoutPayload,
+    acknowledge?: RealtimeAcknowledge<StageLayoutChanged>,
   ) => void;
   "moderation:restrict": (
     payload: ModerationRestrictPayload,
@@ -344,6 +356,7 @@ export interface ServerToClientEvents {
   "chat:created": (message: ChatMessage) => void;
   "chat:deleted": (message: ChatDeleted) => void;
   "chat:state": (state: ChatStateChanged) => void;
+  "stage:layout": (state: StageLayoutChanged) => void;
   "moderation:restriction": (state: ModerationRestrictionChanged) => void;
   "moderation:kicked": (state: ModerationRestrictionChanged) => void;
   "question:created": (question: Question) => void;

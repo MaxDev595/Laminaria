@@ -50,6 +50,14 @@ export const chatStateSchema = z
   })
   .strict();
 
+export const stageLayoutSchema = z
+  .object({
+    ...webinarMutation,
+    position: z.enum(["top-left", "top-right", "bottom-left", "bottom-right"]),
+    sizePercent: z.number().int().min(15).max(50),
+  })
+  .strict();
+
 export const moderationRestrictSchema = z
   .object({
     ...webinarMutation,
@@ -132,6 +140,7 @@ export type WebinarLeavePayload = z.infer<typeof webinarLeaveSchema>;
 export type ChatSendPayload = z.infer<typeof chatSendSchema>;
 export type ChatDeletePayload = z.infer<typeof chatDeleteSchema>;
 export type ChatStatePayload = z.infer<typeof chatStateSchema>;
+export type StageLayoutPayload = z.infer<typeof stageLayoutSchema>;
 export type ModerationRestrictPayload = z.infer<typeof moderationRestrictSchema>;
 export type QuestionAskPayload = z.infer<typeof questionAskSchema>;
 export type QuestionUpvotePayload = z.infer<typeof questionUpvoteSchema>;

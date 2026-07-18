@@ -21,6 +21,7 @@ import {
   questionAskSchema,
   questionModerateSchema,
   questionUpvoteSchema,
+  stageLayoutSchema,
   webinarJoinSchema,
   webinarLeaveSchema,
   type ChatDeletePayload,
@@ -34,6 +35,7 @@ import {
   type QuestionAskPayload,
   type QuestionModeratePayload,
   type QuestionUpvotePayload,
+  type StageLayoutPayload,
   type WebinarJoinPayload,
   type WebinarLeavePayload,
 } from "./schemas.js";
@@ -58,6 +60,7 @@ import type {
   RealtimeRole,
   RealtimeServer,
   RealtimeSocket,
+  StageLayoutChanged,
   WebinarAccessDecision,
   WebinarAccessResolver,
   WebinarAction,
@@ -68,6 +71,7 @@ import type {
 const DEFAULT_IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1_000;
 const noOpLogger: RealtimeLogger = { error: () => undefined };
 const viewerChatEnabledByWebinar = new Map<string, boolean>();
+const stageLayoutByWebinar = new Map<string, StageLayoutChanged>();
 const moderationRestrictionsByWebinar = new Map<string, Map<string, RestrictionState>>();
 
 export interface RestrictionState {
@@ -463,6 +467,14 @@ function registerJoinHandlers(socket: RealtimeSocket, dependencies: ResolvedDepe
           webinarId,
           enabled: viewerChatEnabledByWebinar.get(webinarId) ?? false,
         });
+        socket.emit(
+          "stage:layout",
+          stageLayoutByWebinar.get(webinarId) ?? {
+            webinarId,
+            position: "bottom-right",
+            sizePercent: 24,
+          },
+        );
         return { data: participant, replayed: false };
       },
     );
@@ -481,6 +493,31 @@ function registerJoinHandlers(socket: RealtimeSocket, dependencies: ResolvedDepe
         socket.data.joinedWebinarIds?.delete(webinarId);
         socket.data.webinarRoles?.delete(webinarId);
         return { data: { webinarId }, replayed: false };
+      },
+    );
+  });
+}
+
+function registerStageHandlers(socket: RealtimeSocket, dependencies: ResolvedDependencies): void {
+  socket.on("stage:set_layout", (payload, acknowledge) => {
+    void handleValidated<StageLayoutPayload, StageLayoutChanged>(
+      socket,
+      dependencies,
+      "stage:set_layout",
+      stageLayoutSchema,
+      payload,
+      acknowledge,
+      async (validated) => {
+        await authorize(socket, dependencies, validated.webinarId, "stage.manage");
+        const layout: StageLayoutChanged = {
+          webinarId: validated.webinarId,
+          position: validated.position,
+          sizePercent: validated.sizePercent,
+        };
+        stageLayoutByWebinar.set(validated.webinarId, layout);
+        socket.to(webinarRoom(validated.webinarId)).emit("stage:layout", layout);
+        socket.emit("stage:layout", layout);
+        return { data: layout, replayed: false };
       },
     );
   });
@@ -985,6 +1022,7 @@ export function registerRealtime(
     socket.data.webinarRoles ??= new Map<string, RealtimeRole>();
 
     registerJoinHandlers(socket, dependencies);
+    registerStageHandlers(socket, dependencies);
     registerChatHandlers(socket, dependencies);
     registerModerationHandlers(socket, dependencies);
     registerQuestionHandlers(socket, dependencies);

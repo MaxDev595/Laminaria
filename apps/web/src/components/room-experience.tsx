@@ -36,7 +36,15 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { io, type Socket } from "socket.io-client";
 
 import { Link, useRouter } from "@/i18n/navigation";
@@ -85,15 +93,27 @@ interface Restriction {
 type Role = "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
 type EndedStatus = "ENDED" | "CANCELLED" | "ARCHIVED";
 type QualityPreset = "144p" | "240p" | "480p" | "720p" | "1080p";
+type StageOverlayPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
+interface StageLayout {
+  position: StageOverlayPosition;
+  sizePercent: number;
+}
+
+interface StageLayoutEvent extends StageLayout {
+  webinarId: string;
+}
 type Ack<T> =
   | { ok: true; data: T; replayed: boolean }
   | { ok: false; error: { code: string; message: string } };
 
 const QUALITY_PRESETS = ["144p", "240p", "480p", "720p", "1080p"] as const;
+const DEFAULT_STAGE_LAYOUT: StageLayout = { position: "bottom-right", sizePercent: 24 };
 
 export function RoomExperience({ slug }: { slug: string }) {
   const locale = useLocale();
   const [endedStatus, setEndedStatus] = useState<EndedStatus | null>(null);
+  const [stageLayout, setStageLayout] = useState<StageLayout>(DEFAULT_STAGE_LAYOUT);
   const subscribeStorage = useCallback(() => () => undefined, []);
   const rawSession = useSyncExternalStore(
     subscribeStorage,
@@ -169,11 +189,17 @@ export function RoomExperience({ slug }: { slug: string }) {
       <div className="webinar-room__body">
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
-          <BroadcastStage currentRole={session.participant.role} />
+          <BroadcastStage currentRole={session.participant.role} layout={stageLayout} />
           <RoomAudioRenderer />
           <ConnectionStateToast />
         </section>
-        <RealtimePanel slug={slug} session={session} onEnded={handleEnded} />
+        <RealtimePanel
+          slug={slug}
+          session={session}
+          onEnded={handleEnded}
+          stageLayout={stageLayout}
+          onStageLayoutChange={setStageLayout}
+        />
       </div>
     </LiveKitRoom>
   );
@@ -270,7 +296,7 @@ function RoomEnded({ slug, status }: { slug: string; status: EndedStatus }) {
   );
 }
 
-function BroadcastStage({ currentRole }: { currentRole: Role }) {
+function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: StageLayout }) {
   const locale = useLocale();
   const [quality, setQuality] = useState<QualityPreset>("720p");
   const participants = useParticipants();
@@ -331,7 +357,8 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
         </div>
       ) : (
         <div
-          className={`viewer-stage-grid ${tracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare) ? "has-screen-share" : ""}`}
+          className={`viewer-stage-grid ${tracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare) ? `has-screen-share overlay-${layout.position}` : ""}`}
+          style={{ "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%` } as CSSProperties}
         >
           {orderedTracks.map((trackRef) => (
             <ParticipantTile
@@ -606,10 +633,14 @@ function RealtimePanel({
   slug,
   session,
   onEnded,
+  stageLayout,
+  onStageLayoutChange,
 }: {
   slug: string;
   session: StoredRoom;
   onEnded: (status: EndedStatus) => void;
+  stageLayout: StageLayout;
+  onStageLayoutChange: (layout: StageLayout) => void;
 }) {
   const locale = useLocale();
   const t = useTranslations();
@@ -655,6 +686,10 @@ function RealtimePanel({
     socket.on("chat:state", (state: { webinarId: string; enabled: boolean }) => {
       if (state.webinarId === session.webinarId) setViewerChatEnabled(state.enabled);
     });
+    socket.on("stage:layout", (layout: StageLayoutEvent) => {
+      if (layout.webinarId !== session.webinarId) return;
+      onStageLayoutChange({ position: layout.position, sizePercent: layout.sizePercent });
+    });
     socket.on("moderation:restriction", (restriction: Restriction) => {
       if (restriction.targetId === currentActorId(session))
         setError(restrictionMessage(restriction, locale));
@@ -690,7 +725,24 @@ function RealtimePanel({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [locale, onEnded, room, router, session, slug]);
+  }, [locale, onEnded, onStageLayoutChange, room, router, session, slug]);
+
+  function updateStageLayout(next: StageLayout) {
+    const socket = socketRef.current;
+    if (!socket?.connected || !canManageStage(session.participant.role)) return;
+    socket.emit(
+      "stage:set_layout",
+      {
+        webinarId: session.webinarId,
+        idempotencyKey: crypto.randomUUID(),
+        position: next.position,
+        sizePercent: Math.max(15, Math.min(50, Math.round(next.sizePercent))),
+      },
+      (ack: Ack<StageLayoutEvent>) => {
+        if (!ack.ok) setError(ack.error.message);
+      },
+    );
+  }
 
   async function send() {
     const body = text.trim();
@@ -815,6 +867,63 @@ function RealtimePanel({
             ? "Восстанавливаем realtime..."
             : "Restoring realtime..."}
       </div>
+
+      {canManageStage(session.participant.role) ? (
+        <section
+          className="stage-layout-controls"
+          aria-label={locale === "ru" ? "Положение вебкамеры" : "Camera overlay layout"}
+        >
+          <header>
+            <MonitorUp size={16} />
+            <strong>{locale === "ru" ? "Вебка поверх экрана" : "Camera over screen"}</strong>
+          </header>
+          <div
+            className="stage-corner-picker"
+            aria-label={locale === "ru" ? "Угол вебкамеры" : "Camera corner"}
+          >
+            {(
+              [
+                ["top-left", "↖"],
+                ["top-right", "↗"],
+                ["bottom-left", "↙"],
+                ["bottom-right", "↘"],
+              ] as const
+            ).map(([position, symbol]) => (
+              <button
+                type="button"
+                key={position}
+                className={stageLayout.position === position ? "is-active" : ""}
+                aria-pressed={stageLayout.position === position}
+                onClick={() => updateStageLayout({ ...stageLayout, position })}
+                disabled={!connected}
+              >
+                {symbol}
+              </button>
+            ))}
+          </div>
+          <label className="stage-size-control">
+            <span>
+              {locale === "ru" ? "Размер" : "Size"} <strong>{stageLayout.sizePercent}%</strong>
+            </span>
+            <input
+              type="range"
+              min="15"
+              max="50"
+              step="1"
+              value={stageLayout.sizePercent}
+              disabled={!connected}
+              onChange={(event) =>
+                updateStageLayout({ ...stageLayout, sizePercent: Number(event.target.value) })
+              }
+            />
+          </label>
+          <small>
+            {locale === "ru"
+              ? "Максимум — половина сцены. Изменения сразу видят зрители."
+              : "Maximum is half the stage. Viewers see changes instantly."}
+          </small>
+        </section>
+      ) : null}
 
       {canModerateChat ? (
         <button
@@ -1254,6 +1363,10 @@ function canPublishMedia(role: Role): boolean {
 }
 
 function canEndWebinar(role: Role): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST";
+}
+
+function canManageStage(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST";
 }
 

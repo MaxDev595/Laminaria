@@ -5,6 +5,7 @@ import type { RealtimeAuthResolver, WebinarAccessResolver, WebinarAction } from 
 
 const actionPermissions: Readonly<Record<WebinarAction, WebinarPermission>> = {
   join: "webinar:join",
+  "stage.manage": "webinar:manage_stage",
   "chat.send": "chat:write",
   "chat.moderate": "webinar:moderate",
   "question.ask": "qa:write",

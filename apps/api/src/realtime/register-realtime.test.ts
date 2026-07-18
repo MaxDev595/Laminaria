@@ -169,9 +169,73 @@ describe("realtime moderation", () => {
     expect(result).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
     expect(host.connected).toBe(true);
   });
+
+  it("broadcasts a host-controlled camera overlay and rejects viewer changes", async () => {
+    const webinarId = `webinar_${crypto.randomUUID()}`;
+    const roles = new Map<string, RealtimeRole>([
+      ["host", "HOST"],
+      ["viewer", "ATTENDEE"],
+    ]);
+
+    httpServer = createServer();
+    io = new SocketIoServer(httpServer, { transports: ["websocket"] }) as RealtimeServer;
+    registerRealtime(io, {
+      auth: {
+        async resolve(request) {
+          const token = request.token;
+          if (!token || !roles.has(token)) return null;
+          return { id: `user:${token}`, kind: "user", displayName: token, sessionId: token };
+        },
+      },
+      access: {
+        async authorize({ principal, action }) {
+          const role = roles.get(principal.sessionId ?? "");
+          if (!role || !canPerform(role, action)) return { allowed: false, reason: "forbidden" };
+          return { allowed: true, participantId: principal.id, role };
+        },
+      },
+      repositories: new InMemoryRealtimeRepositories(),
+      idempotency: new InMemoryIdempotencyExecutor(),
+    });
+
+    const port = await listen(httpServer);
+    const host = await connect(port, "host");
+    const viewer = await connect(port, "viewer");
+    await emitAck(host, "webinar:join", { webinarId });
+    await emitAck(viewer, "webinar:join", { webinarId });
+
+    const received = new Promise<unknown>((resolve) => viewer.once("stage:layout", resolve));
+    const changed = await emitAck(host, "stage:set_layout", {
+      webinarId,
+      idempotencyKey: `layout_${crypto.randomUUID()}`,
+      position: "top-left",
+      sizePercent: 50,
+    });
+
+    expect(changed).toMatchObject({
+      ok: true,
+      data: { webinarId, position: "top-left", sizePercent: 50 },
+    });
+    await expect(received).resolves.toMatchObject({
+      webinarId,
+      position: "top-left",
+      sizePercent: 50,
+    });
+
+    const rejected = await emitAck(viewer, "stage:set_layout", {
+      webinarId,
+      idempotencyKey: `layout_${crypto.randomUUID()}`,
+      position: "bottom-right",
+      sizePercent: 25,
+    });
+    expect(rejected).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+  });
 });
 
 function canPerform(role: RealtimeRole, action: WebinarAction): boolean {
+  if (action === "stage.manage") {
+    return role === "OWNER" || role === "HOST" || role === "COHOST";
+  }
   if (action === "chat.moderate") {
     return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
   }

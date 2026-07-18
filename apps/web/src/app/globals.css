@@ -4195,7 +4195,8 @@ select {
   right: clamp(0.7rem, 2vw, 1.25rem);
   bottom: clamp(0.7rem, 2vw, 1.25rem);
   z-index: 4;
-  width: clamp(9rem, 22vw, 18rem);
+  width: min(var(--stage-camera-size, 24%), 50%);
+  max-width: 50%;
   height: auto;
   min-height: 0;
   aspect-ratio: 16 / 9;
@@ -4207,6 +4208,22 @@ select {
 
 .viewer-stage-grid.has-screen-share .stage-presenter-camera {
   z-index: 5;
+}
+
+.viewer-stage-grid.has-screen-share.overlay-top-left .stage-camera-track {
+  inset: clamp(0.7rem, 2vw, 1.25rem) auto auto clamp(0.7rem, 2vw, 1.25rem);
+}
+
+.viewer-stage-grid.has-screen-share.overlay-top-right .stage-camera-track {
+  inset: clamp(0.7rem, 2vw, 1.25rem) clamp(0.7rem, 2vw, 1.25rem) auto auto;
+}
+
+.viewer-stage-grid.has-screen-share.overlay-bottom-left .stage-camera-track {
+  inset: auto auto clamp(0.7rem, 2vw, 1.25rem) clamp(0.7rem, 2vw, 1.25rem);
+}
+
+.viewer-stage-grid.has-screen-share.overlay-bottom-right .stage-camera-track {
+  inset: auto clamp(0.7rem, 2vw, 1.25rem) clamp(0.7rem, 2vw, 1.25rem) auto;
 }
 
 .viewer-stage-empty {
@@ -4900,8 +4917,8 @@ select {
 .realtime-panel {
   min-width: 0;
   min-height: 0;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+  display: flex;
+  flex-direction: column;
   border-left: 1px solid var(--color-border);
   background: var(--ocean-900);
 }
@@ -4980,7 +4997,84 @@ select {
   animation: live-dot 1.8s ease-in-out infinite;
 }
 
+.stage-layout-controls {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.stage-layout-controls > header,
+.stage-size-control > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stage-layout-controls > header {
+  justify-content: flex-start;
+  color: var(--color-foreground);
+  font-size: 0.78rem;
+}
+
+.stage-layout-controls > header svg {
+  color: var(--color-primary);
+}
+
+.stage-corner-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+.stage-corner-picker button {
+  min-height: 2.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  color: var(--color-muted-foreground);
+  background: var(--color-surface-soft);
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.stage-corner-picker button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+}
+
+.stage-corner-picker button.is-active {
+  color: var(--color-primary-strong);
+  border-color: color-mix(in srgb, var(--color-primary) 65%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 15%, var(--color-surface));
+}
+
+.stage-size-control {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+}
+
+.stage-size-control input {
+  width: 100%;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.stage-layout-controls > small {
+  color: var(--color-subtle-foreground);
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
 .realtime-list {
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding: var(--space-3);
