@@ -14,7 +14,10 @@ import type { UnitOfWork } from "../repositories/contracts.js";
 import { WebinarService, type UpdateWebinarInput } from "../webinars/service.js";
 
 const paramsSchema = z.object({ workspaceId: z.string().min(1), webinarId: z.string().min(1) });
-const nullableDate = z.union([z.iso.datetime({ offset: true }).transform((value) => new Date(value)), z.null()]);
+const nullableDate = z.union([
+  z.iso.datetime({ offset: true }).transform((value) => new Date(value)),
+  z.null(),
+]);
 const fields = {
   title: z.string().trim().min(1).max(180),
   description: z.string().trim().max(10_000).default(""),
@@ -28,7 +31,13 @@ const fields = {
   maxAttendees: z.number().int().positive().max(1_000_000).nullable().default(null),
 };
 const createSchema = z.object({
-  slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(100),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .min(3)
+    .max(100),
   ...fields,
 });
 const updateSchema = z.object({
@@ -60,45 +69,67 @@ export async function registerWebinarRoutes(
     livekit: LiveKitTokenService;
     participants: ParticipantTokenService;
     realtime?: {
-      webinarEnded(event: {
-        webinarId: string;
-        status: "ENDED" | "CANCELLED" | "ARCHIVED";
-      }): void;
+      webinarEnded(event: { webinarId: string; status: "ENDED" | "CANCELLED" | "ARCHIVED" }): void;
     };
   },
 ): Promise<void> {
   const service = new WebinarService(repositories.webinars);
 
-  app.get<{ Params: { workspaceId: string } }>("/v1/workspaces/:workspaceId/webinars", {
-    schema: { tags: ["Webinars"], summary: "List webinars in a workspace" },
-  }, async (request) => {
-    const actor = requireUser(request);
-    const membership = await requireWorkspacePermission(request, repositories, request.params.workspaceId, "webinar:read");
-    const webinars = await repositories.webinars.listByWorkspace(request.params.workspaceId);
-    const withRoles = await Promise.all(webinars.map(async (webinar) => {
-      const explicitRole = await repositories.webinars.findParticipantRole(webinar.id, actor.user.id);
-      const currentUserRole = membership.role === "OWNER" || membership.role === "ADMIN" ? "OWNER" : explicitRole;
-      return { ...webinar, currentUserRole };
-    }));
-    return {
-      webinars: membership.role === "OWNER" || membership.role === "ADMIN"
-        ? withRoles
-        : withRoles.filter((webinar) => webinar.currentUserRole),
-    };
-  });
+  app.get<{ Params: { workspaceId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars",
+    {
+      schema: { tags: ["Webinars"], summary: "List webinars in a workspace" },
+    },
+    async (request) => {
+      const actor = requireUser(request);
+      const membership = await requireWorkspacePermission(
+        request,
+        repositories,
+        request.params.workspaceId,
+        "webinar:read",
+      );
+      const webinars = await repositories.webinars.listByWorkspace(request.params.workspaceId);
+      const withRoles = await Promise.all(
+        webinars.map(async (webinar) => {
+          const explicitRole = await repositories.webinars.findParticipantRole(
+            webinar.id,
+            actor.user.id,
+          );
+          const currentUserRole =
+            membership.role === "OWNER" || membership.role === "ADMIN" ? "OWNER" : explicitRole;
+          return { ...webinar, currentUserRole };
+        }),
+      );
+      return {
+        webinars:
+          membership.role === "OWNER" || membership.role === "ADMIN"
+            ? withRoles
+            : withRoles.filter((webinar) => webinar.currentUserRole),
+      };
+    },
+  );
 
-  app.post<{ Params: { workspaceId: string } }>("/v1/workspaces/:workspaceId/webinars", {
-    schema: { tags: ["Webinars"], summary: "Create a draft webinar" },
-  }, async (request, reply) => {
-    const actor = requireUser(request);
-    await requireWorkspacePermission(request, repositories, request.params.workspaceId, "webinar:create");
-    const webinar = await service.create({
-      ...createSchema.parse(request.body),
-      workspaceId: request.params.workspaceId,
-      createdById: actor.user.id,
-    });
-    return reply.status(201).send({ webinar });
-  });
+  app.post<{ Params: { workspaceId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars",
+    {
+      schema: { tags: ["Webinars"], summary: "Create a draft webinar" },
+    },
+    async (request, reply) => {
+      const actor = requireUser(request);
+      await requireWorkspacePermission(
+        request,
+        repositories,
+        request.params.workspaceId,
+        "webinar:create",
+      );
+      const webinar = await service.create({
+        ...createSchema.parse(request.body),
+        workspaceId: request.params.workspaceId,
+        createdById: actor.user.id,
+      });
+      return reply.status(201).send({ webinar });
+    },
+  );
 
   app.get<{ Params: { workspaceId: string; webinarId: string } }>(
     "/v1/workspaces/:workspaceId/webinars/:webinarId",
@@ -126,9 +157,7 @@ export async function registerWebinarRoutes(
         ...(body.title !== undefined ? { title: body.title } : {}),
         ...(body.description !== undefined ? { description: body.description } : {}),
         ...(body.coverImageUrl !== undefined ? { coverImageUrl: body.coverImageUrl } : {}),
-        ...(body.scheduledStartAt !== undefined
-          ? { scheduledStartAt: body.scheduledStartAt }
-          : {}),
+        ...(body.scheduledStartAt !== undefined ? { scheduledStartAt: body.scheduledStartAt } : {}),
         ...(body.timezone !== undefined ? { timezone: body.timezone } : {}),
         ...(body.language !== undefined ? { language: body.language } : {}),
         ...(body.visibility !== undefined ? { visibility: body.visibility } : {}),
@@ -225,11 +254,7 @@ export async function registerWebinarRoutes(
         throw new AppError(409, "CONFLICT", "The webinar is not live");
       }
       await roomAccess.livekit.closeRoom(access.webinar.livekitRoomName);
-      const webinar = await service.transition(
-        access.webinar.id,
-        "ENDED",
-        access.webinar.version,
-      );
+      const webinar = await service.transition(access.webinar.id, "ENDED", access.webinar.version);
       roomAccess.realtime?.webinarEnded({ webinarId: webinar.id, status: "ENDED" });
       return { webinar };
     },
@@ -240,7 +265,12 @@ export async function registerWebinarRoutes(
     { schema: { tags: ["Webinars"], summary: "Assign a webinar host role by email" } },
     async (request, reply) => {
       const params = paramsSchema.parse(request.params);
-      await requireWebinarPermission(request, repositories, params.webinarId, "webinar:manage_stage");
+      await requireWebinarPermission(
+        request,
+        repositories,
+        params.webinarId,
+        "webinar:manage_stage",
+      );
       const existing = await service.find(params.webinarId);
       assertWorkspace(existing.workspaceId, params.workspaceId);
       const body = hostRoleSchema.parse(request.body);
@@ -289,7 +319,8 @@ export async function registerWebinarRoutes(
       await requireWorkspacePermission(request, repositories, params.workspaceId, "webinar:delete");
       const existing = await service.find(params.webinarId);
       assertWorkspace(existing.workspaceId, params.workspaceId);
-      if (existing.status === "LIVE") throw new AppError(409, "CONFLICT", "End or cancel a live webinar first");
+      if (existing.status === "LIVE")
+        throw new AppError(409, "CONFLICT", "End or cancel a live webinar first");
       await repositories.webinars.softDelete(existing.id, new Date());
       return reply.status(204).send();
     },
@@ -304,8 +335,6 @@ function shouldCloseLiveRoom(current: WebinarStatus, next: WebinarStatus): boole
   return current === "LIVE" && isTerminalRoomStatus(next);
 }
 
-function isTerminalRoomStatus(
-  status: WebinarStatus,
-): status is "ENDED" | "CANCELLED" | "ARCHIVED" {
+function isTerminalRoomStatus(status: WebinarStatus): status is "ENDED" | "CANCELLED" | "ARCHIVED" {
   return status === "ENDED" || status === "CANCELLED" || status === "ARCHIVED";
 }

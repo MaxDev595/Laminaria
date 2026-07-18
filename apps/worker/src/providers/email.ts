@@ -4,7 +4,12 @@ import { ServiceNotConfiguredError } from "../errors.js";
 
 export interface EmailProvider {
   readonly configured: boolean;
-  send(message: { to: string; subject: string; text: string; html?: string }): Promise<{ messageId: string }>;
+  send(message: {
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
+  }): Promise<{ messageId: string }>;
 }
 
 class DisabledEmailProvider implements EmailProvider {

@@ -1,12 +1,12 @@
 # Laminaria database
 
 Prisma 7 reads the connection URL from `prisma.config.ts`, not from the schema.
-Because the reference config intentionally lives in this directory, pass it explicitly:
+The root `prisma.config.ts` is loaded automatically:
 
 ```sh
-pnpm prisma --config prisma/prisma.config.ts validate
-pnpm prisma --config prisma/prisma.config.ts migrate deploy
-pnpm prisma --config prisma/prisma.config.ts generate
+pnpm exec prisma validate
+pnpm exec prisma migrate deploy
+pnpm exec prisma generate
 ```
 
 Authentication, invitation and registration secrets are stored only as hashes.

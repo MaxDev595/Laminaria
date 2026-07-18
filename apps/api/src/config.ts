@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-const optionalUrl = z.preprocess(
-  (value) => (value === "" ? undefined : value),
-  z.url().optional(),
-);
+const optionalUrl = z.preprocess((value) => (value === "" ? undefined : value), z.url().optional());
 
 const optionalString = z.preprocess(
   (value) => (value === "" ? undefined : value),
@@ -25,7 +22,7 @@ const booleanString = z
 
 const envSchema = z
   .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z.enum(["development", "test", "production"]).default("production"),
     HOST: z.string().min(1).default("0.0.0.0"),
     PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
     LOG_LEVEL: z
@@ -36,10 +33,16 @@ const envSchema = z
     WEB_APP_URL: z.url().default("http://localhost:3000"),
     CORS_ORIGINS: z.string().min(1).default("http://localhost:3000"),
     DATABASE_URL: z.string().min(1),
-    SESSION_COOKIE_NAME: z.string().regex(/^[A-Za-z0-9_-]+$/).default("laminaria_session"),
+    SESSION_COOKIE_NAME: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]+$/)
+      .default("laminaria_session"),
     SESSION_TTL_SECONDS: z.coerce.number().int().min(900).max(31_536_000).default(2_592_000),
     SESSION_IDLE_TTL_SECONDS: z.coerce.number().int().min(300).max(31_536_000).default(604_800),
-    CSRF_COOKIE_NAME: z.string().regex(/^[A-Za-z0-9_-]+$/).default("laminaria_csrf"),
+    CSRF_COOKIE_NAME: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]+$/)
+      .default("laminaria_csrf"),
     TOKEN_PEPPER: z.string().min(32),
     SKIP_EMAIL_VERIFICATION: booleanString,
     LIVEKIT_URL: optionalUrl,
@@ -52,7 +55,6 @@ const envSchema = z
     SMTP_USER: optionalString,
     SMTP_PASSWORD: optionalString,
     EMAIL_FROM: optionalString,
-    PHONE_AUTH_DEV_CODE: z.string().regex(/^[0-9]{6}$/).default("000000"),
     GOOGLE_CLIENT_ID: optionalString,
     GOOGLE_CLIENT_SECRET: optionalString,
     GOOGLE_REDIRECT_URI: optionalUrl,
@@ -121,7 +123,12 @@ export type AppConfig = Readonly<{
   csrfCookieName: string;
   tokenPepper: string;
   skipEmailVerification: boolean;
-  livekit: Readonly<{ url: string; apiKey: string; apiSecret: string; tokenTtlSeconds: number }> | null;
+  livekit: Readonly<{
+    url: string;
+    apiKey: string;
+    apiSecret: string;
+    tokenTtlSeconds: number;
+  }> | null;
   mail: Readonly<{
     host: string;
     port: number;
@@ -130,7 +137,6 @@ export type AppConfig = Readonly<{
     password: string | null;
     from: string;
   }> | null;
-  phoneAuth: Readonly<{ devCode: string }>;
   google: Readonly<{ clientId: string; clientSecret: string; redirectUri: string }> | null;
   ai: Readonly<{ provider: string; apiKey: string; model: string }> | null;
   billing: Readonly<{ provider: string; apiKey: string; webhookSecret: string }> | null;
@@ -150,7 +156,10 @@ function configured<T extends Record<string, string | undefined>>(
 }
 
 export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
-  const parsed = envSchema.safeParse(source);
+  const hostedProduction = source["RENDER"] === "true" || source["VERCEL"] === "1";
+  const parsed = envSchema.safeParse(
+    hostedProduction ? { ...source, NODE_ENV: "production" } : source,
+  );
   if (!parsed.success) {
     throw new Error(`Invalid API configuration: ${z.prettifyError(parsed.error)}`);
   }
@@ -169,7 +178,13 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
     trustProxy: env.TRUST_PROXY,
     publicApiUrl: env.PUBLIC_API_URL,
     webAppUrl: env.WEB_APP_URL,
-    corsOrigins: [...new Set(env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean))],
+    corsOrigins: [
+      ...new Set(
+        env.CORS_ORIGINS.split(",")
+          .map((origin) => origin.trim())
+          .filter(Boolean),
+      ),
+    ],
     databaseUrl: env.DATABASE_URL,
     sessionCookieName: env.SESSION_COOKIE_NAME,
     sessionTtlSeconds: env.SESSION_TTL_SECONDS,
@@ -177,7 +192,9 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
     csrfCookieName: env.CSRF_COOKIE_NAME,
     tokenPepper: env.TOKEN_PEPPER,
     skipEmailVerification: env.SKIP_EMAIL_VERIFICATION,
-    livekit: livekitBase ? { ...livekitBase, tokenTtlSeconds: env.LIVEKIT_TOKEN_TTL_SECONDS } : null,
+    livekit: livekitBase
+      ? { ...livekitBase, tokenTtlSeconds: env.LIVEKIT_TOKEN_TTL_SECONDS }
+      : null,
     mail:
       env.SMTP_HOST && env.EMAIL_FROM
         ? {
@@ -189,7 +206,6 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
             from: env.EMAIL_FROM,
           }
         : null,
-    phoneAuth: { devCode: env.PHONE_AUTH_DEV_CODE },
     google: configured({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,

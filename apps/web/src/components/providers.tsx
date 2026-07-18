@@ -53,7 +53,9 @@ function NetworkNotice() {
           exit={{ opacity: 0, y: 12, scale: 0.98, filter: "blur(6px)" }}
         >
           <WifiOff size={17} aria-hidden="true" />
-          {locale === "ru" ? "Нет сети. Ожидающие действия будут сохранены." : "You are offline. Pending actions will stay safe."}
+          {locale === "ru"
+            ? "Нет сети. Ожидающие действия будут сохранены."
+            : "You are offline. Pending actions will stay safe."}
         </motion.div>
       ) : null}
     </AnimatePresence>

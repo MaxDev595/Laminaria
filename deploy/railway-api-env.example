@@ -16,7 +16,6 @@ SESSION_IDLE_TTL_SECONDS=604800
 CSRF_COOKIE_NAME=laminaria_csrf
 SKIP_EMAIL_VERIFICATION=true
 
-PHONE_AUTH_DEV_CODE=000000
 
 LIVEKIT_URL=https://your-livekit-domain.livekit.cloud
 LIVEKIT_API_KEY=replace-with-livekit-api-key

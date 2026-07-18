@@ -58,9 +58,7 @@ export class SmtpMailAdapter implements MailAdapter {
       host: config.host,
       port: config.port,
       secure: config.secure,
-      ...(config.username
-        ? { auth: { user: config.username, pass: config.password ?? "" } }
-        : {}),
+      ...(config.username ? { auth: { user: config.username, pass: config.password ?? "" } } : {}),
     });
   }
 
@@ -125,9 +123,7 @@ export class SmtpMailAdapter implements MailAdapter {
 export class HttpMailAdapter implements MailAdapter {
   public readonly configured = true;
 
-  public constructor(
-    private readonly config: { endpoint: string; apiKey: string; from: string },
-  ) {}
+  public constructor(private readonly config: { endpoint: string; apiKey: string; from: string }) {}
 
   public async sendEmailVerification(
     input: Parameters<MailAdapter["sendEmailVerification"]>[0],

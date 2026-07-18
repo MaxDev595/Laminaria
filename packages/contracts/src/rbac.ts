@@ -111,7 +111,7 @@ export interface AccessContext {
 export function hasPermission(context: AccessContext, permission: Permission): boolean {
   return Boolean(
     (context.workspaceRole && workspacePermissions[context.workspaceRole].has(permission)) ||
-      (context.webinarRole && webinarPermissions[context.webinarRole].has(permission)),
+    (context.webinarRole && webinarPermissions[context.webinarRole].has(permission)),
   );
 }
 
@@ -138,6 +138,8 @@ export function liveKitGrantForRole(role: WebinarRole): LiveKitGrant {
     canSubscribe: true,
     canPublish,
     canPublishData: false,
-    canPublishSources: canPublish ? ["camera", "microphone", "screen_share", "screen_share_audio"] : [],
+    canPublishSources: canPublish
+      ? ["camera", "microphone", "screen_share", "screen_share_audio"]
+      : [],
   };
 }

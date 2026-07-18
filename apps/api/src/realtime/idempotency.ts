@@ -30,15 +30,8 @@ export class IdempotencyConflictError extends Error {
   }
 }
 
-function normalizeForFingerprint(
-  value: unknown,
-  ancestors: WeakSet<object>,
-): unknown {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean"
-  ) {
+function normalizeForFingerprint(value: unknown, ancestors: WeakSet<object>): unknown {
+  if (value === null || typeof value === "string" || typeof value === "boolean") {
     return value;
   }
 
@@ -77,10 +70,7 @@ function normalizeForFingerprint(
 
     const normalized: Record<string, unknown> = {};
     for (const key of Object.keys(value).sort()) {
-      normalized[key] = normalizeForFingerprint(
-        (value as Record<string, unknown>)[key],
-        ancestors,
-      );
+      normalized[key] = normalizeForFingerprint((value as Record<string, unknown>)[key], ancestors);
     }
     return normalized;
   } finally {
@@ -170,4 +160,3 @@ export class InMemoryIdempotencyExecutor implements IdempotencyExecutor {
     return this.#entries.size;
   }
 }
-

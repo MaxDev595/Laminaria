@@ -104,8 +104,7 @@ export const pollCreateSchema = z
   .strict()
   .refine(
     ({ options }) =>
-      new Set(options.map((option) => option.toLocaleLowerCase("en-US"))).size ===
-      options.length,
+      new Set(options.map((option) => option.toLocaleLowerCase("en-US"))).size === options.length,
     { message: "Poll options must be unique", path: ["options"] },
   );
 

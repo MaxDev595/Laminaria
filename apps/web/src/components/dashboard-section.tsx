@@ -24,7 +24,8 @@ export function DashboardSection({ section }: { section: DashboardSectionName })
   const t = useTranslations();
   const { workspace } = useDashboard();
 
-  if (section === "upcoming" || section === "past" || section === "drafts") return <DashboardOverview filter={section} />;
+  if (section === "upcoming" || section === "past" || section === "drafts")
+    return <DashboardOverview filter={section} />;
   if (section === "analytics") return <AnalyticsSection />;
 
   const copy = {
@@ -47,7 +48,11 @@ export function DashboardSection({ section }: { section: DashboardSectionName })
       <PageHeading eyebrow={workspace.name} title={copy.title} body={copy.body} />
       <div className="section-placeholder">
         <span className="section-placeholder__icon">{copy.icon}</span>
-        <ServiceState icon={<DatabaseZap size={20} />} title={copy.service} description={t("dashboard.honestState")} />
+        <ServiceState
+          icon={<DatabaseZap size={20} />}
+          title={copy.service}
+          description={t("dashboard.honestState")}
+        />
       </div>
       {section === "settings" ? <ServiceStatusGrid /> : null}
     </div>
@@ -60,7 +65,10 @@ function AnalyticsSection() {
   const { workspace } = useDashboard();
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
-  const webinarsQuery = useQuery({ queryKey: ["webinars", workspace.id], queryFn: () => api.listWebinars(workspace.id) });
+  const webinarsQuery = useQuery({
+    queryKey: ["webinars", workspace.id],
+    queryFn: () => api.listWebinars(workspace.id),
+  });
   const registrationsQuery = useQuery({
     queryKey: ["webinar-registrations", workspace.id, selectedWebinar?.id],
     queryFn: () => api.listWebinarRegistrations(workspace.id, selectedWebinar!.id),
@@ -75,12 +83,22 @@ function AnalyticsSection() {
       <PageHeading
         eyebrow={workspace.name}
         title={t("nav.analytics")}
-        body={locale === "ru" ? "Регистрации вебинаров: имя, email и телефон для рекламной аналитики." : "Webinar registrations: name, email, and phone for marketing analytics."}
+        body={
+          locale === "ru"
+            ? "Регистрации вебинаров: имя, email и телефон для рекламной аналитики."
+            : "Webinar registrations: name, email, and phone for marketing analytics."
+        }
       />
       <div className="analytics-workbench">
         <section>
           <h2>{locale === "ru" ? "Вебинары" : "Webinars"}</h2>
-          {webinarsQuery.isError ? <ServiceState icon={<DatabaseZap size={20} />} title="Analytics unavailable" description={friendlyError(webinarsQuery.error, locale)} /> : null}
+          {webinarsQuery.isError ? (
+            <ServiceState
+              icon={<DatabaseZap size={20} />}
+              title="Analytics unavailable"
+              description={friendlyError(webinarsQuery.error, locale)}
+            />
+          ) : null}
           <div className="analytics-list">
             {webinars.map((webinar) => (
               <button
@@ -93,7 +111,14 @@ function AnalyticsSection() {
                 }}
               >
                 <strong>{webinar.title}</strong>
-                <small>{webinar.status} · {webinar.scheduledStartAt ? new Date(webinar.scheduledStartAt).toLocaleString(locale === "ru" ? "ru-RU" : "en-US") : "no date"}</small>
+                <small>
+                  {webinar.status} ·{" "}
+                  {webinar.scheduledStartAt
+                    ? new Date(webinar.scheduledStartAt).toLocaleString(
+                        locale === "ru" ? "ru-RU" : "en-US",
+                      )
+                    : "no date"}
+                </small>
               </button>
             ))}
           </div>
@@ -101,18 +126,40 @@ function AnalyticsSection() {
         <section>
           <h2>{locale === "ru" ? "Зрители" : "Registrations"}</h2>
           {!selectedWebinar ? (
-            <ServiceState icon={<BarChart3 size={20} />} title={locale === "ru" ? "Выберите вебинар" : "Select a webinar"} description={locale === "ru" ? "После выбора появится список регистраций." : "Registrations will appear after selection."} />
+            <ServiceState
+              icon={<BarChart3 size={20} />}
+              title={locale === "ru" ? "Выберите вебинар" : "Select a webinar"}
+              description={
+                locale === "ru"
+                  ? "После выбора появится список регистраций."
+                  : "Registrations will appear after selection."
+              }
+            />
           ) : registrationsQuery.isLoading ? (
-            <ServiceState icon={<DatabaseZap size={20} />} title={locale === "ru" ? "Загружаем" : "Loading"} description={selectedWebinar.title} />
+            <ServiceState
+              icon={<DatabaseZap size={20} />}
+              title={locale === "ru" ? "Загружаем" : "Loading"}
+              description={selectedWebinar.title}
+            />
           ) : (
             <div className="analytics-list">
               {registrations.map((registration) => (
-                <button type="button" key={registration.id} onClick={() => setSelectedRegistration(registration)}>
+                <button
+                  type="button"
+                  key={registration.id}
+                  onClick={() => setSelectedRegistration(registration)}
+                >
                   <strong>{registration.name}</strong>
-                  <small>{registration.email} · {registration.phone || "—"}</small>
+                  <small>
+                    {registration.email} · {registration.phone || "—"}
+                  </small>
                 </button>
               ))}
-              {registrations.length === 0 ? <p className="analytics-empty">{locale === "ru" ? "Регистраций пока нет." : "No registrations yet."}</p> : null}
+              {registrations.length === 0 ? (
+                <p className="analytics-empty">
+                  {locale === "ru" ? "Регистраций пока нет." : "No registrations yet."}
+                </p>
+              ) : null}
             </div>
           )}
         </section>
@@ -123,11 +170,22 @@ function AnalyticsSection() {
           <article>
             <h2>{selectedRegistration.name}</h2>
             <dl>
-              <div><dt>Email</dt><dd>{selectedRegistration.email}</dd></div>
-              <div><dt>{locale === "ru" ? "Телефон" : "Phone"}</dt><dd>{selectedRegistration.phone || "—"}</dd></div>
-              <div><dt>{locale === "ru" ? "Статус" : "Status"}</dt><dd>{selectedRegistration.status}</dd></div>
+              <div>
+                <dt>Email</dt>
+                <dd>{selectedRegistration.email}</dd>
+              </div>
+              <div>
+                <dt>{locale === "ru" ? "Телефон" : "Phone"}</dt>
+                <dd>{selectedRegistration.phone || "—"}</dd>
+              </div>
+              <div>
+                <dt>{locale === "ru" ? "Статус" : "Status"}</dt>
+                <dd>{selectedRegistration.status}</dd>
+              </div>
             </dl>
-            <Button variant="secondary" onClick={() => setSelectedRegistration(null)}>OK</Button>
+            <Button variant="secondary" onClick={() => setSelectedRegistration(null)}>
+              OK
+            </Button>
           </article>
         </div>
       ) : null}
@@ -149,12 +207,18 @@ function ServiceStatusGrid() {
         icon={<DatabaseZap size={20} />}
         title={t("dashboard.servicesLoadError")}
         description={friendlyError(query.error, locale)}
-        action={<Button variant="secondary" onClick={() => void query.refetch()}>{t("common.retry")}</Button>}
+        action={
+          <Button variant="secondary" onClick={() => void query.refetch()}>
+            {t("common.retry")}
+          </Button>
+        }
       />
     );
   }
 
-  const services = (query.data?.services ?? defaultServices).filter((service) => ["livekit", "mail", "google"].includes(service.key));
+  const services = (query.data?.services ?? defaultServices).filter((service) =>
+    ["livekit", "mail", "google"].includes(service.key),
+  );
   return (
     <div className="settings-service-grid">
       {services.map((service) => (
@@ -166,9 +230,8 @@ function ServiceStatusGrid() {
 
 function ServiceCard({ service, loading }: { service: ServiceStatus; loading: boolean }) {
   const t = useTranslations();
-  const Icon = service.key in serviceIcon
-    ? serviceIcon[service.key as keyof typeof serviceIcon]
-    : DatabaseZap;
+  const Icon =
+    service.key in serviceIcon ? serviceIcon[service.key as keyof typeof serviceIcon] : DatabaseZap;
   const configured = !loading && service.configured;
 
   return (
@@ -198,7 +261,22 @@ const serviceIcon = {
 } satisfies Partial<Record<ServiceStatus["key"], typeof Video>>;
 
 const defaultServices: ServiceStatus[] = [
-  { key: "livekit", label: "LiveKit", configured: false, requiredEnv: ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"] },
-  { key: "mail", label: "Email delivery", configured: false, requiredEnv: ["SMTP_HOST", "EMAIL_FROM"] },
-  { key: "google", label: "Google OAuth", configured: false, requiredEnv: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"] },
+  {
+    key: "livekit",
+    label: "LiveKit",
+    configured: false,
+    requiredEnv: ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"],
+  },
+  {
+    key: "mail",
+    label: "Email delivery",
+    configured: false,
+    requiredEnv: ["SMTP_HOST", "EMAIL_FROM"],
+  },
+  {
+    key: "google",
+    label: "Google OAuth",
+    configured: false,
+    requiredEnv: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+  },
 ];

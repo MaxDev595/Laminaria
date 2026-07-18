@@ -89,7 +89,8 @@ export function PrejoinExperience({ slug }: { slug: string }) {
 
   const webinar = query.data!.webinar;
   const live = webinar.status === "LIVE";
-  const canEnter = live && (Boolean(accessToken) || (webinar.allowGuests && name.trim().length > 0));
+  const canEnter =
+    live && (Boolean(accessToken) || (webinar.allowGuests && name.trim().length > 0));
 
   return (
     <main className="prejoin-shell">
@@ -103,7 +104,11 @@ export function PrejoinExperience({ slug }: { slug: string }) {
       </header>
 
       <div className="prejoin-grid">
-        <motion.section className="preview-card" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+        <motion.section
+          className="preview-card"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
           <div className="preview-frame">
             <div className="preview-empty">
               <span>
@@ -115,12 +120,20 @@ export function PrejoinExperience({ slug }: { slug: string }) {
                   : "You are joining as a viewer. Camera and microphone stay off."}
               </p>
             </div>
-            <div className="preview-name">{name.trim() || (locale === "ru" ? "Зритель" : "Viewer")}</div>
+            <div className="preview-name">
+              {name.trim() || (locale === "ru" ? "Зритель" : "Viewer")}
+            </div>
           </div>
         </motion.section>
 
-        <motion.aside className="prejoin-panel" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }}>
-          <Badge tone={live ? "danger" : "primary"}>{live ? t("dashboard.liveNow") : t("dashboard.scheduled")}</Badge>
+        <motion.aside
+          className="prejoin-panel"
+          initial={{ opacity: 0, x: 18 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <Badge tone={live ? "danger" : "primary"}>
+            {live ? t("dashboard.liveNow") : t("dashboard.scheduled")}
+          </Badge>
           <h1>{locale === "ru" ? "Вход зрителя" : "Viewer entry"}</h1>
           <p>
             {locale === "ru"
@@ -155,7 +168,11 @@ export function PrejoinExperience({ slug }: { slug: string }) {
                     : "A confirmed registration is required"
               }
             >
-              <Input value={name} onChange={(event) => setName(event.target.value)} disabled={!webinar.allowGuests} />
+              <Input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                disabled={!webinar.allowGuests}
+              />
             </Field>
           ) : (
             <div className="access-ready">

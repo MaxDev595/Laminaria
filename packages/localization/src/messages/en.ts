@@ -29,7 +29,8 @@ export const en = {
     eyebrow: "Live rooms, thoughtfully composed",
     titleA: "A calmer stage for",
     titleB: "ideas that need to travel.",
-    subtitle: "Run global webinars with dependable media, precise host controls, and AI that knows when to stay quiet.",
+    subtitle:
+      "Run global webinars with dependable media, precise host controls, and AI that knows when to stay quiet.",
     primaryCta: "Create your workspace",
     secondaryCta: "See how it flows",
     trusted: "Built for teams across Europe, the US, Asia, and the CIS",
@@ -38,19 +39,25 @@ export const en = {
     audienceMode: "Audience is receive-only",
     speakerMode: "Speaker permissions active",
     controlTitle: "Control without the noise",
-    controlBody: "Media, moderation, questions, and recordings stay clearly separated — so the host always knows what happens next.",
+    controlBody:
+      "Media, moderation, questions, and recordings stay clearly separated — so the host always knows what happens next.",
     globalTitle: "Feels local, wherever the room opens",
-    globalBody: "English-first for global growth, with a complete natural Russian experience, local time zones, and browser-based access on any modern device.",
+    globalBody:
+      "English-first for global growth, with a complete natural Russian experience, local time zones, and browser-based access on any modern device.",
     platformEyebrow: "One composed workflow",
     platformTitle: "From invitation to insight, without changing tools",
     stepCreate: "Shape the room",
-    stepCreateBody: "Set access, roles, registration, recording, and moderation before you publish.",
+    stepCreateBody:
+      "Set access, roles, registration, recording, and moderation before you publish.",
     stepLive: "Stay in command",
-    stepLiveBody: "Promote speakers, watch connection health, and manage the conversation in real time.",
+    stepLiveBody:
+      "Promote speakers, watch connection health, and manage the conversation in real time.",
     stepLearn: "Keep the value",
-    stepLearnBody: "Recordings, attendance, questions, polls, exports, and summaries remain with the webinar.",
+    stepLearnBody:
+      "Recordings, attendance, questions, polls, exports, and summaries remain with the webinar.",
     infrastructure: "Production-minded by design",
-    infrastructureBody: "LiveKit for media. PostgreSQL for truth. Short-lived grants, auditable actions, and explicit service states throughout.",
+    infrastructureBody:
+      "LiveKit for media. PostgreSQL for truth. Short-lived grants, auditable actions, and explicit service states throughout.",
     ctaTitle: "Give your next idea a room worth entering.",
     ctaBody: "Start with a workspace. Add external services when your team is ready.",
   },
@@ -108,15 +115,20 @@ export const en = {
     scheduled: "Scheduled",
     draft: "Draft",
     ended: "Ended",
-    recordingsBody: "Recordings appear after a successful LiveKit Egress and upload to configured S3 storage.",
+    recordingsBody:
+      "Recordings appear after a successful LiveKit Egress and upload to configured S3 storage.",
     recordingsState: "Recording catalog is waiting for storage",
-    analyticsBody: "Metrics are computed only from real participant sessions. No demonstration numbers are inserted.",
+    analyticsBody:
+      "Metrics are computed only from real participant sessions. No demonstration numbers are inserted.",
     analyticsState: "No analytics data yet",
-    teamBody: "Members and invitations follow workspace roles and centrally configured plan limits.",
+    teamBody:
+      "Members and invitations follow workspace roles and centrally configured plan limits.",
     teamState: "The team-list API is not connected to this screen yet",
-    settingsBody: "Integration states live here. Secrets are never exposed to the browser — only setup status.",
+    settingsBody:
+      "Integration states live here. Secrets are never exposed to the browser — only setup status.",
     settingsState: "External services are connected through protected environment variables",
-    honestState: "This screen reports the real current state and never substitutes fake production data.",
+    honestState:
+      "This screen reports the real current state and never substitutes fake production data.",
     servicesLoadError: "Service status could not be loaded",
     serviceChecking: "Checking server...",
     serviceReady: "Ready",
@@ -152,7 +164,8 @@ export const en = {
     registrationSuccess: "You are registered. Your secure join link is ready.",
     addCalendar: "Add to calendar",
     draftCreated: "Draft created",
-    createdBody: "{title} is saved in your workspace. You can open the public page or return to the list.",
+    createdBody:
+      "{title} is saved in your workspace. You can open the public page or return to the list.",
     openPage: "Open page",
     saveState: "Changes save on confirmation",
     newRoom: "New room",
@@ -163,7 +176,8 @@ export const en = {
     timeZone: "Time zone: {timezone}",
     emailRegistration: "Email registration",
     roomCapabilities: "Room capabilities",
-    roomCapabilitiesBody: "Controls connect to the domain model; unconfirmed capabilities are never simulated.",
+    roomCapabilitiesBody:
+      "Controls connect to the domain model; unconfirmed capabilities are never simulated.",
   },
   room: {
     prejoinTitle: "Ready when you are",
@@ -188,7 +202,8 @@ export const en = {
     connected: "Connection is stable",
     offline: "You are offline. Your pending actions are safe.",
     mediaNotConfigured: "Live video is not configured for this environment.",
-    permissionDenied: "Browser access is blocked. Update camera or microphone permissions, or join receive-only.",
+    permissionDenied:
+      "Browser access is blocked. Update camera or microphone permissions, or join receive-only.",
     hostControls: "Host controls",
     chat: "Chat",
     participants: "Participants",

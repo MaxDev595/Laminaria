@@ -50,9 +50,19 @@ export interface OneTimeTokenRepository {
 
 export interface WorkspaceRepository {
   findMember(workspaceId: string, userId: string): Promise<WorkspaceMemberRecord | null>;
-  upsertMember(input: { workspaceId: string; userId: string; role: WorkspaceRole }): Promise<WorkspaceMemberRecord>;
-  createWithOwner(input: { name: string; slug: string; ownerId: string }): Promise<{ id: string; name: string; slug: string; role: WorkspaceRole }>;
-  listForUser(userId: string): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]>;
+  upsertMember(input: {
+    workspaceId: string;
+    userId: string;
+    role: WorkspaceRole;
+  }): Promise<WorkspaceMemberRecord>;
+  createWithOwner(input: {
+    name: string;
+    slug: string;
+    ownerId: string;
+  }): Promise<{ id: string; name: string; slug: string; role: WorkspaceRole }>;
+  listForUser(
+    userId: string,
+  ): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]>;
 }
 
 export interface WebinarRepository {
@@ -69,7 +79,9 @@ export interface WebinarRepository {
     acceptedAt: Date;
   }): Promise<void>;
   listByWorkspace(workspaceId: string): Promise<readonly WebinarRecord[]>;
-  create(input: Omit<WebinarRecord, "id" | "version" | "createdAt" | "updatedAt" | "deletedAt">): Promise<WebinarRecord>;
+  create(
+    input: Omit<WebinarRecord, "id" | "version" | "createdAt" | "updatedAt" | "deletedAt">,
+  ): Promise<WebinarRecord>;
   updateDraft(
     id: string,
     version: number,
@@ -89,7 +101,12 @@ export interface WebinarRepository {
       >
     >,
   ): Promise<WebinarRecord | null>;
-  transition(id: string, version: number, from: WebinarStatus, to: WebinarStatus): Promise<WebinarRecord | null>;
+  transition(
+    id: string,
+    version: number,
+    from: WebinarStatus,
+    to: WebinarStatus,
+  ): Promise<WebinarRecord | null>;
   softDelete(id: string, at: Date): Promise<void>;
   countActiveParticipants(id: string): Promise<number>;
 }
@@ -112,6 +129,22 @@ export interface RegistrationRepository {
   }): Promise<RegistrationRecord>;
 }
 
+export interface ModerationRestrictionRecord {
+  targetName: string;
+  mutedUntil?: number | null;
+  bannedUntil?: number | null;
+  reason?: string;
+}
+
+export interface ModerationRestrictionRepository {
+  find(webinarId: string, targetId: string): Promise<ModerationRestrictionRecord | null>;
+  save(input: {
+    webinarId: string;
+    targetId: string;
+    state: ModerationRestrictionRecord;
+  }): Promise<void>;
+}
+
 export interface UnitOfWork {
   readonly users: UserRepository;
   readonly sessions: SessionRepository;
@@ -119,6 +152,7 @@ export interface UnitOfWork {
   readonly workspaces: WorkspaceRepository;
   readonly webinars: WebinarRepository;
   readonly registrations: RegistrationRepository;
+  readonly moderationRestrictions?: ModerationRestrictionRepository;
   healthcheck(): Promise<void>;
   close(): Promise<void>;
 }

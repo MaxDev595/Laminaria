@@ -27,13 +27,21 @@ export function MarketingHeader() {
           <Logo />
         </Link>
         <nav className="desktop-nav" aria-label={t("shell.mainNavigation")}>
-          {nav.map(([href, label]) => <a key={href} href={href}>{label}</a>)}
+          {nav.map(([href, label]) => (
+            <a key={href} href={href}>
+              {label}
+            </a>
+          ))}
         </nav>
         <div className="header-actions">
           <LanguageSwitcher />
           <ThemeToggle />
-          <Link href="/sign-in" className="header-signin">{t("auth.signIn")}</Link>
-          <Link href="/sign-up" className="header-cta"><Button size="sm">{t("auth.signUp")}</Button></Link>
+          <Link href="/sign-in" className="header-signin">
+            {t("auth.signIn")}
+          </Link>
+          <Link href="/sign-up" className="header-cta">
+            <Button size="sm">{t("auth.signUp")}</Button>
+          </Link>
           <button
             type="button"
             className="menu-button"
@@ -54,9 +62,17 @@ export function MarketingHeader() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            {nav.map(([href, label]) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a>)}
-            <Link href="/sign-in" onClick={() => setOpen(false)}>{t("auth.signIn")}</Link>
-            <Link href="/sign-up" onClick={() => setOpen(false)}>{t("auth.signUp")}</Link>
+            {nav.map(([href, label]) => (
+              <a key={href} href={href} onClick={() => setOpen(false)}>
+                {label}
+              </a>
+            ))}
+            <Link href="/sign-in" onClick={() => setOpen(false)}>
+              {t("auth.signIn")}
+            </Link>
+            <Link href="/sign-up" onClick={() => setOpen(false)}>
+              {t("auth.signUp")}
+            </Link>
           </motion.nav>
         ) : null}
       </AnimatePresence>

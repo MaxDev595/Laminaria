@@ -117,7 +117,12 @@ export function Logo({ compact = false, className, label = "Laminaria", ...props
           strokeLinecap="round"
           opacity=".5"
         />
-        <path d="M4 17.5c6.1-2.1 15.3-2.1 22 0" stroke="currentColor" strokeWidth="1.4" opacity=".4" />
+        <path
+          d="M4 17.5c6.1-2.1 15.3-2.1 22 0"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          opacity=".4"
+        />
       </svg>
       {compact ? <span className="lm-sr-only">{label}</span> : <strong>{label}</strong>}
     </span>

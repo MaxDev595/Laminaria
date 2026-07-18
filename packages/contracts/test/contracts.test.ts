@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canTransitionWebinar, createWebinarRequestSchema, hasPermission, liveKitGrantForRole } from "../src/index.js";
+import {
+  canTransitionWebinar,
+  createWebinarRequestSchema,
+  hasPermission,
+  liveKitGrantForRole,
+} from "../src/index.js";
 
 describe("webinar state machine", () => {
   it("allows the happy path and keeps terminal states terminal", () => {

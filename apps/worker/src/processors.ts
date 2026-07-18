@@ -34,7 +34,9 @@ export function createProcessor(providers: Providers) {
       } as const;
       return providers.ai.complete({
         system: instructions[input.kind],
-        prompt: input.context ? `Context:\n${input.context}\n\nInput:\n${input.input}` : input.input,
+        prompt: input.context
+          ? `Context:\n${input.context}\n\nInput:\n${input.input}`
+          : input.input,
         maxOutputTokens: input.kind === "summarize" ? 1800 : 700,
       });
     }

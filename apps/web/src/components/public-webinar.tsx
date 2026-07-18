@@ -43,9 +43,15 @@ export function PublicWebinar({ slug }: { slug: string }) {
     queryKey: ["public-webinar", slug],
     queryFn: ({ signal }) => api.publicWebinar(slug, signal),
   });
-  const [success, setSuccess] = useState<{ confirmationRequired: boolean; hasAccess: boolean } | null>(null);
+  const [success, setSuccess] = useState<{
+    confirmationRequired: boolean;
+    hasAccess: boolean;
+  } | null>(null);
   const [error, setError] = useState("");
-  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", phone: "" } });
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", email: "", phone: "" },
+  });
 
   async function submit(values: Values) {
     setError("");
@@ -56,7 +62,10 @@ export function PublicWebinar({ slug }: { slug: string }) {
         router.replace(`/w/${slug}/waiting`);
         return;
       }
-      setSuccess({ confirmationRequired: result.confirmationRequired, hasAccess: Boolean(result.accessToken) });
+      setSuccess({
+        confirmationRequired: result.confirmationRequired,
+        hasAccess: Boolean(result.accessToken),
+      });
     } catch (reason) {
       setError(friendlyError(reason, locale));
     }
@@ -64,7 +73,13 @@ export function PublicWebinar({ slug }: { slug: string }) {
 
   if (query.isLoading) return <PublicWebinarSkeleton />;
   if (query.isError) {
-    return <PublicError locale={locale} message={friendlyError(query.error, locale)} retry={() => void query.refetch()} />;
+    return (
+      <PublicError
+        locale={locale}
+        message={friendlyError(query.error, locale)}
+        retry={() => void query.refetch()}
+      />
+    );
   }
 
   const webinar = query.data!.webinar;
@@ -72,14 +87,20 @@ export function PublicWebinar({ slug }: { slug: string }) {
 
   function addCalendar() {
     if (!webinar.scheduledStartAt) return;
-    const stamp = new Date(webinar.scheduledStartAt).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const stamp = new Date(webinar.scheduledStartAt)
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "");
     const ics = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//Laminaria//Webinar//EN",
       "BEGIN:VEVENT",
       `UID:${webinar.slug}@laminaria`,
-      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`,
+      `DTSTAMP:${new Date()
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .replace(/\.\d{3}/, "")}`,
       `DTSTART:${stamp}`,
       `SUMMARY:${escapeIcs(webinar.title)}`,
       `DESCRIPTION:${escapeIcs(webinar.description)}`,
@@ -98,21 +119,35 @@ export function PublicWebinar({ slug }: { slug: string }) {
   return (
     <div className="public-event-shell">
       <header className="public-event-nav">
-        <Link href="/"><Logo /></Link>
-        <div><LanguageSwitcher /><ThemeToggle /></div>
+        <Link href="/">
+          <Logo />
+        </Link>
+        <div>
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="public-event">
-        <motion.section className="event-story" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}>
+        <motion.section
+          className="event-story"
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
           <div className="event-story__glow" aria-hidden="true" />
           <div className="event-status">
             <Badge tone={webinar.status === "LIVE" ? "danger" : "primary"}>
               {webinar.status === "LIVE" ? t("dashboard.liveNow") : t("dashboard.scheduled")}
             </Badge>
-            <span>{webinar.visibility === "PUBLIC" ? t("webinar.public") : t("webinar.private")}</span>
+            <span>
+              {webinar.visibility === "PUBLIC" ? t("webinar.public") : t("webinar.private")}
+            </span>
           </div>
           {webinar.coverImageUrl ? (
-            <div className="event-banner" style={{ backgroundImage: `url(${webinar.coverImageUrl})` }}>
+            <div
+              className="event-banner"
+              style={{ backgroundImage: `url(${webinar.coverImageUrl})` }}
+            >
               <span>{webinar.status === "LIVE" ? "LIVE" : "WEBINAR"}</span>
             </div>
           ) : null}
@@ -120,28 +155,57 @@ export function PublicWebinar({ slug }: { slug: string }) {
           <p className="event-description">{webinar.description}</p>
           <dl className="event-details">
             <div>
-              <dt><Clock3 size={17} />{t("webinar.date")}</dt>
-              <dd>{webinar.scheduledStartAt ? formatLocalDate(webinar.scheduledStartAt, locale) : (locale === "ru" ? "Организатор уточняет время" : "Time to be confirmed")}</dd>
+              <dt>
+                <Clock3 size={17} />
+                {t("webinar.date")}
+              </dt>
+              <dd>
+                {webinar.scheduledStartAt
+                  ? formatLocalDate(webinar.scheduledStartAt, locale)
+                  : locale === "ru"
+                    ? "Организатор уточняет время"
+                    : "Time to be confirmed"}
+              </dd>
               <small>{localTimezone()}</small>
             </div>
             <div>
-              <dt><Globe2 size={17} />{t("webinar.language")}</dt>
+              <dt>
+                <Globe2 size={17} />
+                {t("webinar.language")}
+              </dt>
               <dd>{webinar.language === "ru" ? "Русский" : "English"}</dd>
             </div>
             <div>
-              <dt><UsersRound size={17} />{t("webinar.access")}</dt>
-              <dd>{webinar.allowGuests ? t("webinar.guestAccess") : (locale === "ru" ? "По подтверждённой регистрации" : "Confirmed registration required")}</dd>
+              <dt>
+                <UsersRound size={17} />
+                {t("webinar.access")}
+              </dt>
+              <dd>
+                {webinar.allowGuests
+                  ? t("webinar.guestAccess")
+                  : locale === "ru"
+                    ? "По подтверждённой регистрации"
+                    : "Confirmed registration required"}
+              </dd>
             </div>
           </dl>
           <Button variant="secondary" onClick={addCalendar} disabled={!webinar.scheduledStartAt}>
-            <CalendarPlus size={17} />{t("webinar.addCalendar")}
+            <CalendarPlus size={17} />
+            {t("webinar.addCalendar")}
           </Button>
         </motion.section>
 
-        <motion.aside className="registration-card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+        <motion.aside
+          className="registration-card"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+        >
           {success ? (
             <div className="registration-success">
-              <span><CheckCircle2 size={28} /></span>
+              <span>
+                <CheckCircle2 size={28} />
+              </span>
               <h2>{t("webinar.registrationSuccess")}</h2>
               <p>
                 {success.confirmationRequired
@@ -154,14 +218,26 @@ export function PublicWebinar({ slug }: { slug: string }) {
               </p>
               {success.hasAccess ? (
                 <Link href={`/w/${slug}/prejoin`}>
-                  <Button size="lg">{locale === "ru" ? "Перейти ко входу" : "Continue to entry"}<ArrowRight size={18} /></Button>
+                  <Button size="lg">
+                    {locale === "ru" ? "Перейти ко входу" : "Continue to entry"}
+                    <ArrowRight size={18} />
+                  </Button>
                 </Link>
               ) : null}
             </div>
           ) : (
             <>
-              <span className="section-kicker"><Radio size={16} />{t("webinar.registrationTitle")}</span>
-              <h2>{registrationClosed ? (locale === "ru" ? "Регистрация закрыта" : "Registration is closed") : t("webinar.registrationTitle")}</h2>
+              <span className="section-kicker">
+                <Radio size={16} />
+                {t("webinar.registrationTitle")}
+              </span>
+              <h2>
+                {registrationClosed
+                  ? locale === "ru"
+                    ? "Регистрация закрыта"
+                    : "Registration is closed"
+                  : t("webinar.registrationTitle")}
+              </h2>
               <p>
                 {locale === "ru"
                   ? "Ссылка для входа привязывается к подтверждённой регистрации и не публикуется открыто."
@@ -169,24 +245,57 @@ export function PublicWebinar({ slug }: { slug: string }) {
               </p>
               <form onSubmit={form.handleSubmit(submit)}>
                 <Field label={t("auth.name")} error={form.formState.errors.name?.message}>
-                  <Input autoComplete="name" disabled={registrationClosed} {...form.register("name")} />
+                  <Input
+                    autoComplete="name"
+                    disabled={registrationClosed}
+                    {...form.register("name")}
+                  />
                 </Field>
                 <Field label={t("auth.email")} error={form.formState.errors.email?.message}>
-                  <Input type="email" autoComplete="email" disabled={registrationClosed} {...form.register("email")} />
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    disabled={registrationClosed}
+                    {...form.register("email")}
+                  />
                 </Field>
-                <Field label={locale === "ru" ? "Телефон" : "Phone"} error={form.formState.errors.phone?.message}>
-                  <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 555 000 0000" disabled={registrationClosed} {...form.register("phone")} />
+                <Field
+                  label={locale === "ru" ? "Телефон" : "Phone"}
+                  error={form.formState.errors.phone?.message}
+                >
+                  <Input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="+1 555 000 0000"
+                    disabled={registrationClosed}
+                    {...form.register("phone")}
+                  />
                 </Field>
-                {error ? <div className="form-alert"><AlertTriangle size={17} />{error}</div> : null}
-                <Button type="submit" size="lg" disabled={registrationClosed || form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : <LockKeyhole size={17} />}
+                {error ? (
+                  <div className="form-alert">
+                    <AlertTriangle size={17} />
+                    {error}
+                  </div>
+                ) : null}
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={registrationClosed || form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <LoaderCircle className="spin" size={18} />
+                  ) : (
+                    <LockKeyhole size={17} />
+                  )}
                   {t("webinar.registrationTitle")}
                   <ArrowRight size={18} />
                 </Button>
               </form>
               {webinar.allowGuests && webinar.status === "LIVE" ? (
                 <Link href={`/w/${slug}/prejoin`} className="guest-entry">
-                  {locale === "ru" ? "Войти как гость" : "Continue as guest"}<ArrowRight size={16} />
+                  {locale === "ru" ? "Войти как гость" : "Continue as guest"}
+                  <ArrowRight size={16} />
                 </Link>
               ) : null}
             </>
@@ -196,14 +305,22 @@ export function PublicWebinar({ slug }: { slug: string }) {
 
       <footer className="public-event-footer">
         <Logo compact />
-        <span>{locale === "ru" ? "Защищённая регистрация Laminaria" : "Secure registration by Laminaria"}</span>
+        <span>
+          {locale === "ru"
+            ? "Защищённая регистрация Laminaria"
+            : "Secure registration by Laminaria"}
+        </span>
       </footer>
     </div>
   );
 }
 
 function escapeIcs(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
 }
 
 function PublicWebinarSkeleton() {
@@ -219,7 +336,15 @@ function PublicWebinarSkeleton() {
   );
 }
 
-function PublicError({ locale, message, retry }: { locale: string; message: string; retry: () => void }) {
+function PublicError({
+  locale,
+  message,
+  retry,
+}: {
+  locale: string;
+  message: string;
+  retry: () => void;
+}) {
   return (
     <main className="dashboard-gate">
       <Logo />
@@ -227,7 +352,11 @@ function PublicError({ locale, message, retry }: { locale: string; message: stri
         icon={<AlertTriangle size={20} />}
         title={locale === "ru" ? "Страница недоступна" : "This page is unavailable"}
         description={message}
-        action={<Button variant="secondary" onClick={retry}>{locale === "ru" ? "Повторить" : "Try again"}</Button>}
+        action={
+          <Button variant="secondary" onClick={retry}>
+            {locale === "ru" ? "Повторить" : "Try again"}
+          </Button>
+        }
       />
     </main>
   );

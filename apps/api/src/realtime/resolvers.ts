@@ -1,11 +1,7 @@
 import { hasWebinarPermission, type WebinarPermission } from "../auth/rbac.js";
 import type { ParticipantTokenService } from "../auth/participant-token.js";
 import type { UnitOfWork } from "../repositories/contracts.js";
-import type {
-  RealtimeAuthResolver,
-  WebinarAccessResolver,
-  WebinarAction,
-} from "./types.js";
+import type { RealtimeAuthResolver, WebinarAccessResolver, WebinarAction } from "./types.js";
 
 const actionPermissions: Readonly<Record<WebinarAction, WebinarPermission>> = {
   join: "webinar:join",
@@ -44,11 +40,7 @@ export function createWebinarAccessResolver(
     async authorize({ principal, webinarId, action }) {
       if (!principal.sessionId) return { allowed: false, reason: "forbidden" };
       const payload = participantTokens.verify(principal.sessionId);
-      if (
-        !payload ||
-        payload.subject !== principal.id ||
-        payload.webinarId !== webinarId
-      ) {
+      if (!payload || payload.subject !== principal.id || payload.webinarId !== webinarId) {
         return { allowed: false, reason: "forbidden" };
       }
       const webinar = await repositories.webinars.findById(webinarId);

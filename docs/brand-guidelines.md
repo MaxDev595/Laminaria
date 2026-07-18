@@ -2,14 +2,14 @@
 
 ## Quick reference
 
-| Element | Direction |
-| --- | --- |
-| Promise | A calmer room for ideas that need to travel |
-| Primary | Kelp `#35C5B4` |
-| Deep background | Abyss `#061A24` |
-| Accent | Coral `#FF7D6B` — important calls to action only |
-| Typography | Modern humanist sans, high legibility in Latin and Cyrillic |
-| Voice | Calm, lucid, capable, warmly human |
+| Element         | Direction                                                   |
+| --------------- | ----------------------------------------------------------- |
+| Promise         | A calmer room for ideas that need to travel                 |
+| Primary         | Kelp `#35C5B4`                                              |
+| Deep background | Abyss `#061A24`                                             |
+| Accent          | Coral `#FF7D6B` — important calls to action only            |
+| Typography      | Modern humanist sans, high legibility in Latin and Cyrillic |
+| Voice           | Calm, lucid, capable, warmly human                          |
 
 ## Positioning
 
@@ -20,12 +20,12 @@ effortless; it makes the system state understandable and gives the host precise 
 
 ## Voice
 
-| Trait | We are | We are not |
-| --- | --- | --- |
-| Calm | Clear about what is happening and what to do next | Cold or vague |
-| Capable | Precise, operational, honest about limits | Boastful or overly technical |
-| Human | Respectful of attention, timezone, language, and consent | Cute, childish, or chatty |
-| Global | Plain international English and natural Russian | US-only idiom or literal translation |
+| Trait   | We are                                                   | We are not                           |
+| ------- | -------------------------------------------------------- | ------------------------------------ |
+| Calm    | Clear about what is happening and what to do next        | Cold or vague                        |
+| Capable | Precise, operational, honest about limits                | Boastful or overly technical         |
+| Human   | Respectful of attention, timezone, language, and consent | Cute, childish, or chatty            |
+| Global  | Plain international English and natural Russian          | US-only idiom or literal translation |
 
 Success is brief: “Your webinar is scheduled.” Errors name the problem and recovery: “We could not
 reach LiveKit. Your webinar settings are safe — try connecting again.” AI always labels itself and

@@ -32,11 +32,19 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={
         locale === "ru"
-          ? theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"
-          : theme === "dark" ? "Use light theme" : "Use dark theme"
+          ? theme === "dark"
+            ? "Включить светлую тему"
+            : "Включить тёмную тему"
+          : theme === "dark"
+            ? "Use light theme"
+            : "Use dark theme"
       }
     >
-      {theme === "dark" ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
+      {theme === "dark" ? (
+        <Sun size={17} aria-hidden="true" />
+      ) : (
+        <Moon size={17} aria-hidden="true" />
+      )}
     </button>
   );
 }

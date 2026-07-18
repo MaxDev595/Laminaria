@@ -11,14 +11,14 @@ Copy-Item .env.example .env
 .\pnpm.cmd install
 .\pnpm.cmd infra:up
 .\pnpm.cmd db:generate
-.\pnpm.cmd db:push
+.\pnpm.cmd db:bootstrap
 .\pnpm.cmd dev
 ```
 
 Open:
 
 - Web application: http://localhost:3000/en or http://localhost:3000/ru
-- API documentation: http://localhost:4000/docs
+- API documentation (development only): http://localhost:4000/docs
 - Mailpit inbox: http://localhost:8025
 - MinIO console: http://localhost:9001
 
@@ -47,9 +47,7 @@ English and Russian are first-class locales. The interface uses shared design to
 ## Verification
 
 ```powershell
-pnpm typecheck
-pnpm lint
-pnpm build
+.\pnpm.cmd check
 ```
 
 Commercial prices and numeric plan limits are deliberately unset until a business decision is approved. Webinar duration is never limited. AI, billing, and production email/storage providers fail closed when they are not configured.

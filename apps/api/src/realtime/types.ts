@@ -17,13 +17,7 @@ import type {
 } from "./schemas.js";
 
 export type RealtimeRole =
-  | "OWNER"
-  | "HOST"
-  | "COHOST"
-  | "MODERATOR"
-  | "SPEAKER"
-  | "ATTENDEE"
-  | "GUEST";
+  "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
 
 export interface RealtimePrincipal {
   id: string;
@@ -260,8 +254,7 @@ export interface RealtimeErrorPayload {
 }
 
 export type RealtimeAck<T> =
-  | { ok: true; data: T; replayed: boolean }
-  | { ok: false; error: RealtimeErrorPayload };
+  { ok: true; data: T; replayed: boolean } | { ok: false; error: RealtimeErrorPayload };
 
 export type RealtimeAcknowledge<T> = (result: RealtimeAck<T>) => void;
 
@@ -310,10 +303,7 @@ export interface ClientToServerEvents {
     payload: WebinarLeavePayload,
     acknowledge?: RealtimeAcknowledge<WebinarLeft>,
   ) => void;
-  "chat:send": (
-    payload: ChatSendPayload,
-    acknowledge?: RealtimeAcknowledge<ChatMessage>,
-  ) => void;
+  "chat:send": (payload: ChatSendPayload, acknowledge?: RealtimeAcknowledge<ChatMessage>) => void;
   "chat:delete": (
     payload: ChatDeletePayload,
     acknowledge?: RealtimeAcknowledge<ChatDeleted>,
@@ -342,22 +332,10 @@ export interface ClientToServerEvents {
     payload: QuestionModeratePayload,
     acknowledge?: RealtimeAcknowledge<Question>,
   ) => void;
-  "poll:create": (
-    payload: PollCreatePayload,
-    acknowledge?: RealtimeAcknowledge<Poll>,
-  ) => void;
-  "poll:open": (
-    payload: PollChangeStatePayload,
-    acknowledge?: RealtimeAcknowledge<Poll>,
-  ) => void;
-  "poll:close": (
-    payload: PollChangeStatePayload,
-    acknowledge?: RealtimeAcknowledge<Poll>,
-  ) => void;
-  "poll:vote": (
-    payload: PollVotePayload,
-    acknowledge?: RealtimeAcknowledge<Poll>,
-  ) => void;
+  "poll:create": (payload: PollCreatePayload, acknowledge?: RealtimeAcknowledge<Poll>) => void;
+  "poll:open": (payload: PollChangeStatePayload, acknowledge?: RealtimeAcknowledge<Poll>) => void;
+  "poll:close": (payload: PollChangeStatePayload, acknowledge?: RealtimeAcknowledge<Poll>) => void;
+  "poll:vote": (payload: PollVotePayload, acknowledge?: RealtimeAcknowledge<Poll>) => void;
 }
 
 export interface ServerToClientEvents {

@@ -25,7 +25,6 @@ export class AuthService {
       | "sessionIdleTtlSeconds"
       | "webAppUrl"
       | "skipEmailVerification"
-      | "phoneAuth"
     >,
     private readonly clock: Clock = { now: () => new Date() },
   ) {}
@@ -52,11 +51,23 @@ export class AuthService {
     if (this.config.skipEmailVerification) {
       const verifiedAt = this.clock.now();
       await this.repositories.users.markEmailVerified(user.id, verifiedAt);
-      return { id: user.id, email: user.email, name: user.name, locale: user.locale, emailVerifiedAt: verifiedAt };
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        locale: user.locale,
+        emailVerifiedAt: verifiedAt,
+      };
     }
 
     await this.issueVerification(user);
-    return { id: user.id, email: user.email, name: user.name, locale: user.locale, emailVerifiedAt: user.emailVerifiedAt };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      locale: user.locale,
+      emailVerifiedAt: user.emailVerifiedAt,
+    };
   }
 
   public async signIn(input: { email: string; password: string }): Promise<{
@@ -79,38 +90,6 @@ export class AuthService {
     return this.createSession(user);
   }
 
-  public async signInWithPhone(input: {
-    phone: string;
-    code: string;
-    name?: string | undefined;
-    locale: Locale;
-  }): Promise<{ actor: AuthenticatedActor; sessionToken: string }> {
-    if (input.code !== this.config.phoneAuth.devCode) {
-      throw new AppError(401, "UNAUTHENTICATED", "Invalid phone verification code");
-    }
-
-    const normalizedPhone = normalizePhone(input.phone);
-    if (!normalizedPhone) {
-      throw new AppError(400, "BAD_REQUEST", "Phone number is invalid");
-    }
-
-    const email = `phone+${normalizedPhone}@phone.laminaria.local`;
-    const existing = await this.repositories.users.findByEmail(email);
-    const user = existing ?? await this.repositories.users.create({
-      email,
-      name: input.name?.trim() || `Phone ${normalizedPhone.slice(-4)}`,
-      passwordHash: await hashPassword(createOpaqueToken()),
-      locale: input.locale,
-    });
-
-    if (!user.emailVerifiedAt) {
-      await this.repositories.users.markEmailVerified(user.id, this.clock.now());
-      return this.createSession({ ...user, emailVerifiedAt: this.clock.now() });
-    }
-
-    return this.createSession(user);
-  }
-
   public async signInWithGoogle(input: {
     email: string;
     name: string;
@@ -123,12 +102,14 @@ export class AuthService {
 
     const email = normalizeEmail(input.email);
     const existing = await this.repositories.users.findByEmail(email);
-    const user = existing ?? await this.repositories.users.create({
-      email,
-      name: input.name.trim() || email.split("@")[0] || "Google user",
-      passwordHash: await hashPassword(createOpaqueToken()),
-      locale: input.locale,
-    });
+    const user =
+      existing ??
+      (await this.repositories.users.create({
+        email,
+        name: input.name.trim() || email.split("@")[0] || "Google user",
+        passwordHash: await hashPassword(createOpaqueToken()),
+        locale: input.locale,
+      }));
 
     if (!user.emailVerifiedAt) {
       const verifiedAt = this.clock.now();
@@ -142,7 +123,10 @@ export class AuthService {
   public async authenticate(sessionToken: string): Promise<AuthenticatedActor | null> {
     if (sessionToken.length < 32 || sessionToken.length > 256) return null;
     const now = this.clock.now();
-    const session = await this.repositories.sessions.findActiveByTokenHash(this.hashToken(sessionToken), now);
+    const session = await this.repositories.sessions.findActiveByTokenHash(
+      this.hashToken(sessionToken),
+      now,
+    );
     if (!session) return null;
     const idleLimit = new Date(now.getTime() - this.config.sessionIdleTtlSeconds * 1_000);
     if (session.lastSeenAt <= idleLimit) {
@@ -186,7 +170,11 @@ export class AuthService {
     }
     const user = await this.repositories.users.findByEmail(normalizeEmail(emailInput));
     if (!user || user.emailVerifiedAt) return;
-    await this.repositories.tokens.invalidateForUser(user.id, "EMAIL_VERIFICATION", this.clock.now());
+    await this.repositories.tokens.invalidateForUser(
+      user.id,
+      "EMAIL_VERIFICATION",
+      this.clock.now(),
+    );
     await this.issueVerification(user);
   }
 
@@ -215,7 +203,11 @@ export class AuthService {
 
   public async resetPassword(token: string, password: string): Promise<void> {
     const now = this.clock.now();
-    const record = await this.repositories.tokens.consume(this.hashToken(token), "PASSWORD_RESET", now);
+    const record = await this.repositories.tokens.consume(
+      this.hashToken(token),
+      "PASSWORD_RESET",
+      now,
+    );
     if (!record?.userId) {
       throw new AppError(400, "BAD_REQUEST", "Password reset token is invalid or expired");
     }
@@ -269,11 +261,6 @@ export class AuthService {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLocaleLowerCase("en-US");
-}
-
-function normalizePhone(phone: string): string | null {
-  const digits = phone.replace(/\D/g, "");
-  return digits.length >= 10 && digits.length <= 15 ? digits : null;
 }
 
 function pickPublicUser(user: UserRecord): AuthenticatedActor["user"] {

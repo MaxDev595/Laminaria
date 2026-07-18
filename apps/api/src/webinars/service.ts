@@ -53,7 +53,11 @@ export class WebinarService {
     return updated;
   }
 
-  public async transition(id: string, target: WebinarStatus, version: number): Promise<WebinarRecord> {
+  public async transition(
+    id: string,
+    target: WebinarStatus,
+    version: number,
+  ): Promise<WebinarRecord> {
     const current = await this.find(id);
     assertWebinarTransition(current.status, target);
     if (target === "SCHEDULED" && !current.scheduledStartAt) {
@@ -61,9 +65,14 @@ export class WebinarService {
     }
     const updated = await this.webinars.transition(id, version, current.status, target);
     if (!updated) {
-      throw new AppError(409, "CONFLICT", "Webinar state changed before this transition completed", {
-        reason: "STALE_VERSION",
-      });
+      throw new AppError(
+        409,
+        "CONFLICT",
+        "Webinar state changed before this transition completed",
+        {
+          reason: "STALE_VERSION",
+        },
+      );
     }
     return updated;
   }

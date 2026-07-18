@@ -18,13 +18,16 @@ export function authenticationPlugin(
   config: Pick<AppConfig, "sessionCookieName">,
   auth: AuthService,
 ) {
-  return fp(async (app: FastifyInstance) => {
-    app.decorateRequest("actor", null);
-    app.addHook("onRequest", async (request) => {
-      const token = request.cookies[config.sessionCookieName] ?? bearerToken(request);
-      request.actor = token ? await auth.authenticate(token) : null;
-    });
-  }, { name: "laminaria-authentication", dependencies: ["@fastify/cookie"] });
+  return fp(
+    async (app: FastifyInstance) => {
+      app.decorateRequest("actor", null);
+      app.addHook("onRequest", async (request) => {
+        const token = request.cookies[config.sessionCookieName] ?? bearerToken(request);
+        request.actor = token ? await auth.authenticate(token) : null;
+      });
+    },
+    { name: "laminaria-authentication", dependencies: ["@fastify/cookie"] },
+  );
 }
 
 function bearerToken(request: FastifyRequest): string | null {
@@ -64,7 +67,8 @@ export async function requireWebinarPermission(
   if (!webinar) throw new AppError(404, "NOT_FOUND", "Webinar not found");
   const membership = await repositories.workspaces.findMember(webinar.workspaceId, actor.user.id);
   const explicitRole = await repositories.webinars.findParticipantRole(webinar.id, actor.user.id);
-  const role = membership?.role === "OWNER" || membership?.role === "ADMIN" ? "OWNER" : explicitRole;
+  const role =
+    membership?.role === "OWNER" || membership?.role === "ADMIN" ? "OWNER" : explicitRole;
   if (!role) throw new AppError(404, "NOT_FOUND", "Webinar not found");
   assertWebinarPermission(role, permission);
   return { actor, webinar, role };

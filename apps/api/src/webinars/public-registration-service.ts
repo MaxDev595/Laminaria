@@ -39,12 +39,17 @@ export class PublicRegistrationService {
     name: string;
     locale: Locale;
     userId?: string;
-  }): Promise<{ registration: RegistrationRecord; accessToken: string | null; confirmationRequired: boolean }> {
+  }): Promise<{
+    registration: RegistrationRecord;
+    accessToken: string | null;
+    confirmationRequired: boolean;
+  }> {
     const webinar = await this.publicWebinar(input.slug);
     if (webinar.status !== "SCHEDULED" && webinar.status !== "LIVE") {
       throw new AppError(409, "CONFLICT", "Registration is closed", { status: webinar.status });
     }
-    const confirmationRequired = webinar.requireEmailRegistration && !this.skipEmailVerification && this.mail.configured;
+    const confirmationRequired =
+      webinar.requireEmailRegistration && !this.skipEmailVerification && this.mail.configured;
     if (webinar.requireEmailRegistration && !this.skipEmailVerification && !this.mail.configured) {
       throw new ServiceNotConfiguredError("Mail");
     }
@@ -88,7 +93,9 @@ export class PublicRegistrationService {
     };
   }
 
-  public async confirm(token: string): Promise<{ registration: RegistrationRecord; accessToken: string }> {
+  public async confirm(
+    token: string,
+  ): Promise<{ registration: RegistrationRecord; accessToken: string }> {
     const registration = await this.repositories.registrations.confirmByTokenHash(
       hashOpaqueToken(token, this.tokenPepper),
       new Date(),
@@ -97,16 +104,14 @@ export class PublicRegistrationService {
     return { registration, accessToken: token };
   }
 
-  public async prejoin(input: {
-    slug: string;
-    accessToken?: string;
-    guestName?: string;
-  }) {
+  public async prejoin(input: { slug: string; accessToken?: string; guestName?: string }) {
     const webinar = await this.publicWebinar(input.slug);
     if (webinar.status !== "LIVE") {
-      throw new AppError(409, "CONFLICT", "The webinar room is not open", { status: webinar.status });
+      throw new AppError(409, "CONFLICT", "The webinar room is not open", {
+        status: webinar.status,
+      });
     }
-    const active = await this.repositories.webinars.countActiveParticipants(webinar.id);
+    const active = await this.livekit.countParticipants(webinar.livekitRoomName);
     if (webinar.maxAttendees !== null && active >= webinar.maxAttendees) {
       throw new AppError(409, "CONFLICT", "The webinar is at capacity", { reason: "ROOM_FULL" });
     }
@@ -118,14 +123,19 @@ export class PublicRegistrationService {
       const registration = await this.repositories.registrations.findByTokenHash(
         hashOpaqueToken(input.accessToken, this.tokenPepper),
       );
-      if (!registration || registration.webinarId !== webinar.id || registration.status !== "CONFIRMED") {
+      if (
+        !registration ||
+        registration.webinarId !== webinar.id ||
+        registration.status !== "CONFIRMED"
+      ) {
         throw new AppError(401, "UNAUTHENTICATED", "Registration token is invalid");
       }
       subject = `registration:${registration.id}`;
       displayName = registration.name;
       role = "ATTENDEE";
     } else {
-      if (!webinar.allowGuests) throw new AppError(401, "UNAUTHENTICATED", "Registration is required");
+      if (!webinar.allowGuests)
+        throw new AppError(401, "UNAUTHENTICATED", "Registration is required");
       const guestName = input.guestName?.trim();
       if (!guestName) throw new AppError(400, "BAD_REQUEST", "Guest name is required");
       subject = `guest:${randomUUID()}`;
@@ -143,7 +153,12 @@ export class PublicRegistrationService {
     return {
       webinarId: webinar.id,
       media,
-      realtimeToken: this.participants.issue({ subject, webinarId: webinar.id, role, name: displayName }),
+      realtimeToken: this.participants.issue({
+        subject,
+        webinarId: webinar.id,
+        role,
+        name: displayName,
+      }),
       participant: { identity, displayName, role },
     };
   }

@@ -24,6 +24,8 @@ import type {
 import type {
   OneTimeTokenRepository,
   RegistrationRepository,
+  ModerationRestrictionRecord,
+  ModerationRestrictionRepository,
   SessionRepository,
   UnitOfWork,
   UserRepository,
@@ -59,6 +61,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
   public readonly workspaces: WorkspaceRepository;
   public readonly webinars: WebinarRepository;
   public readonly registrations: RegistrationRepository;
+  public readonly moderationRestrictions: ModerationRestrictionRepository;
 
   public constructor(databaseUrl: string) {
     const adapter = new PrismaPg({ connectionString: databaseUrl });
@@ -70,6 +73,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.workspaces = this.createWorkspaceRepository();
     this.webinars = this.createWebinarRepository();
     this.registrations = this.createRegistrationRepository();
+    this.moderationRestrictions = this.createModerationRestrictionRepository();
   }
 
   public async healthcheck(): Promise<void> {
@@ -78,6 +82,47 @@ export class PrismaUnitOfWork implements UnitOfWork {
 
   public async close(): Promise<void> {
     await this.#client.$disconnect();
+  }
+
+  private createModerationRestrictionRepository(): ModerationRestrictionRepository {
+    return {
+      find: async (webinarId, targetId) => {
+        const event = await this.#client.moderationEvent.findFirst({
+          where: {
+            webinarSession: { webinarId },
+            category: "CUSTOM",
+            metadata: { path: ["targetId"], equals: targetId },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { metadata: true },
+        });
+        return restrictionFromMetadata(event?.metadata);
+      },
+      save: async ({ webinarId, targetId, state }) => {
+        const session = await this.#client.webinarSession.findFirst({
+          where: { webinarId },
+          orderBy: { sequence: "desc" },
+          select: { id: true },
+        });
+        if (!session) throw missingWebinarSessionError(webinarId);
+        await this.#client.moderationEvent.create({
+          data: {
+            webinarSessionId: session.id,
+            source: "MANUAL",
+            category: "CUSTOM",
+            action: state.bannedUntil !== undefined ? "DISCONNECT" : "MUTE",
+            ...(state.reason !== undefined ? { reason: state.reason } : {}),
+            metadata: {
+              targetId,
+              targetName: state.targetName,
+              ...(state.mutedUntil !== undefined ? { mutedUntil: state.mutedUntil } : {}),
+              ...(state.bannedUntil !== undefined ? { bannedUntil: state.bannedUntil } : {}),
+              ...(state.reason !== undefined ? { reason: state.reason } : {}),
+            },
+          },
+        });
+      },
+    };
   }
 
   private createUserRepository(): UserRepository {
@@ -254,7 +299,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
           },
         });
         if (existing) {
-          const role = existing.role === "OWNER" || existing.role === "ADMIN" ? existing.role : input.role;
+          const role =
+            existing.role === "OWNER" || existing.role === "ADMIN" ? existing.role : input.role;
           const member = await this.#client.workspaceMember.update({
             where: { id: existing.id },
             data: {
@@ -621,9 +667,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
             locale: toDatabaseLocale(input.locale),
             status: input.status,
             tokenHash: input.tokenHash,
-            ...(input.status === "CONFIRMED"
-              ? { confirmedAt: new Date() }
-              : {}),
+            ...(input.status === "CONFIRMED" ? { confirmedAt: new Date() } : {}),
           },
         });
         return mapRegistration(registration);
@@ -741,13 +785,7 @@ function mapRegistration(registration: Registration): RegistrationRecord {
 }
 
 function toDomainRegistrationStatus(
-  status:
-    | "PENDING"
-    | "CONFIRMED"
-    | "WAITLISTED"
-    | "CANCELLED"
-    | "ATTENDED"
-    | "NO_SHOW",
+  status: "PENDING" | "CONFIRMED" | "WAITLISTED" | "CANCELLED" | "ATTENDED" | "NO_SHOW",
 ): RegistrationRecord["status"] {
   switch (status) {
     case "PENDING":
@@ -774,9 +812,7 @@ function normalizeEmail(email: string): string {
   return email.trim().toLocaleLowerCase("en-US");
 }
 
-function toSupportedAuthTokenKind(
-  kind: OneTimeTokenKind,
-): SupportedAuthTokenKind | null {
+function toSupportedAuthTokenKind(kind: OneTimeTokenKind): SupportedAuthTokenKind | null {
   if (kind === "EMAIL_VERIFICATION" || kind === "PASSWORD_RESET") return kind;
   return null;
 }
@@ -795,9 +831,7 @@ function missingWebinarSessionError(webinarId: string): Error {
   return new Error(`Webinar ${webinarId} has no current WebinarSession`);
 }
 
-function toSessionStatus(
-  status: WebinarStatus,
-): "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED" {
+function toSessionStatus(status: WebinarStatus): "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED" {
   switch (status) {
     case "DRAFT":
     case "SCHEDULED":
@@ -854,4 +888,25 @@ function sessionTransitionTimestamps(
     case "ARCHIVED":
       return {};
   }
+}
+
+function restrictionFromMetadata(
+  value: Prisma.JsonValue | null | undefined,
+): ModerationRestrictionRecord | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const targetName = value["targetName"];
+  if (typeof targetName !== "string") return null;
+  const mutedUntil = restrictionTimestamp(value["mutedUntil"]);
+  const bannedUntil = restrictionTimestamp(value["bannedUntil"]);
+  const reason = value["reason"];
+  return {
+    targetName,
+    ...(mutedUntil !== undefined ? { mutedUntil } : {}),
+    ...(bannedUntil !== undefined ? { bannedUntil } : {}),
+    ...(typeof reason === "string" ? { reason } : {}),
+  };
+}
+
+function restrictionTimestamp(value: Prisma.JsonValue | undefined): number | null | undefined {
+  return value === null || typeof value === "number" ? value : undefined;
 }

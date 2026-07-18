@@ -2,7 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, LoaderCircle, Mail } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  Mail,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -41,7 +49,11 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
   const isSignIn = mode === "sign-in";
-  const title = isSignUp ? t("auth.signUp") : isForgot || isReset ? t("auth.resetPassword") : t("auth.signIn");
+  const title = isSignUp
+    ? t("auth.signUp")
+    : isForgot || isReset
+      ? t("auth.resetPassword")
+      : t("auth.signIn");
   const subtitle = isSignUp
     ? locale === "ru"
       ? "Создайте аккаунт через email или Google."
@@ -60,7 +72,8 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
 
   useEffect(() => {
     let active = true;
-    api.authProviders()
+    api
+      .authProviders()
       .then((value) => {
         if (active) setProviders(value);
       })
@@ -69,7 +82,8 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
       });
 
     if (mode === "sign-in") {
-      api.me()
+      api
+        .me()
         .then((payload) => {
           if (!active) return;
           queryClient.setQueryData(["me"], payload);
@@ -93,9 +107,18 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
     try {
       if (mode === "sign-up") {
         if (!values.name || !values.email || !values.password || values.password.length < 12) {
-          throw new Error(locale === "ru" ? "Укажите имя, email и пароль от 12 символов." : "Enter your name, email, and a password of at least 12 characters.");
+          throw new Error(
+            locale === "ru"
+              ? "Укажите имя, email и пароль от 12 символов."
+              : "Enter your name, email, and a password of at least 12 characters.",
+          );
         }
-        const result = await api.signUp({ name: values.name, email: values.email, password: values.password, locale });
+        const result = await api.signUp({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          locale,
+        });
         if (result.verificationRequired) {
           router.push("/verify-email?sent=1");
           return;
@@ -104,25 +127,39 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         router.replace("/dashboard");
       } else if (mode === "sign-in") {
         if (!values.email || !values.password) {
-          throw new Error(locale === "ru" ? "Введите email и пароль." : "Enter your email and password.");
+          throw new Error(
+            locale === "ru" ? "Введите email и пароль." : "Enter your email and password.",
+          );
         }
         rememberAuthenticated(await api.signIn({ email: values.email, password: values.password }));
         router.replace("/dashboard");
       } else if (mode === "forgot") {
-        if (!values.email) throw new Error(locale === "ru" ? "Введите email." : "Enter your email.");
+        if (!values.email)
+          throw new Error(locale === "ru" ? "Введите email." : "Enter your email.");
         await api.forgotPassword(values.email);
         setSuccess(true);
       } else {
-        if (!token) throw new Error(locale === "ru" ? "Ссылка восстановления недействительна." : "The reset link is invalid.");
+        if (!token)
+          throw new Error(
+            locale === "ru"
+              ? "Ссылка восстановления недействительна."
+              : "The reset link is invalid.",
+          );
         if (!values.password || values.password.length < 12) {
-          throw new Error(locale === "ru" ? "Пароль должен содержать минимум 12 символов." : "Use at least 12 characters.");
+          throw new Error(
+            locale === "ru"
+              ? "Пароль должен содержать минимум 12 символов."
+              : "Use at least 12 characters.",
+          );
         }
         await api.resetPassword(token, values.password);
         queryClient.clear();
         setSuccess(true);
       }
     } catch (error) {
-      setServerError(error instanceof Error && !("code" in error) ? error.message : friendlyError(error, locale));
+      setServerError(
+        error instanceof Error && !("code" in error) ? error.message : friendlyError(error, locale),
+      );
     }
   }
 
@@ -140,9 +177,23 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
 
   if (success) {
     return (
-      <motion.div className="auth-success" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
-        <span><CheckCircle2 size={28} /></span>
-        <h1>{isForgot ? (locale === "ru" ? "Проверьте почту" : "Check your inbox") : (locale === "ru" ? "Пароль обновлён" : "Password updated")}</h1>
+      <motion.div
+        className="auth-success"
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <span>
+          <CheckCircle2 size={28} />
+        </span>
+        <h1>
+          {isForgot
+            ? locale === "ru"
+              ? "Проверьте почту"
+              : "Check your inbox"
+            : locale === "ru"
+              ? "Пароль обновлён"
+              : "Password updated"}
+        </h1>
         <p>
           {isForgot
             ? locale === "ru"
@@ -153,20 +204,27 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
               : "You can now sign in with your new password."}
         </p>
         <Link href="/sign-in">
-          <Button>{t("auth.signIn")}<ArrowRight size={17} /></Button>
+          <Button>
+            {t("auth.signIn")}
+            <ArrowRight size={17} />
+          </Button>
         </Link>
       </motion.div>
     );
   }
 
   return (
-    <motion.div className="auth-form-wrap" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.div
+      className="auth-form-wrap"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
       <div className="auth-heading">
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </div>
 
-      {(isSignIn || isSignUp) ? (
+      {isSignIn || isSignUp ? (
         <button type="button" className="google-auth-button" onClick={startGoogle}>
           <span>G</span>
           {locale === "ru" ? "Продолжить через Google" : "Continue with Google"}
@@ -182,18 +240,44 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
 
         {!isReset ? (
           <Field label={t("auth.email")} error={form.formState.errors.email?.message}>
-            <Input type="email" autoComplete="email" inputMode="email" {...form.register("email")} />
+            <Input
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              {...form.register("email")}
+            />
           </Field>
         ) : null}
 
         {!isForgot ? (
-          <Field label={t("auth.password")} hint={isSignUp || isReset ? (locale === "ru" ? "Минимум 12 символов" : "At least 12 characters") : undefined}>
+          <Field
+            label={t("auth.password")}
+            hint={
+              isSignUp || isReset
+                ? locale === "ru"
+                  ? "Минимум 12 символов"
+                  : "At least 12 characters"
+                : undefined
+            }
+          >
             <div className="password-field">
-              <Input type={visible ? "text" : "password"} autoComplete={isSignUp || isReset ? "new-password" : "current-password"} {...form.register("password")} />
+              <Input
+                type={visible ? "text" : "password"}
+                autoComplete={isSignUp || isReset ? "new-password" : "current-password"}
+                {...form.register("password")}
+              />
               <button
                 type="button"
                 onClick={() => setVisible((value) => !value)}
-                aria-label={visible ? (locale === "ru" ? "Скрыть пароль" : "Hide password") : (locale === "ru" ? "Показать пароль" : "Show password")}
+                aria-label={
+                  visible
+                    ? locale === "ru"
+                      ? "Скрыть пароль"
+                      : "Hide password"
+                    : locale === "ru"
+                      ? "Показать пароль"
+                      : "Show password"
+                }
               >
                 {visible ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -202,12 +286,20 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         ) : null}
 
         {isSignIn ? (
-          <Link href="/forgot-password" className="form-link">{t("auth.forgotPassword")}</Link>
+          <Link href="/forgot-password" className="form-link">
+            {t("auth.forgotPassword")}
+          </Link>
         ) : null}
 
         <AnimatePresence>
           {serverError ? (
-            <motion.div className="form-alert" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+            <motion.div
+              className="form-alert"
+              role="alert"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
               <AlertCircle size={17} />
               {serverError}
             </motion.div>
@@ -215,11 +307,17 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         </AnimatePresence>
 
         <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : isForgot ? <Mail size={18} /> : null}
+          {form.formState.isSubmitting ? (
+            <LoaderCircle className="spin" size={18} />
+          ) : isForgot ? (
+            <Mail size={18} />
+          ) : null}
           {isSignUp
             ? t("auth.signUp")
             : isForgot
-              ? locale === "ru" ? "Отправить ссылку" : "Send reset link"
+              ? locale === "ru"
+                ? "Отправить ссылку"
+                : "Send reset link"
               : isReset
                 ? t("auth.resetPassword")
                 : t("auth.signIn")}
@@ -229,7 +327,9 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
 
       <p className="auth-alternate">
         {isSignUp ? t("auth.haveAccount") : t("auth.noAccount")}{" "}
-        <Link href={isSignUp ? "/sign-in" : "/sign-up"}>{isSignUp ? t("auth.signIn") : t("auth.signUp")}</Link>
+        <Link href={isSignUp ? "/sign-in" : "/sign-up"}>
+          {isSignUp ? t("auth.signIn") : t("auth.signUp")}
+        </Link>
       </p>
     </motion.div>
   );

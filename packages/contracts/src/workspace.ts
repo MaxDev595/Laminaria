@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { dateTimeSchema, emailSchema, idSchema, localeSchema, slugSchema, timezoneSchema } from "./common.js";
+import {
+  dateTimeSchema,
+  emailSchema,
+  idSchema,
+  localeSchema,
+  slugSchema,
+  timezoneSchema,
+} from "./common.js";
 
 export const workspaceRoleSchema = z.enum(["OWNER", "ADMIN", "MEMBER"]);
 

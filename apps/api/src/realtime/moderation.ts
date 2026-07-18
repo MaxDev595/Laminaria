@@ -52,4 +52,3 @@ export class RuleBasedModerationService implements ModerationService {
     return { decision: "allow", normalizedText };
   }
 }
-

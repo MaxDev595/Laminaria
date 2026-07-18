@@ -29,7 +29,13 @@ export function Field({
     <label className="field">
       <span className="field__label">{label}</span>
       {children}
-      {error ? <span className="field__error" role="alert">{error}</span> : hint ? <span className="field__hint">{hint}</span> : null}
+      {error ? (
+        <span className="field__error" role="alert">
+          {error}
+        </span>
+      ) : hint ? (
+        <span className="field__hint">{hint}</span>
+      ) : null}
     </label>
   );
 }
@@ -59,7 +65,9 @@ export function ServiceState({
 }) {
   return (
     <div className="service-state" role="status">
-      <span className="service-state__icon" aria-hidden="true">{icon}</span>
+      <span className="service-state__icon" aria-hidden="true">
+        {icon}
+      </span>
       <div>
         <strong>{title}</strong>
         <p>{description}</p>

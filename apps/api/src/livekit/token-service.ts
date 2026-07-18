@@ -1,9 +1,4 @@
-import {
-  AccessToken,
-  RoomServiceClient,
-  TrackSource,
-  type VideoGrant,
-} from "livekit-server-sdk";
+import { AccessToken, RoomServiceClient, TrackSource, type VideoGrant } from "livekit-server-sdk";
 import type { ParticipantRole, WebinarRecord } from "../domain/models.js";
 import { AppError, ServiceNotConfiguredError } from "../errors.js";
 import { hasWebinarPermission } from "../auth/rbac.js";
@@ -30,14 +25,38 @@ export class LiveKitTokenService {
     return this.config !== null;
   }
 
+  public async countParticipants(roomName: string): Promise<number> {
+    if (!this.config) throw new ServiceNotConfiguredError("LiveKit");
+    const rooms = this.roomService();
+    try {
+      return (await rooms.listParticipants(roomName)).length;
+    } catch (error) {
+      if (isMissingRoomError(error)) return 0;
+      throw error;
+    }
+  }
+
+  public async removeParticipantsBySubject(roomName: string, subject: string): Promise<void> {
+    if (!this.config) return;
+    const rooms = this.roomService();
+    let participants;
+    try {
+      participants = await rooms.listParticipants(roomName);
+    } catch (error) {
+      if (isMissingRoomError(error)) return;
+      throw error;
+    }
+    const matching = participants.filter(
+      (participant) => participantSubject(participant.metadata) === subject,
+    );
+    await Promise.all(
+      matching.map((participant) => rooms.removeParticipant(roomName, participant.identity)),
+    );
+  }
+
   public async closeRoom(roomName: string): Promise<void> {
     if (!this.config) return;
-
-    const rooms = new RoomServiceClient(
-      toLiveKitApiUrl(this.config.url),
-      this.config.apiKey,
-      this.config.apiSecret,
-    );
+    const rooms = this.roomService();
 
     try {
       await rooms.deleteRoom(roomName);
@@ -98,6 +117,15 @@ export class LiveKitTokenService {
       identity: input.identity,
     };
   }
+
+  private roomService(): RoomServiceClient {
+    if (!this.config) throw new ServiceNotConfiguredError("LiveKit");
+    return new RoomServiceClient(
+      toLiveKitApiUrl(this.config.url),
+      this.config.apiKey,
+      this.config.apiSecret,
+    );
+  }
 }
 
 function toLiveKitApiUrl(url: string): string {
@@ -115,4 +143,13 @@ function isMissingRoomError(error: unknown): boolean {
   }
   const message = typeof record["message"] === "string" ? record["message"] : "";
   return /not\s*found|room.*does.*not.*exist/i.test(message);
+}
+
+function participantSubject(metadata: string): string | null {
+  try {
+    const parsed = JSON.parse(metadata) as { subject?: unknown };
+    return typeof parsed.subject === "string" ? parsed.subject : null;
+  } catch {
+    return null;
+  }
 }

@@ -12,7 +12,10 @@
     },
     "./styles.css": "./src/styles/index.css"
   },
-  "files": ["dist", "src/styles"],
+  "files": [
+    "dist",
+    "src/styles"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

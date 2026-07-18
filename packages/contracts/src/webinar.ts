@@ -17,10 +17,28 @@ export const webinarStatusSchema = z.enum([
   "CANCELLED",
   "ARCHIVED",
 ]);
-export const webinarSessionStatusSchema = z.enum(["SCHEDULED", "WAITING", "LIVE", "ENDED", "CANCELLED"]);
+export const webinarSessionStatusSchema = z.enum([
+  "SCHEDULED",
+  "WAITING",
+  "LIVE",
+  "ENDED",
+  "CANCELLED",
+]);
 export const webinarAccessSchema = z.enum(["PUBLIC", "PRIVATE", "PASSWORD_PROTECTED"]);
-export const webinarRoleSchema = z.enum(["HOST", "COHOST", "MODERATOR", "SPEAKER", "ATTENDEE", "GUEST"]);
-export const webinarHostRoleSchema = webinarRoleSchema.extract(["HOST", "COHOST", "MODERATOR", "SPEAKER"]);
+export const webinarRoleSchema = z.enum([
+  "HOST",
+  "COHOST",
+  "MODERATOR",
+  "SPEAKER",
+  "ATTENDEE",
+  "GUEST",
+]);
+export const webinarHostRoleSchema = webinarRoleSchema.extract([
+  "HOST",
+  "COHOST",
+  "MODERATOR",
+  "SPEAKER",
+]);
 export const registrationStatusSchema = z.enum([
   "PENDING",
   "CONFIRMED",
@@ -147,7 +165,10 @@ export function canTransitionWebinar(from: WebinarStatus, to: WebinarStatus): bo
 export class InvalidWebinarTransitionError extends Error {
   readonly code = "INVALID_WEBINAR_TRANSITION";
 
-  constructor(readonly from: WebinarStatus, readonly to: WebinarStatus) {
+  constructor(
+    readonly from: WebinarStatus,
+    readonly to: WebinarStatus,
+  ) {
     super(`Webinar cannot transition from ${from} to ${to}`);
     this.name = "InvalidWebinarTransitionError";
   }

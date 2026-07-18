@@ -2,14 +2,10 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
-const allowUnsafeEval =
-  isDevelopment || process.env.NEXT_PUBLIC_ALLOW_UNSAFE_EVAL === "true";
-const scriptPolicy = allowUnsafeEval
+const scriptPolicy = isDevelopment
   ? "'self' 'unsafe-inline' 'unsafe-eval'"
   : "'self' 'unsafe-inline'";
-const localApiOrigin = new URL(
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000",
-).origin;
+const localApiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").origin;
 const connectPolicy = [
   "'self'",
   "https:",
@@ -57,7 +53,10 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
-          { key: "Permissions-Policy", value: "camera=(self), microphone=(self), display-capture=(self), geolocation=()" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(self), display-capture=(self), geolocation=()",
+          },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],
       },

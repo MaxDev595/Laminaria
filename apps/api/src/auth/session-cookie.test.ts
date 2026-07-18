@@ -32,6 +32,36 @@ describe("auth session cookie", () => {
       const csrfToken = (JSON.parse(csrf.body) as { csrfToken: string }).csrfToken;
       const csrfCookie = toCookieHeader(csrf.headers["set-cookie"]);
 
+      const providers = await application.app.inject({
+        method: "GET",
+        url: "/v1/auth/providers",
+      });
+      expect(JSON.parse(providers.body)).toEqual({
+        google: { enabled: false },
+      });
+
+      const rejectedOrigin = await application.app.inject({
+        method: "OPTIONS",
+        url: "/v1/auth/providers",
+        headers: {
+          origin: "https://evil.example",
+          "access-control-request-method": "GET",
+        },
+      });
+      expect(rejectedOrigin.statusCode).toBeLessThan(500);
+      expect(rejectedOrigin.headers["access-control-allow-origin"]).toBeUndefined();
+
+      const removedPhoneAuth = await application.app.inject({
+        method: "POST",
+        url: "/v1/auth/phone/verify",
+        headers: {
+          cookie: csrfCookie,
+          "x-csrf-token": csrfToken,
+        },
+        payload: { phone: "+15550000000", code: "000000" },
+      });
+      expect(removedPhoneAuth.statusCode).toBe(404);
+
       const signUp = await application.app.inject({
         method: "POST",
         url: "/v1/auth/sign-up",
@@ -103,7 +133,6 @@ const testConfig: AppConfig = {
   skipEmailVerification: true,
   livekit: null,
   mail: null,
-  phoneAuth: { devCode: "000000" },
   google: null,
   ai: null,
   billing: null,
@@ -148,7 +177,8 @@ class MemoryUnitOfWork implements UnitOfWork {
     },
     markEmailVerified: async (userId: string, verifiedAt: Date) => {
       const user = this.#users.get(userId);
-      if (user) this.#users.set(userId, { ...user, emailVerifiedAt: verifiedAt, updatedAt: verifiedAt });
+      if (user)
+        this.#users.set(userId, { ...user, emailVerifiedAt: verifiedAt, updatedAt: verifiedAt });
     },
     updatePassword: async (userId: string, passwordHash: string) => {
       const user = this.#users.get(userId);
@@ -185,13 +215,19 @@ class MemoryUnitOfWork implements UnitOfWork {
       ) ?? null,
     touchIfOlderThan: async (sessionId: string, threshold: Date, now: Date) => {
       const session = this.#sessions.get(sessionId);
-      if (session && session.lastSeenAt < threshold && session.expiresAt > now && !session.revokedAt) {
+      if (
+        session &&
+        session.lastSeenAt < threshold &&
+        session.expiresAt > now &&
+        !session.revokedAt
+      ) {
         this.#sessions.set(sessionId, { ...session, lastSeenAt: now });
       }
     },
     revoke: async (sessionId: string, at: Date) => {
       const session = this.#sessions.get(sessionId);
-      if (session && !session.revokedAt) this.#sessions.set(sessionId, { ...session, revokedAt: at });
+      if (session && !session.revokedAt)
+        this.#sessions.set(sessionId, { ...session, revokedAt: at });
     },
     revokeAllForUser: async (userId: string, at: Date) => {
       for (const session of this.#sessions.values()) {
@@ -218,14 +254,25 @@ class MemoryUnitOfWork implements UnitOfWork {
 
   public readonly workspaces = {
     findMember: async (): Promise<WorkspaceMemberRecord | null> => null,
-    upsertMember: async (): Promise<WorkspaceMemberRecord> => ({ workspaceId: this.nextId("workspace"), userId: this.nextId("user"), role: "MEMBER" }),
-    createWithOwner: async (): Promise<{ id: string; name: string; slug: string; role: WorkspaceRole }> => ({
+    upsertMember: async (): Promise<WorkspaceMemberRecord> => ({
+      workspaceId: this.nextId("workspace"),
+      userId: this.nextId("user"),
+      role: "MEMBER",
+    }),
+    createWithOwner: async (): Promise<{
+      id: string;
+      name: string;
+      slug: string;
+      role: WorkspaceRole;
+    }> => ({
       id: this.nextId("workspace"),
       name: "Test",
       slug: "test",
       role: "OWNER",
     }),
-    listForUser: async (): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]> => [],
+    listForUser: async (): Promise<
+      readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]
+    > => [],
   };
 
   public readonly webinars = {

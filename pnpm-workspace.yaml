@@ -2,10 +2,14 @@ packages:
   - apps/*
   - packages/*
 
+overrides:
+  "@hono/node-server": 1.19.13
+  postcss: 8.5.10
+
 allowBuilds:
-  '@parcel/watcher': true
-  '@prisma/engines': true
-  '@swc/core': true
+  "@parcel/watcher": true
+  "@prisma/engines": true
+  "@swc/core": true
   argon2: true
   esbuild: true
   msgpackr-extract: true
@@ -14,21 +18,21 @@ allowBuilds:
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
-  - '@aws-sdk/client-s3@3.1084.0'
+  - "@aws-sdk/client-s3@3.1084.0"
   - bullmq@5.80.0
   - icu-minify@4.13.2
   - next-intl-swc-plugin-extractor@4.13.2
   - next-intl@4.13.2
   - prettier@3.9.5
   - use-intl@4.13.2
-  - '@eslint/eslintrc@3.3.6'
-  - '@eslint/js@9.39.5'
+  - "@eslint/eslintrc@3.3.6"
+  - "@eslint/js@9.39.5"
   - eslint@9.39.5
 
 onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@prisma/engines'
-  - '@swc/core'
+  - "@parcel/watcher"
+  - "@prisma/engines"
+  - "@swc/core"
   - argon2
   - esbuild
   - msgpackr-extract

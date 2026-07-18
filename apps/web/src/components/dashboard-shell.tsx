@@ -35,7 +35,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : window.localStorage.getItem("laminaria-workspace-id"),
+  );
   const me = useQuery({ queryKey: ["me"], queryFn: ({ signal }) => api.me(signal) });
   const workspaces = useQuery({
     queryKey: ["workspaces"],
@@ -48,18 +50,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       router.replace("/onboarding");
     }
   }, [workspaces.isSuccess, workspaces.data, router]);
-
-  useEffect(() => {
-    if (!workspaces.isSuccess || workspaces.data.workspaces.length === 0) return;
-    const available = workspaces.data.workspaces;
-    const saved = window.localStorage.getItem("laminaria-workspace-id");
-    const next = available.some((workspace) => workspace.id === saved)
-      ? saved
-      : available[0]!.id;
-    setSelectedWorkspaceId((current) =>
-      current && available.some((workspace) => workspace.id === current) ? current : next,
-    );
-  }, [workspaces.isSuccess, workspaces.data]);
 
   const nav = useMemo(
     () => [
@@ -83,7 +73,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <Logo />
         <ServiceState
           icon={<AlertTriangle size={20} />}
-          title={unauthorized ? (locale === "ru" ? "Нужен вход" : "Sign in required") : (locale === "ru" ? "API недоступен" : "API unavailable")}
+          title={
+            unauthorized
+              ? locale === "ru"
+                ? "Нужен вход"
+                : "Sign in required"
+              : locale === "ru"
+                ? "API недоступен"
+                : "API unavailable"
+          }
           description={
             unauthorized
               ? locale === "ru"
@@ -115,8 +113,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const availableWorkspaces = workspaces.data?.workspaces ?? [];
   const workspace =
-    availableWorkspaces.find((item) => item.id === selectedWorkspaceId) ??
-    availableWorkspaces[0];
+    availableWorkspaces.find((item) => item.id === selectedWorkspaceId) ?? availableWorkspaces[0];
   if (!me.data || !workspace) return <DashboardSkeleton />;
   const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN";
 
@@ -163,16 +160,24 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           }}
         >
           {availableWorkspaces.map((item) => (
-            <option key={item.id} value={item.id}>{item.name} · {item.role}</option>
+            <option key={item.id} value={item.id}>
+              {item.name} · {item.role}
+            </option>
           ))}
         </select>
       </label>
       <nav className="dashboard-nav" aria-label={t("shell.mainNavigation")}>
         {nav.map((item) => {
-          const active = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
+          const active =
+            item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
           const Icon = item.icon;
           return (
-            <Link key={item.href} href={item.href} className={active ? "is-active" : ""} onClick={() => setMobileOpen(false)}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={active ? "is-active" : ""}
+              onClick={() => setMobileOpen(false)}
+            >
               <Icon size={18} />
               <span>{item.label}</span>
               {active ? <motion.i layoutId="dashboard-nav-active" /> : null}

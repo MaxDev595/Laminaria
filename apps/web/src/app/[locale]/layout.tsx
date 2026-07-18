@@ -17,7 +17,11 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
   const { locale } = await params;
   const messages = locale === "ru" ? ru : en;
   const title = messages.meta.title;
@@ -29,7 +33,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title,
     description,
     applicationName: "Laminaria",
-    keywords: ["webinars", "LiveKit", "online events", "video platform", "Laminaria", "вебинары", "онлайн-трансляции"],
+    keywords: [
+      "webinars",
+      "LiveKit",
+      "online events",
+      "video platform",
+      "Laminaria",
+      "вебинары",
+      "онлайн-трансляции",
+    ],
     authors: [{ name: "Laminaria" }],
     creator: "Laminaria",
     publisher: "Laminaria",

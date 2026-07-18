@@ -76,13 +76,14 @@ describe("InMemoryIdempotencyExecutor", () => {
     const executor = new InMemoryIdempotencyExecutor();
     const failure = new Error("database unavailable");
 
-    await expect(
-      executor.execute(request(), async () => Promise.reject(failure)),
-    ).rejects.toBe(failure);
+    await expect(executor.execute(request(), async () => Promise.reject(failure))).rejects.toBe(
+      failure,
+    );
 
-    await expect(
-      executor.execute(request(), async () => "saved-after-retry"),
-    ).resolves.toEqual({ value: "saved-after-retry", replayed: false });
+    await expect(executor.execute(request(), async () => "saved-after-retry")).resolves.toEqual({
+      value: "saved-after-retry",
+      replayed: false,
+    });
   });
 
   it("expires completed entries after their ttl", async () => {
@@ -107,4 +108,3 @@ describe("createIdempotencyFingerprint", () => {
     );
   });
 });
-

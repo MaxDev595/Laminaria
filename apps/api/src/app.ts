@@ -79,15 +79,15 @@ export async function buildApplication(
       ],
     },
   });
-  await app.register(swaggerUi, {
-    routePrefix: "/docs",
-    uiConfig: { deepLinking: true, docExpansion: "list" },
-  });
+  if (config.nodeEnv !== "production") {
+    await app.register(swaggerUi, {
+      routePrefix: "/docs",
+      uiConfig: { deepLinking: true, docExpansion: "list" },
+    });
+  }
   await app.register(securityPlugin(config));
 
-  const mail = config.mail
-    ? new SmtpMailAdapter(config.mail)
-    : new NotConfiguredMailAdapter();
+  const mail = config.mail ? new SmtpMailAdapter(config.mail) : new NotConfiguredMailAdapter();
   const participants = new ParticipantTokenService(config.tokenPepper);
   const livekit = new LiveKitTokenService(config.livekit);
   const auth = new AuthService(repositories, mail, config);
@@ -150,6 +150,14 @@ export async function buildApplication(
     access: createWebinarAccessResolver(participants, repositories),
     repositories: new InMemoryRealtimeRepositories(),
     idempotency: new InMemoryIdempotencyExecutor(),
+    async removeBannedParticipant(webinarId, subject) {
+      const webinar = await repositories.webinars.findById(webinarId);
+      if (!webinar) return;
+      await livekit.removeParticipantsBySubject(webinar.livekitRoomName, subject);
+    },
+    ...(repositories.moderationRestrictions
+      ? { restrictions: repositories.moderationRestrictions }
+      : {}),
     logger: {
       error(message, context) {
         app.log.error(context ?? {}, message);

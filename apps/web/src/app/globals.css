@@ -45,7 +45,7 @@ select {
 .preview-frame,
 .prejoin-panel,
 .service-state,
-.realtime-message>div,
+.realtime-message > div,
 .device-modal__panel {
   transform: translateZ(0);
 }
@@ -174,7 +174,11 @@ select {
   font-size: var(--text-xs);
   font-weight: 700;
   cursor: pointer;
-  transition: color var(--duration-fast), background var(--duration-fast), border-color var(--duration-fast), transform var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    border-color var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .utility-button:hover,
@@ -204,7 +208,8 @@ select {
   width: min(100%, 104rem);
   min-height: 100svh;
   margin-inline: auto;
-  padding: calc(var(--header-height) + clamp(4rem, 8vw, 7rem)) var(--page-gutter) clamp(5rem, 10vw, 8rem);
+  padding: calc(var(--header-height) + clamp(4rem, 8vw, 7rem)) var(--page-gutter)
+    clamp(5rem, 10vw, 8rem);
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(30rem, 1.08fr);
   align-items: center;
@@ -259,7 +264,9 @@ select {
   color: var(--color-muted-foreground);
   font-size: var(--text-sm);
   font-weight: 650;
-  transition: color var(--duration-fast), gap var(--duration-normal) var(--ease-out);
+  transition:
+    color var(--duration-fast),
+    gap var(--duration-normal) var(--ease-out);
 }
 
 .secondary-link:hover {
@@ -293,7 +300,10 @@ select {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--white) 7%, transparent), transparent 40%),
     color-mix(in srgb, var(--ocean-800) 78%, transparent);
-  box-shadow: var(--highlight-inset), 0 50px 110px color-mix(in srgb, var(--black) 42%, transparent), var(--shadow-glow);
+  box-shadow:
+    var(--highlight-inset),
+    0 50px 110px color-mix(in srgb, var(--black) 42%, transparent),
+    var(--shadow-glow);
   backdrop-filter: blur(30px);
   transform: rotateY(-3deg) rotateX(1deg);
 }
@@ -318,7 +328,7 @@ select {
   font-size: var(--text-xs);
 }
 
-.room-illustration__topbar>div {
+.room-illustration__topbar > div {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -361,7 +371,11 @@ select {
   border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
   border-radius: 1.35rem 1.35rem 2.15rem 1rem;
   background:
-    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--kelp-300) 13%, transparent), transparent 35%),
+    radial-gradient(
+      circle at 50% 20%,
+      color-mix(in srgb, var(--kelp-300) 13%, transparent),
+      transparent 35%
+    ),
     linear-gradient(160deg, var(--ocean-800), var(--ocean-950));
 }
 
@@ -390,7 +404,11 @@ select {
 .speaker-mark span {
   width: 12%;
   border-radius: var(--radius-pill);
-  background: linear-gradient(to top, color-mix(in srgb, var(--color-primary) 24%, transparent), color-mix(in srgb, var(--color-primary-hover) 74%, transparent));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-primary) 24%, transparent),
+    color-mix(in srgb, var(--color-primary-hover) 74%, transparent)
+  );
   box-shadow: 0 0 50px color-mix(in srgb, var(--color-primary) 20%, transparent);
   animation: frond-sway 7s ease-in-out infinite;
   transform-origin: 50% 100%;
@@ -574,8 +592,8 @@ select {
   text-wrap: balance;
 }
 
-.control-copy>p,
-.global-copy>p,
+.control-copy > p,
+.global-copy > p,
 .security-card p,
 .final-cta p {
   margin-top: var(--space-5);
@@ -597,7 +615,9 @@ select {
   border-radius: var(--radius-organic);
   background: linear-gradient(145deg, var(--color-surface), var(--color-surface-soft));
   box-shadow: var(--highlight-inset);
-  transition: border-color var(--duration-normal), box-shadow var(--duration-normal);
+  transition:
+    border-color var(--duration-normal),
+    box-shadow var(--duration-normal);
 }
 
 .feature-tile:hover {
@@ -652,7 +672,12 @@ select {
   padding-block: var(--section-gap);
   border-block: 1px solid var(--color-border);
   background:
-    linear-gradient(120deg, transparent, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent),
+    linear-gradient(
+      120deg,
+      transparent,
+      color-mix(in srgb, var(--color-primary) 5%, transparent),
+      transparent
+    ),
     color-mix(in srgb, var(--color-background-deep) 55%, transparent);
 }
 
@@ -700,7 +725,9 @@ select {
   margin-inline: auto;
   border-radius: 50%;
   background: var(--color-background-deep);
-  box-shadow: 0 0 0 0.75rem var(--color-background-deep), var(--shadow-glow);
+  box-shadow:
+    0 0 0 0.75rem var(--color-background-deep),
+    var(--shadow-glow);
 }
 
 .global-section {
@@ -857,7 +884,11 @@ select {
   border: 1px solid var(--color-border);
   border-radius: 2rem 2rem 3.5rem 1.4rem;
   background:
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 28rem),
+    radial-gradient(
+      circle at 8% 0%,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 28rem
+    ),
     var(--color-surface);
   box-shadow: var(--highlight-inset), var(--shadow-md);
 }
@@ -908,12 +939,17 @@ select {
   justify-content: center;
   border: 1px solid var(--color-border-strong);
   border-radius: 3rem 3rem 5rem 2rem;
-  background: linear-gradient(155deg, color-mix(in srgb, var(--color-primary) 9%, transparent), var(--color-surface), var(--color-background-deep));
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--color-primary) 9%, transparent),
+    var(--color-surface),
+    var(--color-background-deep)
+  );
   box-shadow: var(--highlight-inset), var(--shadow-md), var(--shadow-glow);
   text-align: center;
 }
 
-.final-cta__card>*:not(.final-cta__glow) {
+.final-cta__card > *:not(.final-cta__glow) {
   position: relative;
   z-index: 1;
 }
@@ -956,7 +992,7 @@ select {
   text-align: center;
 }
 
-.marketing-footer>div {
+.marketing-footer > div {
   display: flex;
   gap: var(--space-5);
 }
@@ -1048,7 +1084,11 @@ select {
   border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
   border-radius: calc(var(--radius-2xl) + 0.35rem);
   background:
-    radial-gradient(circle at 0 0, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 45%),
+    radial-gradient(
+      circle at 0 0,
+      color-mix(in srgb, var(--color-primary) 16%, transparent),
+      transparent 45%
+    ),
     color-mix(in srgb, var(--color-surface) 74%, transparent);
   box-shadow: var(--shadow-floating);
   backdrop-filter: blur(22px) saturate(130%);
@@ -1100,8 +1140,16 @@ select {
   border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
   border-radius: calc(var(--radius-2xl) + 0.75rem);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-surface) 90%, transparent), color-mix(in srgb, var(--color-background-soft) 86%, transparent)),
-    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 35%);
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-surface) 90%, transparent),
+      color-mix(in srgb, var(--color-background-soft) 86%, transparent)
+    ),
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--color-primary) 12%, transparent),
+      transparent 35%
+    );
   box-shadow: var(--shadow-soft);
 }
 
@@ -1111,8 +1159,12 @@ select {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background:
-    linear-gradient(120deg, transparent, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent);
+  background: linear-gradient(
+    120deg,
+    transparent,
+    color-mix(in srgb, var(--color-primary) 8%, transparent),
+    transparent
+  );
   opacity: 0;
   transition: opacity var(--duration-normal);
 }
@@ -1273,7 +1325,11 @@ select {
   display: grid;
   grid-template-rows: auto 1fr auto;
   background:
-    radial-gradient(circle at 0 0, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 24rem),
+    radial-gradient(
+      circle at 0 0,
+      color-mix(in srgb, var(--color-primary) 7%, transparent),
+      transparent 24rem
+    ),
     var(--color-background);
 }
 
@@ -1283,7 +1339,7 @@ select {
   justify-content: space-between;
 }
 
-.auth-panel__top>div {
+.auth-panel__top > div {
   display: flex;
   gap: var(--space-1);
 }
@@ -1303,7 +1359,9 @@ select {
   gap: var(--space-2);
   color: var(--color-subtle-foreground);
   font-size: var(--text-sm);
-  transition: color var(--duration-fast), gap var(--duration-normal) var(--ease-out);
+  transition:
+    color var(--duration-fast),
+    gap var(--duration-normal) var(--ease-out);
 }
 
 .auth-back:hover {
@@ -1319,7 +1377,11 @@ select {
   display: flex;
   align-items: flex-end;
   background:
-    radial-gradient(circle at 60% 15%, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 28rem),
+    radial-gradient(
+      circle at 60% 15%,
+      color-mix(in srgb, var(--color-primary) 13%, transparent),
+      transparent 28rem
+    ),
     linear-gradient(145deg, var(--ocean-800), var(--ocean-950));
 }
 
@@ -1359,8 +1421,14 @@ select {
 .auth-mark span {
   width: clamp(2.5rem, 6vw, 5rem);
   border-radius: var(--radius-pill);
-  background: linear-gradient(to top, transparent, color-mix(in srgb, var(--color-primary-hover) 36%, transparent));
-  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--white) 8%, transparent), 0 0 70px color-mix(in srgb, var(--color-primary) 10%, transparent);
+  background: linear-gradient(
+    to top,
+    transparent,
+    color-mix(in srgb, var(--color-primary-hover) 36%, transparent)
+  );
+  box-shadow:
+    inset 1px 0 0 color-mix(in srgb, var(--white) 8%, transparent),
+    0 0 70px color-mix(in srgb, var(--color-primary) 10%, transparent);
   transform-origin: bottom;
   animation: frond-sway 10s ease-in-out infinite;
 }
@@ -1462,7 +1530,11 @@ select {
   font-size: var(--text-sm);
   font-weight: 680;
   cursor: pointer;
-  transition: color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast), transform var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    box-shadow var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .auth-method-tabs button:hover,
@@ -1529,7 +1601,10 @@ select {
   color: var(--color-foreground);
   background: var(--input-background);
   box-shadow: var(--highlight-inset);
-  transition: border-color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
+  transition:
+    border-color var(--duration-fast),
+    background var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .input::placeholder {
@@ -1560,9 +1635,15 @@ select {
 .select {
   padding-right: var(--space-10);
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--color-muted-foreground) 50%), linear-gradient(135deg, var(--color-muted-foreground) 50%, transparent 50%);
-  background-position: calc(100% - 1.15rem) 50%, calc(100% - 0.85rem) 50%;
-  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-muted-foreground) 50%),
+    linear-gradient(135deg, var(--color-muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) 50%,
+    calc(100% - 0.85rem) 50%;
+  background-size:
+    0.3rem 0.3rem,
+    0.3rem 0.3rem;
   background-repeat: no-repeat;
 }
 
@@ -1622,7 +1703,7 @@ select {
   flex: 0 0 auto;
 }
 
-.auth-form>.lm-button {
+.auth-form > .lm-button {
   width: 100%;
 }
 
@@ -1645,7 +1726,7 @@ select {
   align-items: flex-start;
 }
 
-.auth-success>span {
+.auth-success > span {
   width: 4rem;
   height: 4rem;
   margin-bottom: var(--space-6);
@@ -1658,17 +1739,17 @@ select {
   box-shadow: var(--shadow-glow);
 }
 
-.auth-success>span svg {
+.auth-success > span svg {
   width: 1.75rem;
   height: 1.75rem;
 }
 
-.auth-success--error>span {
+.auth-success--error > span {
   color: var(--color-danger);
   border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
 }
 
-.auth-success>a {
+.auth-success > a {
   margin-top: var(--space-8);
 }
 
@@ -1740,7 +1821,11 @@ select {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   background:
-    radial-gradient(circle at 80% -20%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 34rem),
+    radial-gradient(
+      circle at 80% -20%,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 34rem
+    ),
     var(--color-background-deep);
 }
 
@@ -1799,7 +1884,7 @@ select {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
-.workspace-chip>span,
+.workspace-chip > span,
 .user-avatar {
   width: 2rem;
   height: 2rem;
@@ -1833,7 +1918,7 @@ select {
   letter-spacing: 0.06em;
 }
 
-.workspace-chip>svg {
+.workspace-chip > svg {
   color: var(--color-subtle-foreground);
 }
 
@@ -1857,7 +1942,10 @@ select {
   color: var(--color-subtle-foreground);
   font-size: var(--text-sm);
   font-weight: 560;
-  transition: color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .dashboard-nav a:hover {
@@ -1870,17 +1958,17 @@ select {
   color: var(--color-foreground);
 }
 
-.dashboard-nav a>svg {
+.dashboard-nav a > svg {
   position: relative;
   z-index: 2;
 }
 
-.dashboard-nav a>span {
+.dashboard-nav a > span {
   position: relative;
   z-index: 2;
 }
 
-.dashboard-nav a>i {
+.dashboard-nav a > i {
   position: absolute;
   inset: 0;
   border: 1px solid var(--color-border-strong);
@@ -1988,15 +2076,15 @@ select {
   gap: var(--space-8);
 }
 
-.dashboard-page-heading>div {
+.dashboard-page-heading > div {
   max-width: 52rem;
 }
 
-.dashboard-page-heading>div>span {
+.dashboard-page-heading > div > span {
   color: var(--color-primary);
   font-size: var(--text-xs);
   font-weight: 750;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -2033,17 +2121,17 @@ select {
   box-shadow: var(--highlight-inset);
 }
 
-.metric-card>span {
+.metric-card > span {
   width: 2.9rem;
   height: 2.9rem;
   display: grid;
   place-items: center;
-  border-radius: 1rem 1rem 1.2rem .7rem;
+  border-radius: 1rem 1rem 1.2rem 0.7rem;
   color: var(--color-muted-foreground);
   background: var(--color-surface-soft);
 }
 
-.metric-card--primary>span {
+.metric-card--primary > span {
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 9%, transparent);
 }
@@ -2053,12 +2141,12 @@ select {
   color: var(--color-foreground);
   font-size: 1.85rem;
   line-height: 1;
-  letter-spacing: -.04em;
+  letter-spacing: -0.04em;
 }
 
 .metric-card small {
   display: block;
-  margin-top: .45rem;
+  margin-top: 0.45rem;
   color: var(--color-subtle-foreground);
   font-size: var(--text-xs);
 }
@@ -2079,18 +2167,18 @@ select {
   color: var(--color-primary);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .dashboard-section__heading h2 {
-  margin-top: .25rem;
+  margin-top: 0.25rem;
   color: var(--color-foreground);
   font-size: var(--text-2xl);
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
 }
 
-.dashboard-section__heading>a {
+.dashboard-section__heading > a {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -2099,7 +2187,7 @@ select {
   font-weight: 600;
 }
 
-.dashboard-section__heading>a:hover {
+.dashboard-section__heading > a:hover {
   color: var(--color-primary);
 }
 
@@ -2120,7 +2208,11 @@ select {
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--highlight-inset);
-  transition: border-color var(--duration-fast), box-shadow var(--duration-normal), transform var(--duration-normal) var(--ease-out), background var(--duration-normal);
+  transition:
+    border-color var(--duration-fast),
+    box-shadow var(--duration-normal),
+    transform var(--duration-normal) var(--ease-out),
+    background var(--duration-normal);
 }
 
 .webinar-card::before {
@@ -2130,14 +2222,20 @@ select {
   height: 18rem;
   transform: translate3d(-30%, 20%, 0) scale(0.75);
   border-radius: 999px;
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 64%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 16%, transparent),
+    transparent 64%
+  );
   opacity: 0;
-  transition: opacity var(--duration-panel), transform var(--duration-panel) var(--ease-out);
+  transition:
+    opacity var(--duration-panel),
+    transform var(--duration-panel) var(--ease-out);
   pointer-events: none;
   content: "";
 }
 
-.webinar-card>* {
+.webinar-card > * {
   position: relative;
   z-index: 1;
 }
@@ -2145,7 +2243,11 @@ select {
 .webinar-card:hover {
   transform: translateY(-4px) scale(1.006);
   border-color: var(--color-border-strong);
-  background: linear-gradient(135deg, var(--color-surface), color-mix(in srgb, var(--color-primary) 4%, var(--color-surface)));
+  background: linear-gradient(
+    135deg,
+    var(--color-surface),
+    color-mix(in srgb, var(--color-primary) 4%, var(--color-surface))
+  );
   box-shadow: var(--shadow-md), var(--highlight-inset);
 }
 
@@ -2172,9 +2274,9 @@ select {
 }
 
 .webinar-card__date span {
-  margin-top: .3rem;
+  margin-top: 0.3rem;
   color: var(--color-subtle-foreground);
-  font-size: .66rem;
+  font-size: 0.66rem;
   text-transform: uppercase;
 }
 
@@ -2197,7 +2299,7 @@ select {
 
 .webinar-card__main p {
   max-width: 42rem;
-  margin-top: .35rem;
+  margin-top: 0.35rem;
   overflow: hidden;
   color: var(--color-subtle-foreground);
   font-size: var(--text-sm);
@@ -2241,7 +2343,10 @@ select {
   border-radius: 50%;
   color: var(--color-muted-foreground);
   background: var(--color-surface-soft);
-  transition: color var(--duration-fast), transform var(--duration-fast), background var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    transform var(--duration-fast),
+    background var(--duration-fast);
 }
 
 .webinar-card__open:hover {
@@ -2275,20 +2380,24 @@ select {
   height: 6rem;
   display: flex;
   align-items: flex-end;
-  gap: .65rem;
+  gap: 0.65rem;
 }
 
 .empty-illustration span {
   width: 1.25rem;
   border-radius: var(--radius-pill);
-  background: linear-gradient(to top, color-mix(in srgb, var(--color-primary) 15%, transparent), var(--color-primary));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-primary) 15%, transparent),
+    var(--color-primary)
+  );
   animation: frond-sway 8s ease-in-out infinite;
   transform-origin: bottom;
 }
 
 .empty-illustration span:nth-child(1) {
   height: 3.3rem;
-  opacity: .55;
+  opacity: 0.55;
 }
 
 .empty-illustration span:nth-child(2) {
@@ -2297,7 +2406,7 @@ select {
 
 .empty-illustration span:nth-child(3) {
   height: 4.2rem;
-  opacity: .72;
+  opacity: 0.72;
 }
 
 .empty-webinars h3 {
@@ -2330,7 +2439,7 @@ select {
   gap: var(--space-8);
 }
 
-.dashboard-gate>.lm-logo {
+.dashboard-gate > .lm-logo {
   align-self: center;
 }
 
@@ -2349,7 +2458,7 @@ select {
   grid-template-columns: 1fr 1fr;
 }
 
-.dashboard-skeleton-grid> :last-child {
+.dashboard-skeleton-grid > :last-child {
   grid-column: 1 / -1;
 }
 
@@ -2398,7 +2507,7 @@ select {
   background: var(--color-surface);
 }
 
-.service-card>span {
+.service-card > span {
   width: 2.8rem;
   height: 2.8rem;
   display: grid;
@@ -2419,7 +2528,7 @@ select {
 }
 
 .service-card small {
-  margin-top: .2rem;
+  margin-top: 0.2rem;
   color: var(--color-subtle-foreground);
   font-size: var(--text-xs);
   line-height: 1.45;
@@ -2451,7 +2560,11 @@ select {
 
 .plan-card--featured {
   border-color: var(--color-border-strong);
-  background: linear-gradient(145deg, color-mix(in srgb, var(--color-primary) 8%, transparent), var(--color-surface));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary) 8%, transparent),
+    var(--color-surface)
+  );
   box-shadow: var(--shadow-glow), var(--highlight-inset);
 }
 
@@ -2514,9 +2627,9 @@ select {
 .plan-card li::before {
   position: absolute;
   left: 0;
-  top: .5rem;
-  width: .42rem;
-  height: .42rem;
+  top: 0.5rem;
+  width: 0.42rem;
+  height: 0.42rem;
   border-radius: 50%;
   background: var(--color-primary);
   content: "";
@@ -2536,7 +2649,7 @@ select {
 }
 
 .plan-note svg {
-  margin-top: .15rem;
+  margin-top: 0.15rem;
   color: var(--color-warning);
   flex: 0 0 auto;
 }
@@ -2578,45 +2691,45 @@ select {
 }
 
 .save-state span {
-  width: .45rem;
-  height: .45rem;
+  width: 0.45rem;
+  height: 0.45rem;
   border-radius: 50%;
   background: var(--color-warning);
 }
 
-.create-webinar>header {
+.create-webinar > header {
   max-width: 54rem;
   margin-top: clamp(2rem, 5vw, 4rem);
 }
 
-.create-webinar>header h1 {
+.create-webinar > header h1 {
   margin-top: var(--space-3);
   color: var(--color-foreground);
   font-size: clamp(2.6rem, 5.5vw, 5rem);
-  line-height: .98;
-  letter-spacing: -.06em;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
 }
 
-.create-webinar>header p {
+.create-webinar > header p {
   margin-top: var(--space-5);
   color: var(--color-muted-foreground);
   font-size: var(--text-lg);
   line-height: 1.6;
 }
 
-.create-webinar>form {
+.create-webinar > form {
   margin-top: clamp(3rem, 7vw, 6rem);
 }
 
 .form-section {
   padding-block: clamp(2rem, 5vw, 4rem);
   display: grid;
-  grid-template-columns: minmax(14rem, .58fr) minmax(0, 1.42fr);
+  grid-template-columns: minmax(14rem, 0.58fr) minmax(0, 1.42fr);
   gap: clamp(2rem, 7vw, 6rem);
   border-top: 1px solid var(--color-border);
 }
 
-.form-section__intro>span {
+.form-section__intro > span {
   color: var(--color-primary);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -2626,7 +2739,7 @@ select {
   margin-top: var(--space-2);
   color: var(--color-foreground);
   font-size: var(--text-2xl);
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
 }
 
 .form-section__intro p {
@@ -2645,7 +2758,7 @@ select {
   grid-template-columns: 1fr 1fr;
 }
 
-.form-grid> :first-child {
+.form-grid > :first-child {
   grid-column: 1 / -1;
 }
 
@@ -2662,7 +2775,7 @@ select {
   cursor: pointer;
 }
 
-.toggle-field>span:first-child {
+.toggle-field > span:first-child {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -2670,14 +2783,14 @@ select {
   font-size: var(--text-sm);
 }
 
-.toggle-field>span:first-child svg {
+.toggle-field > span:first-child svg {
   color: var(--color-primary);
 }
 
 .toggle {
   width: 2.55rem;
   height: 1.45rem;
-  padding: .17rem;
+  padding: 0.17rem;
   display: flex;
   align-items: center;
   border-radius: var(--radius-pill);
@@ -2691,7 +2804,9 @@ select {
   border-radius: 50%;
   background: var(--color-muted-foreground);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-normal) var(--ease-out), background var(--duration-fast);
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    background var(--duration-fast);
 }
 
 .toggle.is-on {
@@ -2773,7 +2888,7 @@ select {
   text-align: center;
 }
 
-.creation-success>span,
+.creation-success > span,
 .onboarding-icon {
   width: 4rem;
   height: 4rem;
@@ -2794,7 +2909,7 @@ select {
   margin-top: var(--space-6);
   color: var(--color-foreground);
   font-size: var(--text-3xl);
-  letter-spacing: -.045em;
+  letter-spacing: -0.045em;
 }
 
 .creation-success p {
@@ -2823,7 +2938,7 @@ select {
   color: var(--color-primary);
   font-size: var(--text-xs);
   font-weight: 750;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -2837,7 +2952,7 @@ select {
   white-space: nowrap;
 }
 
-.creation-success>div {
+.creation-success > div {
   margin-top: var(--space-8);
   display: flex;
   gap: var(--space-3);
@@ -2848,7 +2963,7 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-shell>.dashboard-sidebar {
+  .dashboard-shell > .dashboard-sidebar {
     display: none;
   }
 
@@ -2895,7 +3010,7 @@ select {
   }
 
   .topbar-context,
-  .topbar-actions>.utility-button {
+  .topbar-actions > .utility-button {
     display: none;
   }
 
@@ -2984,7 +3099,7 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .form-grid> :first-child {
+  .form-grid > :first-child {
     grid-column: auto;
   }
 
@@ -3064,7 +3179,7 @@ select {
     gap: var(--space-3);
   }
 
-  .service-card>span {
+  .service-card > span {
     width: 2.4rem;
     height: 2.4rem;
   }
@@ -3073,7 +3188,7 @@ select {
     padding: var(--space-5);
   }
 
-  .create-webinar>form {
+  .create-webinar > form {
     margin-top: var(--space-8);
   }
 
@@ -3089,7 +3204,7 @@ select {
     grid-column: 2;
   }
 
-  .creation-success>div {
+  .creation-success > div {
     width: 100%;
     flex-direction: column;
   }
@@ -3100,7 +3215,11 @@ select {
   display: grid;
   grid-template-rows: auto 1fr auto;
   background:
-    radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 32rem),
+    radial-gradient(
+      circle at 20% 10%,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 32rem
+    ),
     var(--color-background-deep);
 }
 
@@ -3114,7 +3233,7 @@ select {
   justify-content: space-between;
 }
 
-.public-event-nav>div {
+.public-event-nav > div {
   display: flex;
   gap: var(--space-1);
 }
@@ -3124,7 +3243,7 @@ select {
   margin-inline: auto;
   padding-block: clamp(3rem, 8vw, 7rem);
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(22rem, .88fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(22rem, 0.88fr);
   align-items: start;
   gap: clamp(2rem, 7vw, 6rem);
 }
@@ -3151,7 +3270,7 @@ select {
   gap: var(--space-3);
 }
 
-.event-status>span {
+.event-status > span {
   color: var(--color-subtle-foreground);
   font-size: var(--text-xs);
 }
@@ -3160,8 +3279,8 @@ select {
   margin-top: var(--space-6);
   color: var(--color-foreground);
   font-size: clamp(2.8rem, 6vw, 5.8rem);
-  line-height: .98;
-  letter-spacing: -.06em;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
   text-wrap: balance;
 }
 
@@ -3177,11 +3296,11 @@ select {
 .event-details {
   margin: var(--space-10) 0 var(--space-6);
   display: grid;
-  grid-template-columns: 1.25fr .7fr 1fr;
+  grid-template-columns: 1.25fr 0.7fr 1fr;
   gap: var(--space-4);
 }
 
-.event-details>div {
+.event-details > div {
   min-height: 7rem;
   padding: var(--space-4);
   border: 1px solid var(--color-border);
@@ -3213,7 +3332,7 @@ select {
   display: block;
   margin-top: var(--space-2);
   color: var(--color-subtle-foreground);
-  font-size: .65rem;
+  font-size: 0.65rem;
 }
 
 .registration-card {
@@ -3223,7 +3342,11 @@ select {
   padding: clamp(1.5rem, 3vw, 2.25rem);
   border: 1px solid var(--color-border-strong);
   border-radius: 1.75rem 1.75rem 2.5rem 1rem;
-  background: linear-gradient(150deg, color-mix(in srgb, var(--color-primary) 7%, transparent), var(--panel-background));
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--color-primary) 7%, transparent),
+    var(--panel-background)
+  );
   box-shadow: var(--highlight-inset), var(--shadow-md), var(--shadow-glow);
   backdrop-filter: blur(24px);
 }
@@ -3233,10 +3356,10 @@ select {
   color: var(--color-foreground);
   font-size: var(--text-3xl);
   line-height: 1.08;
-  letter-spacing: -.045em;
+  letter-spacing: -0.045em;
 }
 
-.registration-card>p {
+.registration-card > p {
   margin-top: var(--space-3);
   color: var(--color-muted-foreground);
   font-size: var(--text-sm);
@@ -3249,7 +3372,7 @@ select {
   gap: var(--space-4);
 }
 
-.registration-card form>.lm-button {
+.registration-card form > .lm-button {
   width: 100%;
   margin-top: var(--space-2);
 }
@@ -3275,7 +3398,7 @@ select {
   text-align: center;
 }
 
-.registration-success>span {
+.registration-success > span {
   width: 4rem;
   height: 4rem;
   display: grid;
@@ -3311,7 +3434,11 @@ select {
   min-height: 100svh;
   padding: var(--space-5) var(--page-gutter) var(--space-10);
   background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 34rem),
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--color-primary) 16%, transparent),
+      transparent 34rem
+    ),
     var(--color-background-deep);
 }
 
@@ -3331,7 +3458,7 @@ select {
   backdrop-filter: blur(24px);
 }
 
-.waiting-card>*:not(.waiting-orb) {
+.waiting-card > *:not(.waiting-orb) {
   position: relative;
   z-index: 1;
 }
@@ -3343,7 +3470,7 @@ select {
   height: 22rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  opacity: .75;
+  opacity: 0.75;
 }
 
 .waiting-orb span {
@@ -3363,7 +3490,7 @@ select {
 .waiting-orb span:nth-child(3) {
   inset: 46%;
   background: var(--color-primary);
-  opacity: .35;
+  opacity: 0.35;
 }
 
 .waiting-card h1 {
@@ -3372,10 +3499,10 @@ select {
   color: var(--color-foreground);
   font-size: clamp(2.25rem, 5vw, 4.4rem);
   line-height: 1;
-  letter-spacing: -.06em;
+  letter-spacing: -0.06em;
 }
 
-.waiting-card>p {
+.waiting-card > p {
   max-width: 38rem;
   margin-top: var(--space-4);
   color: var(--color-muted-foreground);
@@ -3396,7 +3523,7 @@ select {
   padding: 0 var(--space-3);
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
+  gap: 0.45rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   color: var(--color-subtle-foreground);
@@ -3433,14 +3560,14 @@ select {
   color: var(--color-foreground);
   font-size: clamp(2rem, 5vw, 3.6rem);
   line-height: 1;
-  letter-spacing: -.06em;
+  letter-spacing: -0.06em;
 }
 
 .countdown-grid span {
   color: var(--color-subtle-foreground);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -3479,7 +3606,7 @@ select {
   text-align: center;
 }
 
-.confirmation-card>span {
+.confirmation-card > span {
   width: 4rem;
   height: 4rem;
   display: grid;
@@ -3489,7 +3616,7 @@ select {
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
-.confirmation-card--error>span {
+.confirmation-card--error > span {
   color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
@@ -3498,7 +3625,7 @@ select {
   margin-top: var(--space-6);
   color: var(--color-foreground);
   font-size: var(--text-3xl);
-  letter-spacing: -.045em;
+  letter-spacing: -0.045em;
 }
 
 .confirmation-card p {
@@ -3512,7 +3639,13 @@ select {
   min-height: 100svh;
   padding-bottom: var(--space-8);
   overflow: hidden;
-  background: radial-gradient(circle at 40% -10%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 34rem), var(--color-background-deep);
+  background:
+    radial-gradient(
+      circle at 40% -10%,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 34rem
+    ),
+    var(--color-background-deep);
 }
 
 .prejoin-shell::before,
@@ -3523,7 +3656,7 @@ select {
   height: 26rem;
   border-radius: 999px;
   filter: blur(20px);
-  opacity: .5;
+  opacity: 0.5;
   pointer-events: none;
   content: "";
   animation: ambient-drift 18s ease-in-out infinite;
@@ -3532,13 +3665,21 @@ select {
 .prejoin-shell::before {
   top: 12%;
   left: -10rem;
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 66%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 14%, transparent),
+    transparent 66%
+  );
 }
 
 .prejoin-shell::after {
   right: -9rem;
   bottom: 8%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 66%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-accent) 12%, transparent),
+    transparent 66%
+  );
   animation-delay: -9s;
 }
 
@@ -3547,7 +3688,7 @@ select {
   grid-template-columns: 1fr auto 1fr;
 }
 
-.prejoin-header> :last-child {
+.prejoin-header > :last-child {
   justify-self: end;
 }
 
@@ -3561,7 +3702,7 @@ select {
   width: min(78rem, calc(100% - 2 * var(--page-gutter)));
   margin: clamp(2rem, 6vw, 5rem) auto 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(22rem, .82fr);
+  grid-template-columns: minmax(0, 1.18fr) minmax(22rem, 0.82fr);
   align-items: center;
   gap: clamp(2rem, 6vw, 5rem);
 }
@@ -3578,13 +3719,21 @@ select {
   border-radius: 2rem 2rem 3rem 1.25rem;
   background: linear-gradient(145deg, var(--ocean-800), var(--ocean-950));
   box-shadow: var(--shadow-md), var(--highlight-inset);
-  transition: transform var(--duration-panel) var(--ease-out), border-color var(--duration-normal), box-shadow var(--duration-panel) var(--ease-out);
+  transition:
+    transform var(--duration-panel) var(--ease-out),
+    border-color var(--duration-normal),
+    box-shadow var(--duration-panel) var(--ease-out);
 }
 
 .preview-frame::after {
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 18%, color-mix(in srgb, white 9%, transparent) 40%, transparent 58%);
+  background: linear-gradient(
+    115deg,
+    transparent 18%,
+    color-mix(in srgb, white 9%, transparent) 40%,
+    transparent 58%
+  );
   transform: translateX(-115%);
   animation: glass-sweep 6.5s var(--ease-out) infinite;
   pointer-events: none;
@@ -3614,7 +3763,7 @@ select {
   color: var(--color-muted-foreground);
 }
 
-.preview-empty>span {
+.preview-empty > span {
   width: 5rem;
   height: 5rem;
   display: grid;
@@ -3638,7 +3787,7 @@ select {
   position: absolute;
   left: var(--space-5);
   bottom: var(--space-5);
-  padding: .5rem .75rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   color: var(--color-foreground);
@@ -3653,8 +3802,8 @@ select {
   bottom: -1.35rem;
   transform: translateX(-50%);
   display: flex;
-  gap: .4rem;
-  padding: .4rem;
+  gap: 0.4rem;
+  padding: 0.4rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: var(--panel-background);
@@ -3672,7 +3821,10 @@ select {
   color: var(--color-muted-foreground);
   background: var(--color-surface-soft);
   cursor: pointer;
-  transition: color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .preview-controls button:hover:not(:disabled) {
@@ -3686,7 +3838,7 @@ select {
 }
 
 .preview-controls button:disabled {
-  opacity: .4;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -3703,12 +3855,16 @@ select {
 .prejoin-panel::before {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--color-primary) 9%, transparent), transparent 18rem);
+  background: radial-gradient(
+    circle at 80% 0%,
+    color-mix(in srgb, var(--color-primary) 9%, transparent),
+    transparent 18rem
+  );
   pointer-events: none;
   content: "";
 }
 
-.prejoin-panel>* {
+.prejoin-panel > * {
   position: relative;
   z-index: 1;
 }
@@ -3718,10 +3874,10 @@ select {
   color: var(--color-foreground);
   font-size: clamp(2rem, 4vw, 3.4rem);
   line-height: 1.03;
-  letter-spacing: -.05em;
+  letter-spacing: -0.05em;
 }
 
-.prejoin-panel>p {
+.prejoin-panel > p {
   margin-top: var(--space-3);
   color: var(--color-muted-foreground);
   line-height: 1.6;
@@ -3754,7 +3910,7 @@ select {
   color: var(--color-primary);
 }
 
-.prejoin-panel>.lm-button {
+.prejoin-panel > .lm-button {
   width: 100%;
   margin-top: var(--space-4);
 }
@@ -3809,7 +3965,13 @@ select {
   overflow: hidden;
   display: grid !important;
   grid-template-rows: 4.25rem minmax(0, 1fr);
-  background: radial-gradient(circle at 20% -10%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 28rem), var(--ocean-950) !important;
+  background:
+    radial-gradient(
+      circle at 20% -10%,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 28rem
+    ),
+    var(--ocean-950) !important;
   color: var(--ocean-50) !important;
 }
 
@@ -3863,7 +4025,11 @@ select {
   background: var(--color-surface-soft);
   font-size: var(--text-xs);
   cursor: pointer;
-  transition: color var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    border-color var(--duration-fast),
+    background var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .room-end {
@@ -3977,7 +4143,9 @@ select {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--highlight-inset);
-  transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
 }
 
 .live-stage .lk-participant-tile:hover {
@@ -4032,7 +4200,9 @@ select {
   min-height: 0;
   aspect-ratio: 16 / 9;
   border: 2px solid color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38), var(--highlight-inset);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.38),
+    var(--highlight-inset);
 }
 
 .viewer-stage-empty {
@@ -4070,7 +4240,10 @@ select {
   background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface));
   font-weight: 800;
   cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
 }
 
 .chat-gate-toggle:hover:not(:disabled) {
@@ -4438,7 +4611,11 @@ select {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--ocean-950) 58%, transparent));
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--ocean-950) 58%, transparent)
+  );
 }
 
 .event-banner span {
@@ -4592,7 +4769,7 @@ select {
   animation: panel-pop 360ms var(--ease-out) both;
 }
 
-.device-modal__panel>header {
+.device-modal__panel > header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -4602,7 +4779,7 @@ select {
 .device-modal__panel h2 {
   color: var(--color-foreground);
   font-size: var(--text-2xl);
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
 }
 
 .device-modal__panel p {
@@ -4612,7 +4789,7 @@ select {
   line-height: 1.55;
 }
 
-.device-modal__panel>header button {
+.device-modal__panel > header button {
   width: 2.35rem;
   height: 2.35rem;
   display: grid;
@@ -4624,7 +4801,7 @@ select {
   cursor: pointer;
 }
 
-.device-modal__panel>header button:hover {
+.device-modal__panel > header button:hover {
   color: var(--color-foreground);
   border-color: var(--color-border-strong);
 }
@@ -4680,7 +4857,11 @@ select {
   font-size: var(--text-sm);
   font-weight: 650;
   cursor: pointer;
-  transition: color var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    border-color var(--duration-fast),
+    background var(--duration-fast),
+    transform var(--duration-fast);
 }
 
 .device-controls button:hover {
@@ -4723,10 +4904,10 @@ select {
 
 .realtime-tabs {
   min-height: 3.5rem;
-  padding: .35rem;
+  padding: 0.35rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: .25rem;
+  gap: 0.25rem;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -4736,7 +4917,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: .45rem;
+  gap: 0.45rem;
   border: 0;
   border-radius: var(--radius-sm);
   color: var(--color-subtle-foreground);
@@ -4750,20 +4931,20 @@ select {
   color: var(--color-foreground);
 }
 
-.realtime-tabs button>*:not(i) {
+.realtime-tabs button > *:not(i) {
   position: relative;
   z-index: 2;
 }
 
-.realtime-tabs button>span {
+.realtime-tabs button > span {
   min-width: 1.25rem;
-  padding: .15rem .3rem;
+  padding: 0.15rem 0.3rem;
   border-radius: var(--radius-pill);
   background: var(--color-surface-soft);
-  font-size: .62rem;
+  font-size: 0.62rem;
 }
 
-.realtime-tabs button>i {
+.realtime-tabs button > i {
   position: absolute;
   inset: 0;
   border: 1px solid var(--color-border);
@@ -4776,20 +4957,20 @@ select {
   padding: 0 var(--space-3);
   display: flex;
   align-items: center;
-  gap: .45rem;
+  gap: 0.45rem;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-subtle-foreground);
-  font-size: .65rem;
+  font-size: 0.65rem;
 }
 
-.realtime-status>span {
-  width: .4rem;
-  height: .4rem;
+.realtime-status > span {
+  width: 0.4rem;
+  height: 0.4rem;
   border-radius: 50%;
   background: var(--color-warning);
 }
 
-.realtime-status>span.is-live {
+.realtime-status > span.is-live {
   background: var(--color-success);
   box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 50%, transparent);
   animation: live-dot 1.8s ease-in-out infinite;
@@ -4814,7 +4995,7 @@ select {
   text-align: center;
 }
 
-.realtime-empty>span {
+.realtime-empty > span {
   width: 3.5rem;
   height: 3.5rem;
   display: grid;
@@ -4845,7 +5026,7 @@ select {
   gap: var(--space-2);
 }
 
-.realtime-message>span {
+.realtime-message > span {
   width: 1.8rem;
   height: 1.8rem;
   display: grid;
@@ -4853,20 +5034,23 @@ select {
   border-radius: 50%;
   color: var(--color-primary-foreground);
   background: var(--color-primary);
-  font-size: .62rem;
+  font-size: 0.62rem;
   font-weight: 750;
 }
 
-.realtime-message>div {
+.realtime-message > div {
   min-width: 0;
-  padding: .65rem .75rem;
+  padding: 0.65rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: .25rem var(--radius-md) var(--radius-md) var(--radius-md);
+  border-radius: 0.25rem var(--radius-md) var(--radius-md) var(--radius-md);
   background: var(--color-surface-soft);
-  transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast), background var(--duration-fast);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast),
+    background var(--duration-fast);
 }
 
-.realtime-message:hover>div {
+.realtime-message:hover > div {
   transform: translateX(2px);
   border-color: var(--color-border-strong);
   background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface-soft));
@@ -4875,66 +5059,110 @@ select {
 .realtime-message header {
   display: flex;
   align-items: center;
-  gap: .45rem;
+  gap: 0.45rem;
 }
 
 .realtime-message header strong {
   overflow: hidden;
   color: var(--color-foreground);
-  font-size: .7rem;
+  font-size: 0.7rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .realtime-message header small {
   color: var(--color-primary);
-  font-size: .55rem;
+  font-size: 0.55rem;
 }
 
 .realtime-message p {
-  margin-top: .35rem;
+  margin-top: 0.35rem;
   color: var(--color-muted-foreground);
-  font-size: .75rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
 .realtime-message button {
-  margin-top: .45rem;
+  margin-top: 0.45rem;
   display: flex;
   align-items: center;
-  gap: .25rem;
+  gap: 0.25rem;
   border: 0;
   color: var(--color-subtle-foreground);
   background: transparent;
-  font-size: .65rem;
+  font-size: 0.65rem;
   cursor: pointer;
+}
+
+.question-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.question-answer {
+  margin-top: 0.65rem;
+  padding: 0.6rem 0.7rem;
+  border-left: 2px solid var(--color-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.question-answer strong {
+  color: var(--color-primary);
+  font-size: 0.7rem;
+}
+
+.question-answer-form {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.question-answer-form textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem;
+  color: var(--color-foreground);
+  background: var(--color-surface);
+  font: inherit;
+}
+
+.question-answer-form > div {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .realtime-error {
   margin: 0 var(--space-3) var(--space-2);
-  padding: .55rem .7rem;
+  padding: 0.55rem 0.7rem;
   display: flex;
-  gap: .45rem;
+  gap: 0.45rem;
   border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
   border-radius: var(--radius-sm);
   color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
-  font-size: .65rem;
+  font-size: 0.65rem;
 }
 
 .realtime-composer {
   margin: 0 var(--space-3) var(--space-2);
-  padding: .35rem;
+  padding: 0.35rem;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: end;
-  gap: .35rem;
+  gap: 0.35rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
-  transition: border-color var(--duration-fast), box-shadow var(--duration-normal), transform var(--duration-fast) var(--ease-out);
+  transition:
+    border-color var(--duration-fast),
+    box-shadow var(--duration-normal),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .realtime-composer:focus-within {
@@ -4946,14 +5174,14 @@ select {
 .realtime-composer textarea {
   min-width: 0;
   max-height: 7rem;
-  padding: .45rem;
+  padding: 0.45rem;
   resize: none;
   border: 0;
   outline: 0;
   color: var(--color-foreground);
   background: transparent;
   font: inherit;
-  font-size: .75rem;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -4974,7 +5202,7 @@ select {
 }
 
 .realtime-composer button:disabled {
-  opacity: .35;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
@@ -4983,10 +5211,10 @@ select {
   padding: 0 var(--space-3);
   display: flex;
   align-items: center;
-  gap: .4rem;
+  gap: 0.4rem;
   border-top: 1px solid var(--color-border);
   color: var(--color-subtle-foreground);
-  font-size: .6rem;
+  font-size: 0.6rem;
 }
 
 .ai-room-note svg {
@@ -5080,7 +5308,7 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .event-details>div {
+  .event-details > div {
     min-height: auto;
   }
 
@@ -5088,7 +5316,7 @@ select {
     grid-template-columns: 1fr auto;
   }
 
-  .prejoin-header>.lm-logo {
+  .prejoin-header > .lm-logo {
     display: none;
   }
 
@@ -5163,7 +5391,7 @@ select {
   }
 
   .live-stage {
-    padding: .35rem;
+    padding: 0.35rem;
   }
 
   .broadcast-toolbar {
@@ -5239,7 +5467,7 @@ select {
   }
 
   .live-stage .lk-video-conference {
-    border-radius: .75rem;
+    border-radius: 0.75rem;
   }
 
   .device-controls,
@@ -5312,7 +5540,6 @@ select {
 }
 
 @keyframes light-breathe {
-
   0%,
   100% {
     transform: translateX(-50%) scale(0.92);
@@ -5326,7 +5553,6 @@ select {
 }
 
 @keyframes frond-sway {
-
   0%,
   100% {
     transform: rotate(-2deg) scaleY(0.96);
@@ -5338,7 +5564,6 @@ select {
 }
 
 @keyframes ambient-drift {
-
   0%,
   100% {
     transform: translate3d(0, 0, 0) scale(0.95);
@@ -5350,7 +5575,6 @@ select {
 }
 
 @keyframes soft-float {
-
   0%,
   100% {
     transform: translate3d(0, 0, 0) scale(1);
@@ -5362,7 +5586,6 @@ select {
 }
 
 @keyframes glass-sweep {
-
   0%,
   46% {
     transform: translateX(-115%);
@@ -5409,7 +5632,6 @@ select {
 }
 
 @keyframes live-dot {
-
   0%,
   100% {
     transform: scale(1);
@@ -5423,7 +5645,6 @@ select {
 }
 
 @keyframes organic-morph {
-
   0%,
   100% {
     border-radius: 48% 52% 55% 45%;
@@ -5771,10 +5992,10 @@ select {
   .prejoin-shell::before,
   .prejoin-shell::after,
   .preview-frame::after,
-  .preview-empty>span,
+  .preview-empty > span,
   .room-gate,
   .device-modal__panel,
-  .realtime-status>span.is-live {
+  .realtime-status > span.is-live {
     animation: none !important;
   }
 

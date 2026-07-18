@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  assertWebinarPermission,
-  hasWebinarPermission,
-  hasWorkspacePermission,
-} from "./rbac.js";
+import { assertWebinarPermission, hasWebinarPermission, hasWorkspacePermission } from "./rbac.js";
 
 describe("RBAC", () => {
   it("keeps workspace billing owner-only", () => {

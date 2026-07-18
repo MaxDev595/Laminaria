@@ -70,19 +70,14 @@ const noOpLogger: RealtimeLogger = { error: () => undefined };
 const viewerChatEnabledByWebinar = new Map<string, boolean>();
 const moderationRestrictionsByWebinar = new Map<string, Map<string, RestrictionState>>();
 
-interface RestrictionState {
+export interface RestrictionState {
   mutedUntil?: number | null;
   bannedUntil?: number | null;
   targetName: string;
   reason?: string;
 }
 
-export type RealtimeEntityKind =
-  | "chat"
-  | "question"
-  | "poll"
-  | "poll_option"
-  | "moderation";
+export type RealtimeEntityKind = "chat" | "question" | "poll" | "poll_option" | "moderation";
 
 export interface RegisterRealtimeDependencies {
   auth: RealtimeAuthResolver;
@@ -94,6 +89,11 @@ export interface RegisterRealtimeDependencies {
   now?: () => Date;
   idFactory?: (kind: RealtimeEntityKind) => string;
   idempotencyTtlMs?: number;
+  removeBannedParticipant?: (webinarId: string, subject: string) => Promise<void>;
+  restrictions?: {
+    find(webinarId: string, targetId: string): Promise<RestrictionState | null>;
+    save(input: { webinarId: string; targetId: string; state: RestrictionState }): Promise<void>;
+  };
 }
 
 interface ResolvedDependencies {
@@ -106,6 +106,8 @@ interface ResolvedDependencies {
   now: () => Date;
   idFactory: (kind: RealtimeEntityKind) => string;
   idempotencyTtlMs: number;
+  removeBannedParticipant: (webinarId: string, subject: string) => Promise<void>;
+  restrictions: NonNullable<RegisterRealtimeDependencies["restrictions"]>;
 }
 
 interface OperationResponse<T> {
@@ -122,11 +124,8 @@ function createDefaultId(kind: RealtimeEntityKind): string {
   return `${kind}_${randomUUID()}`;
 }
 
-function resolveDependencies(
-  dependencies: RegisterRealtimeDependencies,
-): ResolvedDependencies {
-  const idempotencyTtlMs =
-    dependencies.idempotencyTtlMs ?? DEFAULT_IDEMPOTENCY_TTL_MS;
+function resolveDependencies(dependencies: RegisterRealtimeDependencies): ResolvedDependencies {
+  const idempotencyTtlMs = dependencies.idempotencyTtlMs ?? DEFAULT_IDEMPOTENCY_TTL_MS;
   if (!Number.isFinite(idempotencyTtlMs) || idempotencyTtlMs <= 0) {
     throw new TypeError("idempotencyTtlMs must be a positive number");
   }
@@ -141,6 +140,15 @@ function resolveDependencies(
     now: dependencies.now ?? (() => new Date()),
     idFactory: dependencies.idFactory ?? createDefaultId,
     idempotencyTtlMs,
+    removeBannedParticipant: dependencies.removeBannedParticipant ?? (async () => undefined),
+    restrictions: dependencies.restrictions ?? {
+      async find() {
+        return null;
+      },
+      async save() {
+        return undefined;
+      },
+    },
   };
 }
 
@@ -176,9 +184,7 @@ function createAuthRequest(socket: RealtimeSocket): RealtimeAuthRequest {
   const token =
     optionalString(auth["token"]) ??
     optionalString(auth["bearerToken"]) ??
-    (authorization?.startsWith("Bearer ")
-      ? authorization.slice("Bearer ".length)
-      : undefined);
+    (authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : undefined);
   const sessionId = optionalString(auth["sessionId"]);
 
   return {
@@ -191,14 +197,12 @@ function createAuthRequest(socket: RealtimeSocket): RealtimeAuthRequest {
   };
 }
 
-function isValidPrincipal(
-  principal: RealtimePrincipal | null,
-): principal is RealtimePrincipal {
+function isValidPrincipal(principal: RealtimePrincipal | null): principal is RealtimePrincipal {
   return Boolean(
     principal &&
-      principal.id.trim() &&
-      principal.displayName.trim() &&
-      (principal.kind === "user" || principal.kind === "guest"),
+    principal.id.trim() &&
+    principal.displayName.trim() &&
+    (principal.kind === "user" || principal.kind === "guest"),
   );
 }
 
@@ -258,23 +262,43 @@ function isProtectedModerationRole(role: RealtimeRole | undefined): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
 }
 
-function restrictionFor(webinarId: string, targetId: string): RestrictionState | null {
-  return moderationRestrictionsByWebinar.get(webinarId)?.get(targetId) ?? null;
+async function restrictionFor(
+  dependencies: ResolvedDependencies,
+  webinarId: string,
+  targetId: string,
+): Promise<RestrictionState | null> {
+  const cached = moderationRestrictionsByWebinar.get(webinarId)?.get(targetId);
+  if (cached) return cached;
+  const persisted = await dependencies.restrictions.find(webinarId, targetId);
+  if (!persisted) return null;
+  const byTarget =
+    moderationRestrictionsByWebinar.get(webinarId) ?? new Map<string, RestrictionState>();
+  byTarget.set(targetId, persisted);
+  moderationRestrictionsByWebinar.set(webinarId, byTarget);
+  return persisted;
 }
 
 function isRestrictionActive(until: number | null | undefined, now = Date.now()): boolean {
   return until === null || (typeof until === "number" && until > now);
 }
 
-function assertNotBanned(webinarId: string, principal: RealtimePrincipal): void {
-  const restriction = restrictionFor(webinarId, principal.id);
+async function assertNotBanned(
+  dependencies: ResolvedDependencies,
+  webinarId: string,
+  principal: RealtimePrincipal,
+): Promise<void> {
+  const restriction = await restrictionFor(dependencies, webinarId, principal.id);
   if (restriction && isRestrictionActive(restriction.bannedUntil)) {
     throw new RealtimeDomainError("FORBIDDEN", "You are banned from this webinar");
   }
 }
 
-function assertNotMuted(webinarId: string, principal: RealtimePrincipal): void {
-  const restriction = restrictionFor(webinarId, principal.id);
+async function assertNotMuted(
+  dependencies: ResolvedDependencies,
+  webinarId: string,
+  principal: RealtimePrincipal,
+): Promise<void> {
+  const restriction = await restrictionFor(dependencies, webinarId, principal.id);
   if (restriction && isRestrictionActive(restriction.mutedUntil)) {
     throw new RealtimeDomainError("FORBIDDEN", "You are muted in this webinar");
   }
@@ -409,18 +433,12 @@ async function moderateText(
   });
 
   if (result.decision === "block") {
-    throw new RealtimeDomainError(
-      "CONTENT_BLOCKED",
-      "Content was rejected by moderation",
-    );
+    throw new RealtimeDomainError("CONTENT_BLOCKED", "Content was rejected by moderation");
   }
   return { text, pendingReview: true };
 }
 
-function registerJoinHandlers(
-  socket: RealtimeSocket,
-  dependencies: ResolvedDependencies,
-): void {
+function registerJoinHandlers(socket: RealtimeSocket, dependencies: ResolvedDependencies): void {
   socket.on("webinar:join", (payload, acknowledge) => {
     void handleValidated<WebinarJoinPayload, WebinarJoined>(
       socket,
@@ -430,14 +448,8 @@ function registerJoinHandlers(
       payload,
       acknowledge,
       async ({ webinarId }) => {
-        const access = await authorize(
-          socket,
-          dependencies,
-          webinarId,
-          "join",
-          false,
-        );
-        assertNotBanned(webinarId, requirePrincipal(socket));
+        const access = await authorize(socket, dependencies, webinarId, "join", false);
+        await assertNotBanned(dependencies, webinarId, requirePrincipal(socket));
         await socket.join(webinarRoom(webinarId));
         socket.data.joinedWebinarIds?.add(webinarId);
         socket.data.webinarRoles?.set(webinarId, access.role);
@@ -446,9 +458,7 @@ function registerJoinHandlers(
           participantId: access.participantId,
           role: access.role,
         };
-        socket
-          .to(webinarRoom(webinarId))
-          .emit("webinar:participant_joined", participant);
+        socket.to(webinarRoom(webinarId)).emit("webinar:participant_joined", participant);
         socket.emit("chat:state", {
           webinarId,
           enabled: viewerChatEnabledByWebinar.get(webinarId) ?? false,
@@ -476,10 +486,7 @@ function registerJoinHandlers(
   });
 }
 
-function registerChatHandlers(
-  socket: RealtimeSocket,
-  dependencies: ResolvedDependencies,
-): void {
+function registerChatHandlers(socket: RealtimeSocket, dependencies: ResolvedDependencies): void {
   socket.on("chat:send", (payload, acknowledge) => {
     void handleValidated<ChatSendPayload, ChatMessage>(
       socket,
@@ -489,53 +496,41 @@ function registerChatHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        const access = await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "join",
-        );
+        const access = await authorize(socket, dependencies, validated.webinarId, "join");
         const principal = requirePrincipal(socket);
-        assertNotMuted(validated.webinarId, principal);
-        if (isViewerRole(access.role) && !(viewerChatEnabledByWebinar.get(validated.webinarId) ?? false)) {
+        await assertNotMuted(dependencies, validated.webinarId, principal);
+        if (
+          isViewerRole(access.role) &&
+          !(viewerChatEnabledByWebinar.get(validated.webinarId) ?? false)
+        ) {
           throw new RealtimeDomainError("FORBIDDEN", "Viewer chat is closed");
         }
-        return executeMutation(
-          socket,
-          dependencies,
-          "chat:send",
-          validated,
-          async () => {
-            const id = dependencies.idFactory("chat");
-            const moderated = await moderateText(dependencies, {
-              webinarId: validated.webinarId,
-              actor: principal,
-              targetId: id,
-              targetType: "chat_message",
-              text: validated.body,
-              maximumLength: 2_000,
-            });
-            const message: ChatMessage = {
-              id,
-              webinarId: validated.webinarId,
-              author: actorFrom(principal, access),
-              body: moderated.text,
-              status: moderated.pendingReview ? "pending_review" : "visible",
-              createdAt: dependencies.now().toISOString(),
-              ...(validated.replyToId
-                ? { replyToId: validated.replyToId }
-                : {}),
-            };
-            const created = await dependencies.repositories.chat.create(message);
-            if (created.status === "visible") {
-              socket
-                .to(webinarRoom(validated.webinarId))
-                .emit("chat:created", created);
-              socket.emit("chat:created", created);
-            }
-            return created;
-          },
-        );
+        return executeMutation(socket, dependencies, "chat:send", validated, async () => {
+          const id = dependencies.idFactory("chat");
+          const moderated = await moderateText(dependencies, {
+            webinarId: validated.webinarId,
+            actor: principal,
+            targetId: id,
+            targetType: "chat_message",
+            text: validated.body,
+            maximumLength: 2_000,
+          });
+          const message: ChatMessage = {
+            id,
+            webinarId: validated.webinarId,
+            author: actorFrom(principal, access),
+            body: moderated.text,
+            status: moderated.pendingReview ? "pending_review" : "visible",
+            createdAt: dependencies.now().toISOString(),
+            ...(validated.replyToId ? { replyToId: validated.replyToId } : {}),
+          };
+          const created = await dependencies.repositories.chat.create(message);
+          if (created.status === "visible") {
+            socket.to(webinarRoom(validated.webinarId)).emit("chat:created", created);
+            socket.emit("chat:created", created);
+          }
+          return created;
+        });
       },
     );
   });
@@ -549,12 +544,7 @@ function registerChatHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "chat.moderate",
-        );
+        await authorize(socket, dependencies, validated.webinarId, "chat.moderate");
         const state = { webinarId: validated.webinarId, enabled: validated.enabled };
         viewerChatEnabledByWebinar.set(validated.webinarId, validated.enabled);
         socket.to(webinarRoom(validated.webinarId)).emit("chat:state", state);
@@ -573,42 +563,28 @@ function registerChatHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "chat.moderate",
-        );
-        return executeMutation(
-          socket,
-          dependencies,
-          "chat:delete",
-          validated,
-          async () => {
-            const deletedAt = dependencies.now().toISOString();
-            const deleted = await dependencies.repositories.chat.markDeleted({
-              webinarId: validated.webinarId,
-              messageId: validated.messageId,
-              deletedAt,
-              deletedById: requirePrincipal(socket).id,
-              ...(validated.reason ? { reason: validated.reason } : {}),
-            });
-            if (!deleted) {
-              throw new RealtimeDomainError(
-                "NOT_FOUND",
-                "Chat message was not found",
-              );
-            }
-            const event: ChatDeleted = {
-              webinarId: validated.webinarId,
-              messageId: deleted.id,
-              deletedAt: deleted.deletedAt ?? deletedAt,
-            };
-            socket.to(webinarRoom(validated.webinarId)).emit("chat:deleted", event);
-            socket.emit("chat:deleted", event);
-            return event;
-          },
-        );
+        await authorize(socket, dependencies, validated.webinarId, "chat.moderate");
+        return executeMutation(socket, dependencies, "chat:delete", validated, async () => {
+          const deletedAt = dependencies.now().toISOString();
+          const deleted = await dependencies.repositories.chat.markDeleted({
+            webinarId: validated.webinarId,
+            messageId: validated.messageId,
+            deletedAt,
+            deletedById: requirePrincipal(socket).id,
+            ...(validated.reason ? { reason: validated.reason } : {}),
+          });
+          if (!deleted) {
+            throw new RealtimeDomainError("NOT_FOUND", "Chat message was not found");
+          }
+          const event: ChatDeleted = {
+            webinarId: validated.webinarId,
+            messageId: deleted.id,
+            deletedAt: deleted.deletedAt ?? deletedAt,
+          };
+          socket.to(webinarRoom(validated.webinarId)).emit("chat:deleted", event);
+          socket.emit("chat:deleted", event);
+          return event;
+        });
       },
     );
   });
@@ -636,12 +612,20 @@ function registerModerationHandlers(
           .map((candidate) => candidate.data.webinarRoles?.get(validated.webinarId))
           .find((role) => role !== undefined);
         if (isProtectedModerationRole(targetRole)) {
-          throw new RealtimeDomainError("FORBIDDEN", "Privileged participants cannot be restricted");
+          throw new RealtimeDomainError(
+            "FORBIDDEN",
+            "Privileged participants cannot be restricted",
+          );
         }
         const stateByTarget =
-          moderationRestrictionsByWebinar.get(validated.webinarId) ?? new Map<string, RestrictionState>();
+          moderationRestrictionsByWebinar.get(validated.webinarId) ??
+          new Map<string, RestrictionState>();
         moderationRestrictionsByWebinar.set(validated.webinarId, stateByTarget);
-        const current = stateByTarget.get(validated.targetId) ?? { targetName: validated.targetName };
+        const current = (await restrictionFor(
+          dependencies,
+          validated.webinarId,
+          validated.targetId,
+        )) ?? { targetName: validated.targetName };
         const until =
           validated.action === "mute" || validated.action === "ban"
             ? validated.durationMinutes
@@ -658,6 +642,11 @@ function registerModerationHandlers(
         if (validated.action === "unmute") delete next.mutedUntil;
         if (validated.action === "unban") delete next.bannedUntil;
         stateByTarget.set(validated.targetId, next);
+        await dependencies.restrictions.save({
+          webinarId: validated.webinarId,
+          targetId: validated.targetId,
+          state: next,
+        });
         const event: ModerationRestrictionChanged = {
           webinarId: validated.webinarId,
           targetId: validated.targetId,
@@ -682,6 +671,15 @@ function registerModerationHandlers(
         };
         socket.nsp.to(webinarRoom(validated.webinarId)).emit("moderation:restriction", event);
         if (validated.action === "ban") {
+          try {
+            await dependencies.removeBannedParticipant(validated.webinarId, validated.targetId);
+          } catch (error) {
+            dependencies.logger.error("Failed to remove banned LiveKit participant", {
+              webinarId: validated.webinarId,
+              targetId: validated.targetId,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+          }
           for (const targetSocket of targetSockets) {
             targetSocket.emit("moderation:kicked", event);
             targetSocket.disconnect(true);
@@ -706,50 +704,37 @@ function registerQuestionHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        const access = await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "question.ask",
-        );
+        const access = await authorize(socket, dependencies, validated.webinarId, "question.ask");
         const principal = requirePrincipal(socket);
-        assertNotMuted(validated.webinarId, principal);
-        return executeMutation(
-          socket,
-          dependencies,
-          "question:ask",
-          validated,
-          async () => {
-            const id = dependencies.idFactory("question");
-            const moderated = await moderateText(dependencies, {
-              webinarId: validated.webinarId,
-              actor: principal,
-              targetId: id,
-              targetType: "question",
-              text: validated.body,
-              maximumLength: 2_000,
-            });
-            const now = dependencies.now().toISOString();
-            const question: Question = {
-              id,
-              webinarId: validated.webinarId,
-              author: actorFrom(principal, access),
-              body: moderated.text,
-              status: moderated.pendingReview ? "pending_review" : "open",
-              upvoteCount: 0,
-              createdAt: now,
-              updatedAt: now,
-            };
-            const created = await dependencies.repositories.questions.create(question);
-            if (created.status !== "pending_review") {
-              socket
-                .to(webinarRoom(validated.webinarId))
-                .emit("question:created", created);
-              socket.emit("question:created", created);
-            }
-            return created;
-          },
-        );
+        await assertNotMuted(dependencies, validated.webinarId, principal);
+        return executeMutation(socket, dependencies, "question:ask", validated, async () => {
+          const id = dependencies.idFactory("question");
+          const moderated = await moderateText(dependencies, {
+            webinarId: validated.webinarId,
+            actor: principal,
+            targetId: id,
+            targetType: "question",
+            text: validated.body,
+            maximumLength: 2_000,
+          });
+          const now = dependencies.now().toISOString();
+          const question: Question = {
+            id,
+            webinarId: validated.webinarId,
+            author: actorFrom(principal, access),
+            body: moderated.text,
+            status: moderated.pendingReview ? "pending_review" : "open",
+            upvoteCount: 0,
+            createdAt: now,
+            updatedAt: now,
+          };
+          const created = await dependencies.repositories.questions.create(question);
+          if (created.status !== "pending_review") {
+            socket.to(webinarRoom(validated.webinarId)).emit("question:created", created);
+            socket.emit("question:created", created);
+          }
+          return created;
+        });
       },
     );
   });
@@ -769,28 +754,20 @@ function registerQuestionHandlers(
           validated.webinarId,
           "question.upvote",
         );
-        return executeMutation(
-          socket,
-          dependencies,
-          "question:upvote",
-          validated,
-          async () => {
-            const question = await dependencies.repositories.questions.addUpvote({
-              webinarId: validated.webinarId,
-              questionId: validated.questionId,
-              voterId: access.participantId,
-              updatedAt: dependencies.now().toISOString(),
-            });
-            if (!question) {
-              throw new RealtimeDomainError("NOT_FOUND", "Question was not found");
-            }
-            socket
-              .to(webinarRoom(validated.webinarId))
-              .emit("question:updated", question);
-            socket.emit("question:updated", question);
-            return question;
-          },
-        );
+        return executeMutation(socket, dependencies, "question:upvote", validated, async () => {
+          const question = await dependencies.repositories.questions.addUpvote({
+            webinarId: validated.webinarId,
+            questionId: validated.questionId,
+            voterId: access.participantId,
+            updatedAt: dependencies.now().toISOString(),
+          });
+          if (!question) {
+            throw new RealtimeDomainError("NOT_FOUND", "Question was not found");
+          }
+          socket.to(webinarRoom(validated.webinarId)).emit("question:updated", question);
+          socket.emit("question:updated", question);
+          return question;
+        });
       },
     );
   });
@@ -810,33 +787,25 @@ function registerQuestionHandlers(
           validated.webinarId,
           "question.manage",
         );
-        return executeMutation(
-          socket,
-          dependencies,
-          "question:answer",
-          validated,
-          async () => {
-            const answeredAt = dependencies.now().toISOString();
-            const question = await dependencies.repositories.questions.answer({
-              webinarId: validated.webinarId,
-              questionId: validated.questionId,
-              answer: {
-                body: validated.answer,
-                author: actorFrom(requirePrincipal(socket), access),
-                createdAt: answeredAt,
-              },
-              updatedAt: answeredAt,
-            });
-            if (!question) {
-              throw new RealtimeDomainError("NOT_FOUND", "Question was not found");
-            }
-            socket
-              .to(webinarRoom(validated.webinarId))
-              .emit("question:updated", question);
-            socket.emit("question:updated", question);
-            return question;
-          },
-        );
+        return executeMutation(socket, dependencies, "question:answer", validated, async () => {
+          const answeredAt = dependencies.now().toISOString();
+          const question = await dependencies.repositories.questions.answer({
+            webinarId: validated.webinarId,
+            questionId: validated.questionId,
+            answer: {
+              body: validated.answer,
+              author: actorFrom(requirePrincipal(socket), access),
+              createdAt: answeredAt,
+            },
+            updatedAt: answeredAt,
+          });
+          if (!question) {
+            throw new RealtimeDomainError("NOT_FOUND", "Question was not found");
+          }
+          socket.to(webinarRoom(validated.webinarId)).emit("question:updated", question);
+          socket.emit("question:updated", question);
+          return question;
+        });
       },
     );
   });
@@ -850,44 +819,28 @@ function registerQuestionHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "question.manage",
-        );
-        return executeMutation(
-          socket,
-          dependencies,
-          "question:moderate",
-          validated,
-          async () => {
-            const question = await dependencies.repositories.questions.setVisibility({
-              webinarId: validated.webinarId,
-              questionId: validated.questionId,
-              hidden: validated.action === "hide",
-              updatedAt: dependencies.now().toISOString(),
-              ...(validated.reason ? { reason: validated.reason } : {}),
-            });
-            if (!question) {
-              throw new RealtimeDomainError("NOT_FOUND", "Question was not found");
-            }
-            socket
-              .to(webinarRoom(validated.webinarId))
-              .emit("question:updated", question);
-            socket.emit("question:updated", question);
-            return question;
-          },
-        );
+        await authorize(socket, dependencies, validated.webinarId, "question.manage");
+        return executeMutation(socket, dependencies, "question:moderate", validated, async () => {
+          const question = await dependencies.repositories.questions.setVisibility({
+            webinarId: validated.webinarId,
+            questionId: validated.questionId,
+            hidden: validated.action === "hide",
+            updatedAt: dependencies.now().toISOString(),
+            ...(validated.reason ? { reason: validated.reason } : {}),
+          });
+          if (!question) {
+            throw new RealtimeDomainError("NOT_FOUND", "Question was not found");
+          }
+          socket.to(webinarRoom(validated.webinarId)).emit("question:updated", question);
+          socket.emit("question:updated", question);
+          return question;
+        });
       },
     );
   });
 }
 
-function registerPollHandlers(
-  socket: RealtimeSocket,
-  dependencies: ResolvedDependencies,
-): void {
+function registerPollHandlers(socket: RealtimeSocket, dependencies: ResolvedDependencies): void {
   socket.on("poll:create", (payload, acknowledge) => {
     void handleValidated<PollCreatePayload, Poll>(
       socket,
@@ -897,40 +850,29 @@ function registerPollHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        const access = await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "poll.manage",
-        );
-        return executeMutation(
-          socket,
-          dependencies,
-          "poll:create",
-          validated,
-          async () => {
-            const now = dependencies.now().toISOString();
-            const poll: Poll = {
-              id: dependencies.idFactory("poll"),
-              webinarId: validated.webinarId,
-              question: validated.question,
-              options: validated.options.map((label) => ({
-                id: dependencies.idFactory("poll_option"),
-                label,
-                voteCount: 0,
-              })),
-              allowMultiple: validated.allowMultiple,
-              status: "draft",
-              createdBy: actorFrom(requirePrincipal(socket), access),
-              createdAt: now,
-              updatedAt: now,
-            };
-            const created = await dependencies.repositories.polls.create(poll);
-            socket.to(webinarRoom(validated.webinarId)).emit("poll:created", created);
-            socket.emit("poll:created", created);
-            return created;
-          },
-        );
+        const access = await authorize(socket, dependencies, validated.webinarId, "poll.manage");
+        return executeMutation(socket, dependencies, "poll:create", validated, async () => {
+          const now = dependencies.now().toISOString();
+          const poll: Poll = {
+            id: dependencies.idFactory("poll"),
+            webinarId: validated.webinarId,
+            question: validated.question,
+            options: validated.options.map((label) => ({
+              id: dependencies.idFactory("poll_option"),
+              label,
+              voteCount: 0,
+            })),
+            allowMultiple: validated.allowMultiple,
+            status: "draft",
+            createdBy: actorFrom(requirePrincipal(socket), access),
+            createdAt: now,
+            updatedAt: now,
+          };
+          const created = await dependencies.repositories.polls.create(poll);
+          socket.to(webinarRoom(validated.webinarId)).emit("poll:created", created);
+          socket.emit("poll:created", created);
+          return created;
+        });
       },
     );
   });
@@ -949,32 +891,21 @@ function registerPollHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "poll.manage",
-        );
-        return executeMutation(
-          socket,
-          dependencies,
-          eventName,
-          validated,
-          async () => {
-            const poll = await dependencies.repositories.polls.setStatus({
-              webinarId: validated.webinarId,
-              pollId: validated.pollId,
-              status,
-              updatedAt: dependencies.now().toISOString(),
-            });
-            if (!poll) {
-              throw new RealtimeDomainError("NOT_FOUND", "Poll was not found");
-            }
-            socket.to(webinarRoom(validated.webinarId)).emit("poll:updated", poll);
-            socket.emit("poll:updated", poll);
-            return poll;
-          },
-        );
+        await authorize(socket, dependencies, validated.webinarId, "poll.manage");
+        return executeMutation(socket, dependencies, eventName, validated, async () => {
+          const poll = await dependencies.repositories.polls.setStatus({
+            webinarId: validated.webinarId,
+            pollId: validated.pollId,
+            status,
+            updatedAt: dependencies.now().toISOString(),
+          });
+          if (!poll) {
+            throw new RealtimeDomainError("NOT_FOUND", "Poll was not found");
+          }
+          socket.to(webinarRoom(validated.webinarId)).emit("poll:updated", poll);
+          socket.emit("poll:updated", poll);
+          return poll;
+        });
       },
     );
   };
@@ -996,33 +927,22 @@ function registerPollHandlers(
       payload,
       acknowledge,
       async (validated) => {
-        const access = await authorize(
-          socket,
-          dependencies,
-          validated.webinarId,
-          "poll.vote",
-        );
-        return executeMutation(
-          socket,
-          dependencies,
-          "poll:vote",
-          validated,
-          async () => {
-            const poll = await dependencies.repositories.polls.recordVote({
-              webinarId: validated.webinarId,
-              pollId: validated.pollId,
-              voterId: access.participantId,
-              optionIds: validated.optionIds,
-              updatedAt: dependencies.now().toISOString(),
-            });
-            if (!poll) {
-              throw new RealtimeDomainError("NOT_FOUND", "Poll was not found");
-            }
-            socket.to(webinarRoom(validated.webinarId)).emit("poll:updated", poll);
-            socket.emit("poll:updated", poll);
-            return poll;
-          },
-        );
+        const access = await authorize(socket, dependencies, validated.webinarId, "poll.vote");
+        return executeMutation(socket, dependencies, "poll:vote", validated, async () => {
+          const poll = await dependencies.repositories.polls.recordVote({
+            webinarId: validated.webinarId,
+            pollId: validated.pollId,
+            voterId: access.participantId,
+            optionIds: validated.optionIds,
+            updatedAt: dependencies.now().toISOString(),
+          });
+          if (!poll) {
+            throw new RealtimeDomainError("NOT_FOUND", "Poll was not found");
+          }
+          socket.to(webinarRoom(validated.webinarId)).emit("poll:updated", poll);
+          socket.emit("poll:updated", poll);
+          return poll;
+        });
       },
     );
   });

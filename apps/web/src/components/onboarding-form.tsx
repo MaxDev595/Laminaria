@@ -12,7 +12,14 @@ import { slugify } from "@/lib/text";
 import { useRouter } from "@/i18n/navigation";
 import { Button, Field, Input } from "./ui";
 
-const schema = z.object({ name: z.string().trim().min(2).max(100), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(63) });
+const schema = z.object({
+  name: z.string().trim().min(2).max(100),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .min(3)
+    .max(63),
+});
 type Values = z.infer<typeof schema>;
 
 export function OnboardingForm() {
@@ -21,7 +28,10 @@ export function OnboardingForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState("");
-  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: "", slug: "" } });
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", slug: "" },
+  });
   const name = useWatch({ control: form.control, name: "name" });
   const slug = useWatch({ control: form.control, name: "slug" });
 
@@ -37,9 +47,45 @@ export function OnboardingForm() {
       await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
       router.replace("/dashboard");
       router.refresh();
+    } catch (reason) {
+      setError(friendlyError(reason, locale));
     }
-    catch (reason) { setError(friendlyError(reason, locale)); }
   }
 
-  return <div className="auth-form-wrap"><div className="auth-heading"><span className="onboarding-icon"><Building2 size={22} /></span><h1>{t("auth.workspaceTitle")}</h1><p>{t("auth.workspaceHint")}</p></div><form className="auth-form" onSubmit={form.handleSubmit(submit)}><Field label={locale === "ru" ? "Название" : "Workspace name"} error={form.formState.errors.name?.message}><Input autoFocus {...form.register("name")} /></Field><Field label={locale === "ru" ? "Адрес пространства" : "Workspace address"} hint={`laminaria.app/w/${slug || "your-workspace"}`} error={form.formState.errors.slug?.message}><Input {...form.register("slug")} /></Field>{error ? <div className="form-alert" role="alert">{error}</div> : null}<Button type="submit" size="lg" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : null}{locale === "ru" ? "Создать пространство" : "Create workspace"}<ArrowRight size={18} /></Button></form></div>;
+  return (
+    <div className="auth-form-wrap">
+      <div className="auth-heading">
+        <span className="onboarding-icon">
+          <Building2 size={22} />
+        </span>
+        <h1>{t("auth.workspaceTitle")}</h1>
+        <p>{t("auth.workspaceHint")}</p>
+      </div>
+      <form className="auth-form" onSubmit={form.handleSubmit(submit)}>
+        <Field
+          label={locale === "ru" ? "Название" : "Workspace name"}
+          error={form.formState.errors.name?.message}
+        >
+          <Input autoFocus {...form.register("name")} />
+        </Field>
+        <Field
+          label={locale === "ru" ? "Адрес пространства" : "Workspace address"}
+          hint={`laminaria.app/w/${slug || "your-workspace"}`}
+          error={form.formState.errors.slug?.message}
+        >
+          <Input {...form.register("slug")} />
+        </Field>
+        {error ? (
+          <div className="form-alert" role="alert">
+            {error}
+          </div>
+        ) : null}
+        <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : null}
+          {locale === "ru" ? "Создать пространство" : "Create workspace"}
+          <ArrowRight size={18} />
+        </Button>
+      </form>
+    </div>
+  );
 }

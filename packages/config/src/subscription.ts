@@ -1,10 +1,4 @@
-import {
-  PLAN_CATALOG,
-  isFeatureKey,
-  isLimitKey,
-  isPlanId,
-  type PlanCatalog,
-} from "./plans.js";
+import { PLAN_CATALOG, isFeatureKey, isLimitKey, isPlanId, type PlanCatalog } from "./plans.js";
 
 export type AccessDenialReason =
   | "unknown_plan"
@@ -22,9 +16,7 @@ export type AccessDecision =
     }>
   | Readonly<{ allowed: false; reason: AccessDenialReason }>;
 
-const allow = (
-  reason: "explicitly_included" | "within_configured_limit",
-): AccessDecision => ({
+const allow = (reason: "explicitly_included" | "within_configured_limit"): AccessDecision => ({
   allowed: true,
   reason,
 });
@@ -47,10 +39,7 @@ export class SubscriptionService {
     this.#catalog = catalog;
   }
 
-  public checkFeatureAccess(
-    planId: string,
-    feature: string,
-  ): AccessDecision {
+  public checkFeatureAccess(planId: string, feature: string): AccessDecision {
     if (!isPlanId(planId)) {
       return deny("unknown_plan");
     }
@@ -65,20 +54,14 @@ export class SubscriptionService {
       return deny("pending_business_decision");
     }
 
-    return decision.value === true
-      ? allow("explicitly_included")
-      : deny("not_included");
+    return decision.value === true ? allow("explicitly_included") : deny("not_included");
   }
 
   public hasFeatureAccess(planId: string, feature: string): boolean {
     return this.checkFeatureAccess(planId, feature).allowed;
   }
 
-  public checkLimit(
-    planId: string,
-    limit: string,
-    requestedUsage: number,
-  ): AccessDecision {
+  public checkLimit(planId: string, limit: string, requestedUsage: number): AccessDecision {
     if (!Number.isFinite(requestedUsage) || requestedUsage < 0) {
       return deny("invalid_usage");
     }
@@ -105,9 +88,6 @@ export class SubscriptionService {
 
 export const subscriptionService = new SubscriptionService();
 
-export function checkFeatureAccess(
-  planId: string,
-  feature: string,
-): AccessDecision {
+export function checkFeatureAccess(planId: string, feature: string): AccessDecision {
   return subscriptionService.checkFeatureAccess(planId, feature);
 }

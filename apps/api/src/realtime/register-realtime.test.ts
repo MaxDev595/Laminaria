@@ -7,11 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { InMemoryIdempotencyExecutor } from "./idempotency.js";
 import { InMemoryRealtimeRepositories } from "./in-memory-repositories.js";
 import { registerRealtime } from "./register-realtime.js";
-import type {
-  RealtimeRole,
-  RealtimeServer,
-  WebinarAction,
-} from "./types.js";
+import type { RealtimeRole, RealtimeServer, WebinarAction } from "./types.js";
 
 type Ack<T> =
   | { ok: true; data: T; replayed: boolean }
@@ -40,6 +36,12 @@ describe("realtime moderation", () => {
       ["moderator", "MODERATOR"],
       ["viewer", "ATTENDEE"],
     ]);
+    const removedFromMedia: Array<{ webinarId: string; subject: string }> = [];
+    const savedRestrictions: Array<{
+      webinarId: string;
+      targetId: string;
+      bannedUntil?: number | null;
+    }> = [];
 
     httpServer = createServer();
     io = new SocketIoServer(httpServer, {
@@ -68,6 +70,21 @@ describe("realtime moderation", () => {
       },
       repositories: new InMemoryRealtimeRepositories(),
       idempotency: new InMemoryIdempotencyExecutor(),
+      async removeBannedParticipant(id, subject) {
+        removedFromMedia.push({ webinarId: id, subject });
+      },
+      restrictions: {
+        async find() {
+          return null;
+        },
+        async save({ webinarId: id, targetId, state }) {
+          savedRestrictions.push({
+            webinarId: id,
+            targetId,
+            ...(state.bannedUntil !== undefined ? { bannedUntil: state.bannedUntil } : {}),
+          });
+        },
+      },
     });
 
     const port = await listen(httpServer);
@@ -88,6 +105,13 @@ describe("realtime moderation", () => {
     });
 
     expect(ban.ok).toBe(true);
+    expect(removedFromMedia).toEqual([{ webinarId, subject: "user:viewer" }]);
+    expect(savedRestrictions).toHaveLength(1);
+    expect(savedRestrictions[0]).toMatchObject({
+      webinarId,
+      targetId: "user:viewer",
+    });
+    expect(savedRestrictions[0]?.bannedUntil).toBeTypeOf("number");
     await expect(kicked).resolves.toMatchObject({ targetId: "user:viewer", action: "ban" });
     await expect(disconnected).resolves.toBe("io server disconnect");
 
@@ -157,7 +181,8 @@ function canPerform(role: RealtimeRole, action: WebinarAction): boolean {
 async function listen(server: HttpServer): Promise<number> {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  if (!address || typeof address === "string") throw new Error("Test server did not bind to a TCP port");
+  if (!address || typeof address === "string")
+    throw new Error("Test server did not bind to a TCP port");
   return address.port;
 }
 

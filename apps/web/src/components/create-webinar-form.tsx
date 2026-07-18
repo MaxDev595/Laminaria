@@ -1,7 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, CalendarCheck, Check, Copy, ExternalLink, LoaderCircle, LockKeyhole, Radio, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarCheck,
+  Check,
+  Copy,
+  ExternalLink,
+  LoaderCircle,
+  LockKeyhole,
+  Radio,
+  Save,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -17,7 +27,11 @@ import { Field, Input, Select, Textarea } from "./ui";
 
 const schema = z.object({
   title: z.string().trim().min(3).max(180),
-  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(100),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .min(3)
+    .max(100),
   description: z.string().max(10_000),
   coverImageUrl: z.string().url().or(z.literal("")),
   scheduledStartAt: z.string(),
@@ -55,7 +69,10 @@ export function CreateWebinarForm() {
   const slug = useWatch({ control: form.control, name: "slug" });
   const scheduledStartAt = useWatch({ control: form.control, name: "scheduledStartAt" });
   const allowGuests = useWatch({ control: form.control, name: "allowGuests" });
-  const requireEmailRegistration = useWatch({ control: form.control, name: "requireEmailRegistration" });
+  const requireEmailRegistration = useWatch({
+    control: form.control,
+    name: "requireEmailRegistration",
+  });
   const publicUrl = useMemo(() => {
     if (!created || typeof window === "undefined") return "";
     return new URL(`/${locale}/w/${created.slug}`, window.location.origin).toString();
@@ -71,11 +88,19 @@ export function CreateWebinarForm() {
       const result = await api.createWebinar(workspace.id, {
         ...values,
         coverImageUrl: values.coverImageUrl.trim() || null,
-        scheduledStartAt: values.scheduledStartAt ? new Date(values.scheduledStartAt).toISOString() : null,
+        scheduledStartAt: values.scheduledStartAt
+          ? new Date(values.scheduledStartAt).toISOString()
+          : null,
         timezone: localTimezone(),
         maxAttendees: null,
       });
-      if (schedule) await api.transitionWebinar(workspace.id, result.webinar.id, "SCHEDULED", result.webinar.version);
+      if (schedule)
+        await api.transitionWebinar(
+          workspace.id,
+          result.webinar.id,
+          "SCHEDULED",
+          result.webinar.version,
+        );
       setCreated({ title: result.webinar.title, slug: result.webinar.slug });
     } catch (reason) {
       setError(friendlyError(reason, locale));
@@ -91,8 +116,14 @@ export function CreateWebinarForm() {
     }
 
     return (
-      <motion.div className="creation-success" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
-        <span><Check size={28} /></span>
+      <motion.div
+        className="creation-success"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <span>
+          <Check size={28} />
+        </span>
         <h1>{t("webinar.draftCreated")}</h1>
         <p>{t("webinar.createdBody", { title: created.title })}</p>
         <div className="share-link-card">
@@ -100,12 +131,25 @@ export function CreateWebinarForm() {
           <code>{publicUrl}</code>
           <Button type="button" variant="secondary" onClick={() => void copyPublicUrl()}>
             <Copy size={17} />
-            {copied ? (locale === "ru" ? "Скопировано" : "Copied") : (locale === "ru" ? "Скопировать" : "Copy")}
+            {copied
+              ? locale === "ru"
+                ? "Скопировано"
+                : "Copied"
+              : locale === "ru"
+                ? "Скопировать"
+                : "Copy"}
           </Button>
         </div>
         <div>
-          <Link href={`/w/${created.slug}`}><Button>{t("webinar.openPage")}<ExternalLink size={17} /></Button></Link>
-          <Button variant="secondary" onClick={() => router.push("/dashboard/drafts")}>{t("nav.drafts")}</Button>
+          <Link href={`/w/${created.slug}`}>
+            <Button>
+              {t("webinar.openPage")}
+              <ExternalLink size={17} />
+            </Button>
+          </Link>
+          <Button variant="secondary" onClick={() => router.push("/dashboard/drafts")}>
+            {t("nav.drafts")}
+          </Button>
         </div>
       </motion.div>
     );
@@ -114,11 +158,20 @@ export function CreateWebinarForm() {
   return (
     <div className="create-webinar">
       <div className="create-webinar__top">
-        <Link href="/dashboard" className="auth-back"><ArrowLeft size={16} />{t("common.back")}</Link>
-        <span className="save-state"><span />{t("webinar.saveState")}</span>
+        <Link href="/dashboard" className="auth-back">
+          <ArrowLeft size={16} />
+          {t("common.back")}
+        </Link>
+        <span className="save-state">
+          <span />
+          {t("webinar.saveState")}
+        </span>
       </div>
       <header>
-        <span className="section-kicker"><Radio size={16} />{t("webinar.newRoom")}</span>
+        <span className="section-kicker">
+          <Radio size={16} />
+          {t("webinar.newRoom")}
+        </span>
         <h1>{t("webinar.createTitle")}</h1>
         <p>{t("webinar.createSubtitle")}</p>
       </header>
@@ -130,12 +183,26 @@ export function CreateWebinarForm() {
             <p>{t("webinar.essentialsBody")}</p>
           </div>
           <div className="form-section__fields">
-            <Field label={t("webinar.title")} error={form.formState.errors.title?.message}><Input autoFocus {...form.register("title")} /></Field>
-            <Field label={t("webinar.slug")} hint={`laminaria.app/${locale}/w/${slug || "your-webinar"}`} error={form.formState.errors.slug?.message}><Input {...form.register("slug")} /></Field>
-            <Field label={t("webinar.description")}><Textarea {...form.register("description")} /></Field>
+            <Field label={t("webinar.title")} error={form.formState.errors.title?.message}>
+              <Input autoFocus {...form.register("title")} />
+            </Field>
+            <Field
+              label={t("webinar.slug")}
+              hint={`laminaria.app/${locale}/w/${slug || "your-webinar"}`}
+              error={form.formState.errors.slug?.message}
+            >
+              <Input {...form.register("slug")} />
+            </Field>
+            <Field label={t("webinar.description")}>
+              <Textarea {...form.register("description")} />
+            </Field>
             <Field
               label={locale === "ru" ? "Баннер / обложка вебинара" : "Webinar banner / cover"}
-              hint={locale === "ru" ? "Вставьте ссылку на картинку 16:9 или 3:1" : "Paste an image URL, ideally 16:9 or 3:1"}
+              hint={
+                locale === "ru"
+                  ? "Вставьте ссылку на картинку 16:9 или 3:1"
+                  : "Paste an image URL, ideally 16:9 or 3:1"
+              }
               error={form.formState.errors.coverImageUrl?.message}
             >
               <Input placeholder="https://..." {...form.register("coverImageUrl")} />
@@ -149,7 +216,9 @@ export function CreateWebinarForm() {
             <p>{t("webinar.timeZone", { timezone: localTimezone() })}</p>
           </div>
           <div className="form-section__fields form-grid">
-            <Field label={t("webinar.date")}><Input type="datetime-local" {...form.register("scheduledStartAt")} /></Field>
+            <Field label={t("webinar.date")}>
+              <Input type="datetime-local" {...form.register("scheduledStartAt")} />
+            </Field>
             <Field label={t("webinar.language")}>
               <Select {...form.register("language")}>
                 <option value="en">English</option>
@@ -162,8 +231,20 @@ export function CreateWebinarForm() {
                 <option value="PRIVATE">{t("webinar.private")}</option>
               </Select>
             </Field>
-            <ToggleField label={t("webinar.guestAccess")} icon={<LockKeyhole size={17} />} checked={allowGuests} onChange={(checked) => form.setValue("allowGuests", checked, { shouldDirty: true })} />
-            <ToggleField label={t("webinar.emailRegistration")} icon={<CalendarCheck size={17} />} checked={requireEmailRegistration} onChange={(checked) => form.setValue("requireEmailRegistration", checked, { shouldDirty: true })} />
+            <ToggleField
+              label={t("webinar.guestAccess")}
+              icon={<LockKeyhole size={17} />}
+              checked={allowGuests}
+              onChange={(checked) => form.setValue("allowGuests", checked, { shouldDirty: true })}
+            />
+            <ToggleField
+              label={t("webinar.emailRegistration")}
+              icon={<CalendarCheck size={17} />}
+              checked={requireEmailRegistration}
+              onChange={(checked) =>
+                form.setValue("requireEmailRegistration", checked, { shouldDirty: true })
+              }
+            />
           </div>
         </section>
         <section className="form-section form-section--future">
@@ -173,19 +254,56 @@ export function CreateWebinarForm() {
             <p>{t("webinar.roomCapabilitiesBody")}</p>
           </div>
           <div className="capability-preview">
-            <span><Check />{t("webinar.chat")}</span>
-            <span><Check />{t("webinar.qa")}</span>
-            <span><Check />{t("webinar.polls")}</span>
-            <span><Check />{t("webinar.reactions")}</span>
+            <span>
+              <Check />
+              {t("webinar.chat")}
+            </span>
+            <span>
+              <Check />
+              {t("webinar.qa")}
+            </span>
+            <span>
+              <Check />
+              {t("webinar.polls")}
+            </span>
+            <span>
+              <Check />
+              {t("webinar.reactions")}
+            </span>
           </div>
         </section>
-        <AnimatePresence>{error ? <motion.div className="form-alert form-alert--box" role="alert" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{error}</motion.div> : null}</AnimatePresence>
+        <AnimatePresence>
+          {error ? (
+            <motion.div
+              className="form-alert form-alert--box"
+              role="alert"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {error}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
         <footer className="create-webinar__footer">
-          <Button type="submit" variant="secondary" size="lg" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? <LoaderCircle className="spin" size={18} /> : <Save size={18} />}
+          <Button
+            type="submit"
+            variant="secondary"
+            size="lg"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? (
+              <LoaderCircle className="spin" size={18} />
+            ) : (
+              <Save size={18} />
+            )}
             {t("webinar.saveDraft")}
           </Button>
-          <Button type="button" size="lg" disabled={form.formState.isSubmitting || !scheduledStartAt} onClick={form.handleSubmit((values) => submit(values, true))}>
+          <Button
+            type="button"
+            size="lg"
+            disabled={form.formState.isSubmitting || !scheduledStartAt}
+            onClick={form.handleSubmit((values) => submit(values, true))}
+          >
             <CalendarCheck size={18} />
             {t("webinar.schedule")}
           </Button>
@@ -208,9 +326,19 @@ function ToggleField({
 }) {
   return (
     <label className="toggle-field">
-      <span>{icon}{label}</span>
-      <input className="lm-sr-only" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <span className={`toggle ${checked ? "is-on" : ""}`} aria-hidden="true"><i /></span>
+      <span>
+        {icon}
+        {label}
+      </span>
+      <input
+        className="lm-sr-only"
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span className={`toggle ${checked ? "is-on" : ""}`} aria-hidden="true">
+        <i />
+      </span>
     </label>
   );
 }

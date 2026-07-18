@@ -22,10 +22,7 @@ async function main(): Promise<void> {
     host: application.config.host,
     port: application.config.port,
   });
-  application.app.log.info(
-    { url: application.config.publicApiUrl },
-    "Laminaria API is ready",
-  );
+  application.app.log.info({ url: application.config.publicApiUrl }, "Laminaria API is ready");
 }
 
 main().catch((error: unknown) => {

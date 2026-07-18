@@ -40,7 +40,11 @@ export class OpenAiCompatibleProvider implements AiProvider {
     private readonly baseUrl: string,
   ) {}
 
-  async complete(input: { system: string; prompt: string; maxOutputTokens: number }): Promise<AiResult> {
+  async complete(input: {
+    system: string;
+    prompt: string;
+    maxOutputTokens: number;
+  }): Promise<AiResult> {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: {
@@ -59,12 +63,17 @@ export class OpenAiCompatibleProvider implements AiProvider {
     });
 
     if (!response.ok) {
-      throw new ProviderResponseError("ai", response.status, `AI provider returned ${response.status}`);
+      throw new ProviderResponseError(
+        "ai",
+        response.status,
+        `AI provider returned ${response.status}`,
+      );
     }
 
     const payload = (await response.json()) as ChatCompletionResponse;
     const content = payload.choices?.[0]?.message?.content?.trim();
-    if (!content) throw new ProviderResponseError("ai", 502, "AI provider returned an empty response");
+    if (!content)
+      throw new ProviderResponseError("ai", 502, "AI provider returned an empty response");
 
     return {
       content,
@@ -79,6 +88,7 @@ export class OpenAiCompatibleProvider implements AiProvider {
 
 export function createAiProvider(config: WorkerConfig): AiProvider {
   if (config.AI_PROVIDER === "disabled") return new DisabledAiProvider();
-  if (!config.AI_API_KEY || !config.AI_MODEL || !config.AI_BASE_URL) return new DisabledAiProvider();
+  if (!config.AI_API_KEY || !config.AI_MODEL || !config.AI_BASE_URL)
+    return new DisabledAiProvider();
   return new OpenAiCompatibleProvider(config.AI_API_KEY, config.AI_MODEL, config.AI_BASE_URL);
 }

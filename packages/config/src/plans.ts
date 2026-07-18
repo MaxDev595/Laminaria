@@ -93,10 +93,7 @@ const pendingFeatures = (): PlanDefinition["features"] =>
     dataExport: pendingDecision<boolean>(),
   });
 
-const createPendingPlan = (
-  id: PlanId,
-  name: LocalizedPlanName,
-): PlanDefinition =>
+const createPendingPlan = (id: PlanId, name: LocalizedPlanName): PlanDefinition =>
   Object.freeze({
     id,
     name: Object.freeze(name),

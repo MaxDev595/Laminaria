@@ -17,8 +17,17 @@ body {
   min-width: 20rem;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 12% -10%, color-mix(in srgb, var(--kelp-500) 12%, transparent), transparent 30rem),
-    linear-gradient(155deg, var(--color-background-deep), var(--color-background) 55%, var(--color-background-elevated));
+    radial-gradient(
+      circle at 12% -10%,
+      color-mix(in srgb, var(--kelp-500) 12%, transparent),
+      transparent 30rem
+    ),
+    linear-gradient(
+      155deg,
+      var(--color-background-deep),
+      var(--color-background) 55%,
+      var(--color-background-elevated)
+    );
 }
 
 button,
@@ -82,9 +91,16 @@ a {
   position: absolute;
   inset: -45% -35%;
   transform: translateX(-130%) rotate(12deg);
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, white 34%, transparent), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, white 34%, transparent),
+    transparent
+  );
   opacity: 0;
-  transition: transform 700ms var(--ease-out), opacity var(--duration-fast);
+  transition:
+    transform 700ms var(--ease-out),
+    opacity var(--duration-fast);
   pointer-events: none;
   content: "";
 }
@@ -221,10 +237,18 @@ a {
   content: "";
 }
 
-.lm-badge--success { color: var(--color-success); }
-.lm-badge--warning { color: var(--color-warning); }
-.lm-badge--danger { color: var(--color-danger); }
-.lm-badge--primary { color: var(--color-primary); }
+.lm-badge--success {
+  color: var(--color-success);
+}
+.lm-badge--warning {
+  color: var(--color-warning);
+}
+.lm-badge--danger {
+  color: var(--color-danger);
+}
+.lm-badge--primary {
+  color: var(--color-primary);
+}
 
 .lm-skeleton {
   position: relative;
@@ -252,8 +276,16 @@ a {
   animation: lm-spin 700ms linear infinite;
 }
 
-@keyframes lm-spin { to { transform: rotate(360deg); } }
-@keyframes lm-shimmer { 100% { transform: translateX(100%); } }
+@keyframes lm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes lm-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -225,7 +225,8 @@ export class InMemoryPollRepository implements PollRepository {
     const options = poll.options.map((option) => ({
       ...option,
       voteCount:
-        option.voteCount - (previousVoteSet.has(option.id) ? 1 : 0) +
+        option.voteCount -
+        (previousVoteSet.has(option.id) ? 1 : 0) +
         (nextVotes.has(option.id) ? 1 : 0),
     }));
 

@@ -95,21 +95,33 @@ const webinarPermissions: Readonly<Record<ParticipantRole, ReadonlySet<WebinarPe
   GUEST: new Set(["webinar:join", "qa:write", "poll:vote"]),
 };
 
-export function hasWorkspacePermission(role: WorkspaceRole, permission: WorkspacePermission): boolean {
+export function hasWorkspacePermission(
+  role: WorkspaceRole,
+  permission: WorkspacePermission,
+): boolean {
   return workspacePermissions[role].has(permission);
 }
 
-export function hasWebinarPermission(role: ParticipantRole, permission: WebinarPermission): boolean {
+export function hasWebinarPermission(
+  role: ParticipantRole,
+  permission: WebinarPermission,
+): boolean {
   return webinarPermissions[role].has(permission);
 }
 
-export function assertWorkspacePermission(role: WorkspaceRole, permission: WorkspacePermission): void {
+export function assertWorkspacePermission(
+  role: WorkspaceRole,
+  permission: WorkspacePermission,
+): void {
   if (!hasWorkspacePermission(role, permission)) {
     throw new AppError(403, "FORBIDDEN", "Workspace permission denied", { permission });
   }
 }
 
-export function assertWebinarPermission(role: ParticipantRole, permission: WebinarPermission): void {
+export function assertWebinarPermission(
+  role: ParticipantRole,
+  permission: WebinarPermission,
+): void {
   if (!hasWebinarPermission(role, permission)) {
     throw new AppError(403, "FORBIDDEN", "Webinar permission denied", { permission });
   }

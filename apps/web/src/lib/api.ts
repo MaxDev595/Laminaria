@@ -1,6 +1,6 @@
 const API_ORIGIN = (
-  process.env.NEXT_PUBLIC_API_URL
-  ?? (process.env.NODE_ENV === "production" ? "" : "http://localhost:4000")
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:4000")
 ).replace(/\/$/, "");
 
 export class ApiError extends Error {
@@ -42,7 +42,12 @@ async function getCsrfToken(): Promise<string> {
       headers: { accept: "application/json" },
     })
       .then(async (response) => {
-        if (!response.ok) throw new ApiError(response.status, "CSRF_UNAVAILABLE", "Request protection is unavailable");
+        if (!response.ok)
+          throw new ApiError(
+            response.status,
+            "CSRF_UNAVAILABLE",
+            "Request protection is unavailable",
+          );
         const payload = (await response.json()) as { csrfToken: string };
         csrfToken = payload.csrfToken;
         return payload.csrfToken;
@@ -64,7 +69,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   headers.set("accept", "application/json");
   if (options.body && !headers.has("content-type")) headers.set("content-type", "application/json");
   const sessionToken = getStoredSessionToken();
-  if (sessionToken && !headers.has("authorization")) headers.set("authorization", `Bearer ${sessionToken}`);
+  if (sessionToken && !headers.has("authorization"))
+    headers.set("authorization", `Bearer ${sessionToken}`);
   if (isUnsafe(method)) headers.set("x-csrf-token", await getCsrfToken());
 
   let response: Response;
@@ -85,12 +91,20 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   if (response.status === 204) return undefined as T;
   const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json") ? await response.json() : await response.text();
+  const payload = contentType.includes("application/json")
+    ? await response.json()
+    : await response.text();
 
   if (!response.ok) {
-    const body = payload as { code?: string; message?: string; details?: unknown; error?: { code?: string; message?: string; details?: unknown } };
+    const body = payload as {
+      code?: string;
+      message?: string;
+      details?: unknown;
+      error?: { code?: string; message?: string; details?: unknown };
+    };
     const errorBody = body.error ?? body;
-    if (response.status === 403 && errorBody.code === "FORBIDDEN" && isUnsafe(method)) csrfToken = null;
+    if (response.status === 403 && errorBody.code === "FORBIDDEN" && isUnsafe(method))
+      csrfToken = null;
     if (response.status === 401 && sessionToken) clearSessionToken();
     throw new ApiError(
       response.status,
@@ -105,15 +119,20 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
 export const api = {
   origin: API_ORIGIN,
-  authProviders: (signal?: AbortSignal) => apiFetch<AuthProvidersPayload>("/v1/auth/providers", { signal }),
+  authProviders: (signal?: AbortSignal) =>
+    apiFetch<AuthProvidersPayload>("/v1/auth/providers", { signal }),
   me: (signal?: AbortSignal) => apiFetch<AuthPayload>("/v1/auth/me", { signal }),
-  serviceStatus: (signal?: AbortSignal) => apiFetch<ServiceStatusPayload>("/v1/system/services", { signal }),
+  serviceStatus: (signal?: AbortSignal) =>
+    apiFetch<ServiceStatusPayload>("/v1/system/services", { signal }),
   signIn: (input: { email: string; password: string }) =>
-    apiFetch<AuthPayload>("/v1/auth/sign-in", { method: "POST", body: JSON.stringify(input) }).then((payload) => {
-      storeSessionToken(payload.sessionToken);
-      return payload;
-    }),
-  googleStartUrl: (locale: "en" | "ru") => `${API_ORIGIN}/v1/auth/google/start?locale=${encodeURIComponent(locale)}`,
+    apiFetch<AuthPayload>("/v1/auth/sign-in", { method: "POST", body: JSON.stringify(input) }).then(
+      (payload) => {
+        storeSessionToken(payload.sessionToken);
+        return payload;
+      },
+    ),
+  googleStartUrl: (locale: "en" | "ru") =>
+    `${API_ORIGIN}/v1/auth/google/start?locale=${encodeURIComponent(locale)}`,
   signUp: (input: { name: string; email: string; password: string; locale: "en" | "ru" }) =>
     apiFetch<{ user: User; verificationRequired: boolean }>("/v1/auth/sign-up", {
       method: "POST",
@@ -121,14 +140,23 @@ export const api = {
     }),
   signOut: () => apiFetch<void>("/v1/auth/sign-out", { method: "POST" }).finally(clearSessionToken),
   forgotPassword: (email: string) =>
-    apiFetch<{ accepted: true }>("/v1/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+    apiFetch<{ accepted: true }>("/v1/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
   resetPassword: (token: string, password: string) =>
-    apiFetch<void>("/v1/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) }),
+    apiFetch<void>("/v1/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
   verifyEmail: (token: string) =>
     apiFetch<void>("/v1/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
   listWorkspaces: () => apiFetch<{ workspaces: Workspace[] }>("/v1/workspaces"),
   createWorkspace: (input: { name: string; slug: string }) =>
-    apiFetch<{ workspace: Workspace }>("/v1/workspaces", { method: "POST", body: JSON.stringify(input) }),
+    apiFetch<{ workspace: Workspace }>("/v1/workspaces", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   listWebinars: (workspaceId: string) =>
     apiFetch<{ webinars: Webinar[] }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars`),
   createWebinar: (workspaceId: string, input: CreateWebinarInput) =>
@@ -136,7 +164,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  transitionWebinar: (workspaceId: string, webinarId: string, status: WebinarStatus, version: number) =>
+  transitionWebinar: (
+    workspaceId: string,
+    webinarId: string,
+    status: WebinarStatus,
+    version: number,
+  ) =>
     apiFetch<{ webinar: Webinar }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/transitions`,
       { method: "POST", body: JSON.stringify({ status, version }) },
@@ -150,8 +183,19 @@ export const api = {
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/prejoin`,
       { method: "POST" },
     ),
-  assignWebinarHost: (workspaceId: string, webinarId: string, input: { email: string; role: "COHOST" | "MODERATOR" | "SPEAKER" }) =>
-    apiFetch<{ host: { userId: string; email: string; name: string; role: "COHOST" | "MODERATOR" | "SPEAKER" } }>(
+  assignWebinarHost: (
+    workspaceId: string,
+    webinarId: string,
+    input: { email: string; role: "COHOST" | "MODERATOR" | "SPEAKER" },
+  ) =>
+    apiFetch<{
+      host: {
+        userId: string;
+        email: string;
+        name: string;
+        role: "COHOST" | "MODERATOR" | "SPEAKER";
+      };
+    }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/hosts`,
       { method: "POST", body: JSON.stringify(input) },
     ),
@@ -160,17 +204,25 @@ export const api = {
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/registrations`,
     ),
   publicWebinar: (slug: string, signal?: AbortSignal) =>
-    apiFetch<{ webinar: PublicWebinar }>(`/v1/public/webinars/${encodeURIComponent(slug)}`, { signal }),
-  register: (slug: string, input: { email: string; phone: string; name: string; locale: "en" | "ru" }) =>
-    apiFetch<RegistrationPayload>(
-      `/v1/public/webinars/${encodeURIComponent(slug)}/registrations`,
-      { method: "POST", body: JSON.stringify(input) },
-    ),
-  confirmRegistration: (token: string) =>
-    apiFetch<{ registration: Registration; accessToken: string }>("/v1/public/registrations/confirm", {
-      method: "POST",
-      body: JSON.stringify({ token }),
+    apiFetch<{ webinar: PublicWebinar }>(`/v1/public/webinars/${encodeURIComponent(slug)}`, {
+      signal,
     }),
+  register: (
+    slug: string,
+    input: { email: string; phone: string; name: string; locale: "en" | "ru" },
+  ) =>
+    apiFetch<RegistrationPayload>(`/v1/public/webinars/${encodeURIComponent(slug)}/registrations`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  confirmRegistration: (token: string) =>
+    apiFetch<{ registration: Registration; accessToken: string }>(
+      "/v1/public/registrations/confirm",
+      {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      },
+    ),
   prejoin: (slug: string, input: { accessToken?: string; guestName?: string }) =>
     apiFetch<PrejoinPayload>(`/v1/public/webinars/${encodeURIComponent(slug)}/prejoin`, {
       method: "POST",
@@ -215,7 +267,8 @@ export interface Workspace {
 }
 
 export type WebinarStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED" | "ARCHIVED";
-export type WebinarRole = "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
+export type WebinarRole =
+  "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
 
 export interface Webinar {
   id: string;
@@ -237,7 +290,17 @@ export interface Webinar {
 
 export type PublicWebinar = Pick<
   Webinar,
-  "slug" | "title" | "description" | "coverImageUrl" | "status" | "scheduledStartAt" | "timezone" | "language" | "visibility" | "allowGuests" | "requireEmailRegistration"
+  | "slug"
+  | "title"
+  | "description"
+  | "coverImageUrl"
+  | "status"
+  | "scheduledStartAt"
+  | "timezone"
+  | "language"
+  | "visibility"
+  | "allowGuests"
+  | "requireEmailRegistration"
 >;
 
 export interface CreateWebinarInput {
@@ -299,19 +362,36 @@ export function friendlyError(error: unknown, locale: string) {
     return serviceNotConfiguredMessage(error.message, russian);
   }
   const messages: Record<string, [string, string]> = {
-    SERVICE_UNAVAILABLE: ["The service is not reachable. Check that the API is running.", "Сервис недоступен. Проверьте, запущен ли API."],
-    SERVICE_NOT_CONFIGURED: ["This service has not been configured yet.", "Этот сервис ещё не настроен."],
+    SERVICE_UNAVAILABLE: [
+      "The service is not reachable. Check that the API is running.",
+      "Сервис недоступен. Проверьте, запущен ли API.",
+    ],
+    SERVICE_NOT_CONFIGURED: [
+      "This service has not been configured yet.",
+      "Этот сервис ещё не настроен.",
+    ],
     UNAUTHENTICATED: ["Sign in to continue.", "Войдите, чтобы продолжить."],
     UNAUTHORIZED: ["Sign in to continue.", "Войдите, чтобы продолжить."],
-    FORBIDDEN: ["Your role does not allow this action.", "Ваша роль не позволяет выполнить это действие."],
-    VALIDATION_ERROR: ["Review the highlighted information and try again.", "Проверьте введённые данные и попробуйте снова."],
+    FORBIDDEN: [
+      "Your role does not allow this action.",
+      "Ваша роль не позволяет выполнить это действие.",
+    ],
+    VALIDATION_ERROR: [
+      "Review the highlighted information and try again.",
+      "Проверьте введённые данные и попробуйте снова.",
+    ],
     BAD_REQUEST: ["Review the information and try again.", "Проверьте данные и попробуйте снова."],
-    RATE_LIMITED: ["Too many attempts. Wait a moment and try again.", "Слишком много попыток. Подождите и попробуйте снова."],
+    RATE_LIMITED: [
+      "Too many attempts. Wait a moment and try again.",
+      "Слишком много попыток. Подождите и попробуйте снова.",
+    ],
   };
   const pair = messages[code];
   if (pair) return russian ? pair[1] : pair[0];
   if (error instanceof ApiError && error.status > 0) return error.message;
-  return russian ? "Что-то нарушило ход работы. Попробуйте снова." : "Something interrupted the flow. Try again.";
+  return russian
+    ? "Что-то нарушило ход работы. Попробуйте снова."
+    : "Something interrupted the flow. Try again.";
 }
 
 function serviceNotConfiguredMessage(message: string, russian: boolean) {
@@ -325,5 +405,7 @@ function serviceNotConfiguredMessage(message: string, russian: boolean) {
       ? "Почта не настроена. Для локальной разработки можно отключить подтверждение email или добавить SMTP_HOST и EMAIL_FROM."
       : "Email delivery is not configured. For local development, disable email confirmation or add SMTP_HOST and EMAIL_FROM.";
   }
-  return russian ? "Этот сервис ещё не настроен. Проверьте экран Settings." : "This service has not been configured yet. Check Settings.";
+  return russian
+    ? "Этот сервис ещё не настроен. Проверьте экран Settings."
+    : "This service has not been configured yet. Check Settings.";
 }

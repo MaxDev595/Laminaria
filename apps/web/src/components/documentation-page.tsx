@@ -61,50 +61,50 @@ const sectionIcons = {
 const commercialMvpCardsEn: DocCard[] = [
   {
     title: "Account and workspace",
-    body:
-      "The MVP keeps only the account flow needed to run webinars: email registration, sign-in, Google OAuth, password recovery, persistent sessions and workspace onboarding.",
-    items: ["Create workspace", "Owner/Admin/Moderator/Member roles", "Stay signed in after refresh"],
+    body: "The MVP keeps only the account flow needed to run webinars: email registration, sign-in, Google OAuth, password recovery, persistent sessions and workspace onboarding.",
+    items: [
+      "Create workspace",
+      "Owner/Admin/Moderator/Member roles",
+      "Stay signed in after refresh",
+    ],
   },
   {
     title: "Webinar scheduling",
-    body:
-      "Organizers create a real webinar with title, description, banner, date, time, duration, timezone, visibility and participant limit.",
+    body: "Organizers create a real webinar with title, description, banner, date, time, duration, timezone, visibility and participant limit.",
     items: ["Public registration link", "Countdown/waiting page", "Edit core webinar data"],
   },
   {
     title: "Viewer registration",
-    body:
-      "The public registration flow collects the data needed for sales and marketing without making viewers create a full host account.",
-    items: ["Name, email, phone", "One registration per email/phone pair", "Registration status in analytics"],
+    body: "The public registration flow collects the data needed for sales and marketing without making viewers create a full host account.",
+    items: [
+      "Name, email, phone",
+      "One registration per email/phone pair",
+      "Registration status in analytics",
+    ],
   },
   {
     title: "Live room",
-    body:
-      "The host can run the webinar with camera, microphone, screen sharing and stable viewer mode. Viewers stay receive-only unless explicitly invited.",
+    body: "The host can run the webinar with camera, microphone, screen sharing and stable viewer mode. Viewers stay receive-only unless explicitly invited.",
     items: ["Host camera and screen", "Viewer counter", "Mobile-safe room layout"],
   },
   {
     title: "Chat, Q&A and polls",
-    body:
-      "The MVP needs basic engagement tools that make the webinar feel alive without adding unfinished complexity.",
+    body: "The MVP needs basic engagement tools that make the webinar feel alive without adding unfinished complexity.",
     items: ["Chat messages", "Questions and answered state", "Simple polls and reactions"],
   },
   {
     title: "Moderation",
-    body:
-      "Admins and moderators must be able to protect the room during a live event.",
+    body: "Admins and moderators must be able to protect the room during a live event.",
     items: ["Delete message", "Temporary mute", "Kick and ban"],
   },
   {
     title: "Analytics",
-    body:
-      "After registration and attendance, the organizer sees the basic business data needed to follow up with leads.",
+    body: "After registration and attendance, the organizer sees the basic business data needed to follow up with leads.",
     items: ["Registrations", "Name/email/phone details", "Webinar-level attendee list"],
   },
   {
     title: "MVP cleanup rule",
-    body:
-      "Anything that is not ready or not required for the first webinar loop is hidden from navigation and docs until it becomes real product value.",
+    body: "Anything that is not ready or not required for the first webinar loop is hidden from navigation and docs until it becomes real product value.",
     items: ["No empty paid modules", "No empty media catalog", "No unfinished helper modules"],
   },
 ];
@@ -112,51 +112,59 @@ const commercialMvpCardsEn: DocCard[] = [
 const commercialMvpCardsRu: DocCard[] = [
   {
     title: "Аккаунт и workspace",
-    body:
-      "MVP оставляет только тот account flow, который нужен для проведения вебинаров: регистрация по почте, вход, Google OAuth, восстановление пароля, сохранение сессии и создание workspace.",
-    items: ["Создать workspace", "Owner/Admin/Moderator/Member", "Аккаунт сохраняется после обновления"],
+    body: "MVP оставляет только тот account flow, который нужен для проведения вебинаров: регистрация по почте, вход, Google OAuth, восстановление пароля, сохранение сессии и создание workspace.",
+    items: [
+      "Создать workspace",
+      "Owner/Admin/Moderator/Member",
+      "Аккаунт сохраняется после обновления",
+    ],
   },
   {
     title: "Планирование вебинара",
-    body:
-      "Организатор создаёт реальный вебинар: название, описание, баннер, дата, время, длительность, часовой пояс, видимость и лимит участников.",
-    items: ["Публичная ссылка регистрации", "Countdown/waiting page", "Редактирование основных данных"],
+    body: "Организатор создаёт реальный вебинар: название, описание, баннер, дата, время, длительность, часовой пояс, видимость и лимит участников.",
+    items: [
+      "Публичная ссылка регистрации",
+      "Countdown/waiting page",
+      "Редактирование основных данных",
+    ],
   },
   {
     title: "Регистрация зрителя",
-    body:
-      "Публичная регистрация собирает данные для продаж и рекламы, не заставляя зрителя создавать полноценный аккаунт ведущего.",
-    items: ["Имя, email, телефон", "Одна регистрация на связку email/телефон", "Статус регистрации в аналитике"],
+    body: "Публичная регистрация собирает данные для продаж и рекламы, не заставляя зрителя создавать полноценный аккаунт ведущего.",
+    items: [
+      "Имя, email, телефон",
+      "Одна регистрация на связку email/телефон",
+      "Статус регистрации в аналитике",
+    ],
   },
   {
     title: "Комната эфира",
-    body:
-      "Ведущий проводит вебинар с камерой, микрофоном, демонстрацией экрана и стабильным режимом зрителей. Зритель остаётся receive-only, пока его явно не пригласили.",
+    body: "Ведущий проводит вебинар с камерой, микрофоном, демонстрацией экрана и стабильным режимом зрителей. Зритель остаётся receive-only, пока его явно не пригласили.",
     items: ["Камера и экран ведущего", "Счётчик зрителей", "Адаптивная комната"],
   },
   {
     title: "Чат, Q&A и опросы",
-    body:
-      "MVP нужны базовые инструменты вовлечения, чтобы эфир был живым, но без лишней недоделанной сложности.",
+    body: "MVP нужны базовые инструменты вовлечения, чтобы эфир был живым, но без лишней недоделанной сложности.",
     items: ["Сообщения чата", "Вопросы и статус отвечено", "Простые опросы и реакции"],
   },
   {
     title: "Модерация",
-    body:
-      "Админ и модератор должны защищать комнату во время эфира.",
+    body: "Админ и модератор должны защищать комнату во время эфира.",
     items: ["Удалить сообщение", "Временный мут", "Кик и бан"],
   },
   {
     title: "Аналитика",
-    body:
-      "После регистрации и посещения организатор видит базовые бизнес-данные для follow-up.",
+    body: "После регистрации и посещения организатор видит базовые бизнес-данные для follow-up.",
     items: ["Регистрации", "Имя/email/телефон", "Список зрителей по вебинару"],
   },
   {
     title: "Правило очистки MVP",
-    body:
-      "Всё, что не готово или не нужно для первого webinar loop, скрывается из навигации и документации до момента, когда станет реальной ценностью.",
-    items: ["Без пустых платных модулей", "Без пустого медиа-каталога", "Без недоделанных помощников"],
+    body: "Всё, что не готово или не нужно для первого webinar loop, скрывается из навигации и документации до момента, когда станет реальной ценностью.",
+    items: [
+      "Без пустых платных модулей",
+      "Без пустого медиа-каталога",
+      "Без недоделанных помощников",
+    ],
   },
 ];
 
@@ -164,8 +172,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
   en: {
     badge: "Product & technical documentation",
     title: "Laminaria documentation",
-    lead:
-      "A focused MVP plan for a webinar SaaS that can compete through a smooth live room, strong moderation, useful analytics and a fully animated ocean interface.",
+    lead: "A focused MVP plan for a webinar SaaS that can compete through a smooth live room, strong moderation, useful analytics and a fully animated ocean interface.",
     updated: "Updated to the commercial MVP roadmap",
     primaryCta: "Open the app",
     secondaryCta: "Back to landing",
@@ -176,23 +183,19 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "product",
         eyebrow: "01 · Product",
         title: "What Laminaria is",
-        body:
-          "Laminaria is a webinar and live communication platform for creators, educators, consultants and teams that want to run polished online events without assembling several services by hand.",
+        body: "Laminaria is a webinar and live communication platform for creators, educators, consultants and teams that want to run polished online events without assembling several services by hand.",
         cards: [
           {
             title: "Core promise",
-            body:
-              "Create a webinar, share the registration link, host the live room, moderate the audience, collect analytics and reuse the event as part of a repeatable business workflow.",
+            body: "Create a webinar, share the registration link, host the live room, moderate the audience, collect analytics and reuse the event as part of a repeatable business workflow.",
           },
           {
             title: "Market focus",
-            body:
-              "The product is prepared for the EU and US startup market while staying friendly for CIS users through Russian and English localization.",
+            body: "The product is prepared for the EU and US startup market while staying friendly for CIS users through Russian and English localization.",
           },
           {
             title: "Positioning",
-            body:
-              "Laminaria should not be a bare MVP. The first public version should already feel premium enough that creators can imagine paying for it.",
+            body: "Laminaria should not be a bare MVP. The first public version should already feel premium enough that creators can imagine paying for it.",
           },
         ],
       },
@@ -200,42 +203,35 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "functionality",
         eyebrow: "02 · Functionality",
         title: "Main product capabilities",
-        body:
-          "The baseline covers the full journey from account creation to a scheduled webinar, viewer registration, live room, chat, moderation, analytics and reusable team workflow.",
+        body: "The baseline covers the full journey from account creation to a scheduled webinar, viewer registration, live room, chat, moderation, analytics and reusable team workflow.",
         cards: [
           {
             title: "User system",
-            body:
-              "Email and Google sign-in, password recovery, persistent sessions, onboarding, profile basics, language, timezone and workspace creation.",
+            body: "Email and Google sign-in, password recovery, persistent sessions, onboarding, profile basics, language, timezone and workspace creation.",
             items: ["Organizer accounts", "Viewer participation", "Team roles"],
           },
           {
             title: "Webinar creation",
-            body:
-              "Organizers can create scheduled webinars, set title, description, banner, language, time, duration, visibility, password, attendee limit and landing page content.",
+            body: "Organizers can create scheduled webinars, set title, description, banner, language, time, duration, visibility, password, attendee limit and landing page content.",
             items: ["Public registration link", "Countdown page", "Shareable viewer flow"],
           },
           {
             title: "Live room",
-            body:
-              "Hosts get camera, microphone, screen sharing, chat controls, quality options and room modes; viewers join without camera or microphone unless invited.",
+            body: "Hosts get camera, microphone, screen sharing, chat controls, quality options and room modes; viewers join without camera or microphone unless invited.",
             items: ["Audience counter", "Chat permissions", "Screen + camera layout"],
           },
           {
             title: "Moderation",
-            body:
-              "Admins and moderators can delete messages, mute, ban, kick, invite speakers and manage blocked lists inside and outside the webinar.",
+            body: "Admins and moderators can delete messages, mute, ban, kick, invite speakers and manage blocked lists inside and outside the webinar.",
             items: ["Temporary mute", "Temporary or permanent ban", "Unban and unmute lists"],
           },
           {
             title: "MVP boundaries",
-            body:
-              "The product should not show unfinished modules. If a feature is not part of the first webinar loop, it stays out of the main UI.",
+            body: "The product should not show unfinished modules. If a feature is not part of the first webinar loop, it stays out of the main UI.",
           },
           {
             title: "Analytics and notifications",
-            body:
-              "Registration data, attendance, names, emails and phone numbers feed webinar analytics. In-app notifications support team invites and future collaboration flows.",
+            body: "Registration data, attendance, names, emails and phone numbers feed webinar analytics. In-app notifications support team invites and future collaboration flows.",
           },
         ],
       },
@@ -243,33 +239,28 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "commercialMvp",
         eyebrow: "03 · Paid-ready MVP",
         title: "Comparison with the new MVP plan",
-        body:
-          "The earlier documentation was too small: it described a usable test product. The corrected roadmap raises Laminaria to a commercial SaaS MVP that can be sold to early users.",
+        body: "The earlier documentation was too small: it described a usable test product. The corrected roadmap raises Laminaria to a commercial SaaS MVP that can be sold to early users.",
         cards: commercialMvpCardsEn,
       },
       {
         id: "pricing",
         eyebrow: "04 · Pricing",
         title: "Commercial model",
-        body:
-          "Pricing starts simple, but the feature split now matches a real SaaS ladder: free testing, creator monetization, and business/team workflows.",
+        body: "Pricing starts simple, but the feature split now matches a real SaaS ladder: free testing, creator monetization, and business/team workflows.",
         cards: [
           {
             title: "Free · $0",
-            body:
-              "For testing the product, creating early webinars and validating the viewer flow without paid limits during development.",
+            body: "For testing the product, creating early webinars and validating the viewer flow without paid limits during development.",
             items: ["Basic webinars", "Core room controls", "Manual testing"],
           },
           {
             title: "Creator · $15/month",
-            body:
-              "For solo creators and experts who need branded webinars, analytics and a reliable production workflow.",
+            body: "For solo creators and experts who need branded webinars, analytics and a reliable production workflow.",
             items: ["More attendees", "Branding", "Analytics"],
           },
           {
             title: "Business · $49/month",
-            body:
-              "For teams that need roles, moderation, admin controls, deeper analytics and team workflows.",
+            body: "For teams that need roles, moderation, admin controls, deeper analytics and team workflows.",
             items: ["Teams", "Advanced moderation", "Commercial analytics"],
           },
         ],
@@ -278,23 +269,19 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "design",
         eyebrow: "05 · Design",
         title: "Design direction",
-        body:
-          "The interface should feel premium, fluid and joyful: soft gradients, glass panels, clear hierarchy and smooth motion that makes the product feel alive.",
+        body: "The interface should feel premium, fluid and joyful: soft gradients, glass panels, clear hierarchy and smooth motion that makes the product feel alive.",
         cards: [
           {
             title: "Visual language",
-            body:
-              "Ocean-inspired gradients, rounded surfaces, soft shadows, animated accents and a focused dark/light compatible base.",
+            body: "Ocean-inspired gradients, rounded surfaces, soft shadows, animated accents and a focused dark/light compatible base.",
           },
           {
             title: "Core pages",
-            body:
-              "Landing, auth, dashboard, webinar creation, public registration, countdown, prejoin, live room, teams, admin and analytics.",
+            body: "Landing, auth, dashboard, webinar creation, public registration, countdown, prejoin, live room, teams, admin and analytics.",
           },
           {
             title: "Responsive UX",
-            body:
-              "Mobile must be a first-class surface: no overflow, readable controls, stacked panels and thumb-friendly actions.",
+            body: "Mobile must be a first-class surface: no overflow, readable controls, stacked panels and thumb-friendly actions.",
           },
         ],
       },
@@ -302,28 +289,23 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "stack",
         eyebrow: "06 · Stack",
         title: "Technical stack",
-        body:
-          "The project uses a modern TypeScript monorepo with a separate web app, API, shared packages and Prisma database layer.",
+        body: "The project uses a modern TypeScript monorepo with a separate web app, API, shared packages and Prisma database layer.",
         cards: [
           {
             title: "Frontend",
-            body:
-              "Next.js, React, TypeScript, next-intl, motion animations and a shared Laminaria UI package.",
+            body: "Next.js, React, TypeScript, next-intl, motion animations and a shared Laminaria UI package.",
           },
           {
             title: "Backend",
-            body:
-              "Fastify API, Prisma, PostgreSQL/Neon, session cookies, realtime sockets and domain services.",
+            body: "Fastify API, Prisma, PostgreSQL/Neon, session cookies, realtime sockets and domain services.",
           },
           {
             title: "Live video",
-            body:
-              "LiveKit-compatible video infrastructure for host camera, screen sharing, token-based media grants and participant control.",
+            body: "LiveKit-compatible video infrastructure for host camera, screen sharing, token-based media grants and participant control.",
           },
           {
             title: "Infrastructure",
-            body:
-              "Vercel for the web client, Render for API hosting, Neon for PostgreSQL, object storage for assets and future workers for async tasks.",
+            body: "Vercel for the web client, Render for API hosting, Neon for PostgreSQL, object storage for assets and future workers for async tasks.",
           },
         ],
       },
@@ -331,28 +313,23 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "architecture",
         eyebrow: "07 · Architecture",
         title: "System architecture",
-        body:
-          "The MVP stays close to a modular monolith: faster to ship, easier to debug and ready to split into services when usage grows.",
+        body: "The MVP stays close to a modular monolith: faster to ship, easier to debug and ready to split into services when usage grows.",
         cards: [
           {
             title: "Frontend Application",
-            body:
-              "Handles public pages, dashboard, room UI, localization, responsive layout and API integration.",
+            body: "Handles public pages, dashboard, room UI, localization, responsive layout and API integration.",
           },
           {
             title: "Backend API",
-            body:
-              "Owns authentication, workspaces, webinars, registrations, teams, moderation actions, analytics and realtime events.",
+            body: "Owns authentication, workspaces, webinars, registrations, teams, moderation actions, analytics and realtime events.",
           },
           {
             title: "Realtime Service",
-            body:
-              "Coordinates chat, viewer counts, Q&A, polls, reactions, moderation events, room state and live notifications.",
+            body: "Coordinates chat, viewer counts, Q&A, polls, reactions, moderation events, room state and live notifications.",
           },
           {
             title: "Data model",
-            body:
-              "Main entities include users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, chat messages, bans, mutes and analytics events.",
+            body: "Main entities include users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, chat messages, bans, mutes and analytics events.",
           },
         ],
       },
@@ -360,23 +337,19 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "security",
         eyebrow: "08 · Security",
         title: "Security model",
-        body:
-          "Security is built around server-owned sessions, short-lived media tokens, role checks and strict boundaries between organizers and viewers.",
+        body: "Security is built around server-owned sessions, short-lived media tokens, role checks and strict boundaries between organizers and viewers.",
         cards: [
           {
             title: "Auth and sessions",
-            body:
-              "HTTP-only cookies, CSRF checks and persistent login behavior keep users signed in safely across refreshes.",
+            body: "HTTP-only cookies, CSRF checks and persistent login behavior keep users signed in safely across refreshes.",
           },
           {
             title: "Role-based access",
-            body:
-              "Owners, admins, moderators, speakers, members and viewers receive different permissions for room controls, chat and administrative actions.",
+            body: "Owners, admins, moderators, speakers, members and viewers receive different permissions for room controls, chat and administrative actions.",
           },
           {
             title: "Moderation safety",
-            body:
-              "Bans and mutes are recorded so admins can review who was restricted, for how long and restore access when needed.",
+            body: "Bans and mutes are recorded so admins can review who was restricted, for how long and restore access when needed.",
           },
         ],
       },
@@ -384,26 +357,26 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "mvp",
         eyebrow: "09 · Roadmap",
         title: "Final MVP roadmap",
-        body:
-          "The roadmap is now split into MVP v1.0, MVP+ and post-MVP. MVP v1.0 is no longer just a demo: it is the first commercial version for paid early users.",
+        body: "The roadmap is now split into MVP v1.0, MVP+ and post-MVP. MVP v1.0 is no longer just a demo: it is the first commercial version for paid early users.",
         cards: [
           {
             title: "MVP v1.0",
-            body:
-              "Authorization and workspace, webinar creation, webinar room, video/audio, screen sharing, chat, Q&A, polls, webinar landing page, basic email, analytics and dashboard.",
+            body: "Authorization and workspace, webinar creation, webinar room, video/audio, screen sharing, chat, Q&A, polls, webinar landing page, basic email, analytics and dashboard.",
             items: ["Core SaaS loop", "Host + viewer flow", "Commercial webinar baseline"],
           },
           {
             title: "After MVP validation",
-            body:
-              "Only after the first webinar loop is stable, add larger modules one by one based on user demand and ability to charge for them.",
+            body: "Only after the first webinar loop is stable, add larger modules one by one based on user demand and ability to charge for them.",
             items: ["One feature at a time", "No placeholder pages", "User demand first"],
           },
           {
             title: "MVP cleanup rule",
-            body:
-              "Hide anything that does not help the user create, promote, run or analyze the first webinar.",
-            items: ["No empty paid modules", "No empty media catalog", "No unfinished helper modules"],
+            body: "Hide anything that does not help the user create, promote, run or analyze the first webinar.",
+            items: [
+              "No empty paid modules",
+              "No empty media catalog",
+              "No unfinished helper modules",
+            ],
           },
         ],
       },
@@ -412,8 +385,7 @@ const docs: Record<"en" | "ru", DocsContent> = {
   ru: {
     badge: "Продуктовая и техническая документация",
     title: "Документация Laminaria",
-    lead:
-      "Сфокусированный MVP-план webinar SaaS, который может конкурировать за счёт плавной комнаты эфира, сильной модерации, полезной аналитики и полностью анимированного морского интерфейса.",
+    lead: "Сфокусированный MVP-план webinar SaaS, который может конкурировать за счёт плавной комнаты эфира, сильной модерации, полезной аналитики и полностью анимированного морского интерфейса.",
     updated: "Обновлено под коммерческую MVP-дорожную карту",
     primaryCta: "Открыть приложение",
     secondaryCta: "Назад на лендинг",
@@ -424,23 +396,19 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "product",
         eyebrow: "01 · Продукт",
         title: "Что такое Laminaria",
-        body:
-          "Laminaria — платформа для вебинаров и живой коммуникации: для создателей, экспертов, преподавателей, консультантов и команд, которым нужно проводить онлайн-эфиры без сборки пяти разных сервисов вручную.",
+        body: "Laminaria — платформа для вебинаров и живой коммуникации: для создателей, экспертов, преподавателей, консультантов и команд, которым нужно проводить онлайн-эфиры без сборки пяти разных сервисов вручную.",
         cards: [
           {
             title: "Главное обещание",
-            body:
-              "Создать вебинар, выдать ссылку регистрации, провести эфир, модерировать зрителей, собрать аналитику и повторно использовать мероприятие как часть бизнес-процесса.",
+            body: "Создать вебинар, выдать ссылку регистрации, провести эфир, модерировать зрителей, собрать аналитику и повторно использовать мероприятие как часть бизнес-процесса.",
           },
           {
             title: "Фокус рынка",
-            body:
-              "Продукт готовится под стартап-рынок ЕС и США, но остаётся удобным для СНГ благодаря русской и английской локализации.",
+            body: "Продукт готовится под стартап-рынок ЕС и США, но остаётся удобным для СНГ благодаря русской и английской локализации.",
           },
           {
             title: "Позиционирование",
-            body:
-              "Laminaria не должна быть голым MVP. Первая публичная версия уже должна ощущаться достаточно премиально, чтобы создатели могли представить оплату.",
+            body: "Laminaria не должна быть голым MVP. Первая публичная версия уже должна ощущаться достаточно премиально, чтобы создатели могли представить оплату.",
           },
         ],
       },
@@ -448,42 +416,35 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "functionality",
         eyebrow: "02 · Функциональность",
         title: "Основные возможности",
-        body:
-          "Базовая версия закрывает путь от создания аккаунта до запланированного вебинара, регистрации зрителей, комнаты эфира, чата, модерации, аналитики и командного workflow.",
+        body: "Базовая версия закрывает путь от создания аккаунта до запланированного вебинара, регистрации зрителей, комнаты эфира, чата, модерации, аналитики и командного workflow.",
         cards: [
           {
             title: "Система пользователей",
-            body:
-              "Вход по почте и через Google, восстановление пароля, сохранение сессии, онбординг, базовый профиль, язык, часовой пояс и создание workspace.",
+            body: "Вход по почте и через Google, восстановление пароля, сохранение сессии, онбординг, базовый профиль, язык, часовой пояс и создание workspace.",
             items: ["Аккаунты организаторов", "Участие зрителей", "Командные роли"],
           },
           {
             title: "Создание вебинара",
-            body:
-              "Организатор задаёт название, описание, баннер, язык, дату, время, длительность, видимость, пароль, лимит участников и контент landing page.",
+            body: "Организатор задаёт название, описание, баннер, язык, дату, время, длительность, видимость, пароль, лимит участников и контент landing page.",
             items: ["Публичная ссылка", "Страница обратного отсчёта", "Удобный путь зрителя"],
           },
           {
             title: "Комната эфира",
-            body:
-              "Ведущий получает камеру, микрофон, демонстрацию экрана, управление чатом, качеством и режимами комнаты. Зритель входит без камеры и микрофона, пока его не пригласили.",
+            body: "Ведущий получает камеру, микрофон, демонстрацию экрана, управление чатом, качеством и режимами комнаты. Зритель входит без камеры и микрофона, пока его не пригласили.",
             items: ["Счётчик зрителей", "Разрешения чата", "Экран + камера ведущего"],
           },
           {
             title: "Модерация",
-            body:
-              "Админы и модераторы могут удалять сообщения, мутить, банить, кикать, приглашать спикеров и управлять списками ограничений во время и вне вебинара.",
+            body: "Админы и модераторы могут удалять сообщения, мутить, банить, кикать, приглашать спикеров и управлять списками ограничений во время и вне вебинара.",
             items: ["Временный мут", "Временный или вечный бан", "Списки разбана и размута"],
           },
           {
             title: "Границы MVP",
-            body:
-              "Продукт не должен показывать недоделанные модули. Если функция не входит в первый webinar loop, она не попадает в основной интерфейс.",
+            body: "Продукт не должен показывать недоделанные модули. Если функция не входит в первый webinar loop, она не попадает в основной интерфейс.",
           },
           {
             title: "Аналитика и уведомления",
-            body:
-              "Данные регистрации, посещаемость, имена, почты и телефоны уходят в аналитику вебинаров. Внутренние уведомления поддерживают приглашения в команды и будущую коллаборацию.",
+            body: "Данные регистрации, посещаемость, имена, почты и телефоны уходят в аналитику вебинаров. Внутренние уведомления поддерживают приглашения в команды и будущую коллаборацию.",
           },
         ],
       },
@@ -491,33 +452,28 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "commercialMvp",
         eyebrow: "03 · Платёжеспособный MVP",
         title: "Сравнение с новым MVP-планом",
-        body:
-          "Прошлая документация была слишком маленькой: она описывала рабочий тестовый продукт. Исправленная дорожная карта поднимает Laminaria до коммерческого SaaS MVP, который можно продавать ранним пользователям.",
+        body: "Прошлая документация была слишком маленькой: она описывала рабочий тестовый продукт. Исправленная дорожная карта поднимает Laminaria до коммерческого SaaS MVP, который можно продавать ранним пользователям.",
         cards: commercialMvpCardsRu,
       },
       {
         id: "pricing",
         eyebrow: "04 · Тарифы",
         title: "Коммерческая модель",
-        body:
-          "Тарифы остаются простыми, но теперь структура функций похожа на реальную SaaS-лестницу: тестирование, монетизация создателей и командная бизнес-работа.",
+        body: "Тарифы остаются простыми, но теперь структура функций похожа на реальную SaaS-лестницу: тестирование, монетизация создателей и командная бизнес-работа.",
         cards: [
           {
             title: "Free · $0",
-            body:
-              "Для тестирования продукта, первых вебинаров и проверки пути зрителя без платных ограничений во время разработки.",
+            body: "Для тестирования продукта, первых вебинаров и проверки пути зрителя без платных ограничений во время разработки.",
             items: ["Базовые вебинары", "Основные кнопки эфира", "Ручное тестирование"],
           },
           {
             title: "Creator · $15/мес",
-            body:
-              "Для создателей и экспертов, которым нужны брендирование, аналитика и более надёжный рабочий процесс.",
+            body: "Для создателей и экспертов, которым нужны брендирование, аналитика и более надёжный рабочий процесс.",
             items: ["Больше участников", "Брендинг", "Аналитика"],
           },
           {
             title: "Business · $49/мес",
-            body:
-              "Для команд: роли, модерация, админ-контроль, расширенная аналитика и командная работа.",
+            body: "Для команд: роли, модерация, админ-контроль, расширенная аналитика и командная работа.",
             items: ["Команды", "Продвинутая модерация", "Коммерческая аналитика"],
           },
         ],
@@ -526,23 +482,19 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "design",
         eyebrow: "05 · Дизайн",
         title: "Дизайн-направление",
-        body:
-          "Интерфейс должен ощущаться премиальным, плавным и радостным: мягкие градиенты, стеклянные панели, понятная иерархия и живые анимации.",
+        body: "Интерфейс должен ощущаться премиальным, плавным и радостным: мягкие градиенты, стеклянные панели, понятная иерархия и живые анимации.",
         cards: [
           {
             title: "Визуальный язык",
-            body:
-              "Океанические градиенты, округлые поверхности, мягкие тени, анимированные акценты и база, которая дружит с тёмной и светлой темой.",
+            body: "Океанические градиенты, округлые поверхности, мягкие тени, анимированные акценты и база, которая дружит с тёмной и светлой темой.",
           },
           {
             title: "Главные страницы",
-            body:
-              "Лендинг, вход, регистрация, дашборд, создание вебинара, публичная регистрация, обратный отсчёт, prejoin, эфир, команды, админка и аналитика.",
+            body: "Лендинг, вход, регистрация, дашборд, создание вебинара, публичная регистрация, обратный отсчёт, prejoin, эфир, команды, админка и аналитика.",
           },
           {
             title: "Адаптивность",
-            body:
-              "Мобильная версия должна быть полноценной: без overflow, с читаемыми контролами, стеком блоков и удобными кнопками под палец.",
+            body: "Мобильная версия должна быть полноценной: без overflow, с читаемыми контролами, стеком блоков и удобными кнопками под палец.",
           },
         ],
       },
@@ -550,28 +502,23 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "stack",
         eyebrow: "06 · Стек",
         title: "Технический стек",
-        body:
-          "Проект построен как современный TypeScript-монорепозиторий с отдельным web-приложением, API, общими пакетами и Prisma-слоем базы данных.",
+        body: "Проект построен как современный TypeScript-монорепозиторий с отдельным web-приложением, API, общими пакетами и Prisma-слоем базы данных.",
         cards: [
           {
             title: "Frontend",
-            body:
-              "Next.js, React, TypeScript, next-intl, motion-анимации и общий UI-пакет Laminaria.",
+            body: "Next.js, React, TypeScript, next-intl, motion-анимации и общий UI-пакет Laminaria.",
           },
           {
             title: "Backend",
-            body:
-              "Fastify API, Prisma, PostgreSQL/Neon, session cookies, realtime-сокеты и доменные сервисы.",
+            body: "Fastify API, Prisma, PostgreSQL/Neon, session cookies, realtime-сокеты и доменные сервисы.",
           },
           {
             title: "Видео",
-            body:
-              "LiveKit-совместимая инфраструктура для камеры ведущего, демонстрации экрана, короткоживущих media-token и контроля участников.",
+            body: "LiveKit-совместимая инфраструктура для камеры ведущего, демонстрации экрана, короткоживущих media-token и контроля участников.",
           },
           {
             title: "Инфраструктура",
-            body:
-              "Vercel для web-клиента, Render для API, Neon для PostgreSQL, object storage для ассетов и будущие worker-процессы для фоновых задач.",
+            body: "Vercel для web-клиента, Render для API, Neon для PostgreSQL, object storage для ассетов и будущие worker-процессы для фоновых задач.",
           },
         ],
       },
@@ -579,28 +526,23 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "architecture",
         eyebrow: "07 · Архитектура",
         title: "Архитектура системы",
-        body:
-          "MVP остаётся близким к модульному монолиту: быстрее выпускать, проще отлаживать и легче разделить на сервисы, когда появится нагрузка.",
+        body: "MVP остаётся близким к модульному монолиту: быстрее выпускать, проще отлаживать и легче разделить на сервисы, когда появится нагрузка.",
         cards: [
           {
             title: "Frontend Application",
-            body:
-              "Отвечает за публичные страницы, дашборд, комнату эфира, локализацию, адаптивный интерфейс и связь с API.",
+            body: "Отвечает за публичные страницы, дашборд, комнату эфира, локализацию, адаптивный интерфейс и связь с API.",
           },
           {
             title: "Backend API",
-            body:
-              "Ведёт авторизацию, workspaces, webinars, registrations, teams, moderation actions, analytics и realtime-события.",
+            body: "Ведёт авторизацию, workspaces, webinars, registrations, teams, moderation actions, analytics и realtime-события.",
           },
           {
             title: "Realtime Service",
-            body:
-              "Синхронизирует чат, счётчик зрителей, Q&A, опросы, реакции, события модерации, состояние комнаты и живые уведомления.",
+            body: "Синхронизирует чат, счётчик зрителей, Q&A, опросы, реакции, события модерации, состояние комнаты и живые уведомления.",
           },
           {
             title: "Модель данных",
-            body:
-              "Основные сущности: users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, chat messages, bans, mutes и analytics events.",
+            body: "Основные сущности: users, sessions, workspaces, teams, memberships, webinars, registrations, questions, polls, chat messages, bans, mutes и analytics events.",
           },
         ],
       },
@@ -608,23 +550,19 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "security",
         eyebrow: "08 · Безопасность",
         title: "Модель безопасности",
-        body:
-          "Безопасность строится на серверных сессиях, короткоживущих media-token, проверках ролей и строгой границе между организаторами и зрителями.",
+        body: "Безопасность строится на серверных сессиях, короткоживущих media-token, проверках ролей и строгой границе между организаторами и зрителями.",
         cards: [
           {
             title: "Auth и сессии",
-            body:
-              "HTTP-only cookies, CSRF-проверки и сохранение входа позволяют безопасно оставаться в аккаунте после обновления страницы.",
+            body: "HTTP-only cookies, CSRF-проверки и сохранение входа позволяют безопасно оставаться в аккаунте после обновления страницы.",
           },
           {
             title: "Доступ по ролям",
-            body:
-              "Owners, admins, moderators, speakers, members и viewers получают разные права на управление эфиром, чатом и админ-действиями.",
+            body: "Owners, admins, moderators, speakers, members и viewers получают разные права на управление эфиром, чатом и админ-действиями.",
           },
           {
             title: "Безопасная модерация",
-            body:
-              "Баны и муты записываются, чтобы админ мог увидеть кого ограничили, на какой срок и при необходимости вернуть доступ.",
+            body: "Баны и муты записываются, чтобы админ мог увидеть кого ограничили, на какой срок и при необходимости вернуть доступ.",
           },
         ],
       },
@@ -632,26 +570,26 @@ const docs: Record<"en" | "ru", DocsContent> = {
         id: "mvp",
         eyebrow: "09 · Roadmap",
         title: "Итоговая дорожная карта MVP",
-        body:
-          "Дорожная карта теперь разделена на MVP v1.0, MVP+ и post-MVP. MVP v1.0 больше не демо, а первая коммерческая версия для ранних платящих пользователей.",
+        body: "Дорожная карта теперь разделена на MVP v1.0, MVP+ и post-MVP. MVP v1.0 больше не демо, а первая коммерческая версия для ранних платящих пользователей.",
         cards: [
           {
             title: "MVP v1.0",
-            body:
-              "Авторизация и Workspace, создание вебинаров, комната вебинара, видео/аудио, демонстрация экрана, чат, Q&A, опросы, лендинг вебинара, базовый email, аналитика и Dashboard.",
+            body: "Авторизация и Workspace, создание вебинаров, комната вебинара, видео/аудио, демонстрация экрана, чат, Q&A, опросы, лендинг вебинара, базовый email, аналитика и Dashboard.",
             items: ["Core SaaS loop", "Путь ведущего и зрителя", "Коммерческая база вебинара"],
           },
           {
             title: "После проверки MVP",
-            body:
-              "Только после стабильного первого webinar loop добавляем большие модули по одному — по спросу пользователей и способности брать оплату.",
+            body: "Только после стабильного первого webinar loop добавляем большие модули по одному — по спросу пользователей и способности брать оплату.",
             items: ["Одна фича за раз", "Без пустых страниц", "Сначала спрос"],
           },
           {
             title: "Правило очистки MVP",
-            body:
-              "Скрываем всё, что не помогает пользователю создать, продвинуть, провести или проанализировать первый вебинар.",
-            items: ["Без пустых платных модулей", "Без пустого медиа-каталога", "Без недоделанных помощников"],
+            body: "Скрываем всё, что не помогает пользователю создать, продвинуть, провести или проанализировать первый вебинар.",
+            items: [
+              "Без пустых платных модулей",
+              "Без пустого медиа-каталога",
+              "Без недоделанных помощников",
+            ],
           },
         ],
       },
@@ -679,17 +617,38 @@ export function DocumentationPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Badge tone="primary"><Sparkles size={14} />{content.badge}</Badge>
+            <Badge tone="primary">
+              <Sparkles size={14} />
+              {content.badge}
+            </Badge>
             <h1>{content.title}</h1>
             <p>{content.lead}</p>
             <div className="docs-hero__meta">
-              <span><Globe2 size={16} />EN / RU</span>
-              <span><Radio size={16} />{content.updated}</span>
-              <span><LockKeyhole size={16} />MVP</span>
+              <span>
+                <Globe2 size={16} />
+                EN / RU
+              </span>
+              <span>
+                <Radio size={16} />
+                {content.updated}
+              </span>
+              <span>
+                <LockKeyhole size={16} />
+                MVP
+              </span>
             </div>
             <div className="docs-hero__actions">
-              <Link href="/sign-up"><Button size="lg">{content.primaryCta}<ArrowUpRight size={18} /></Button></Link>
-              <Link href="/"><Button size="lg" variant="ghost">{content.secondaryCta}</Button></Link>
+              <Link href="/sign-up">
+                <Button size="lg">
+                  {content.primaryCta}
+                  <ArrowUpRight size={18} />
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button size="lg" variant="ghost">
+                  {content.secondaryCta}
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </section>
@@ -725,7 +684,9 @@ export function DocumentationPage() {
                   transition={{ duration: 0.45, delay: Math.min(index * 0.03, 0.18) }}
                 >
                   <div className="docs-section-card__head">
-                    <div className="docs-section-card__icon"><Icon size={22} /></div>
+                    <div className="docs-section-card__icon">
+                      <Icon size={22} />
+                    </div>
                     <div>
                       <span>{section.eyebrow}</span>
                       <h2>{section.title}</h2>
@@ -734,12 +695,20 @@ export function DocumentationPage() {
                   <p className="docs-section-card__body">{section.body}</p>
                   <div className={section.id === "pricing" ? "docs-price-grid" : "docs-card-grid"}>
                     {section.cards.map((card) => (
-                      <div key={card.title} className={section.id === "pricing" ? "docs-price-card" : "docs-mini-card"}>
+                      <div
+                        key={card.title}
+                        className={section.id === "pricing" ? "docs-price-card" : "docs-mini-card"}
+                      >
                         <h3>{card.title}</h3>
                         <p>{card.body}</p>
                         {card.items ? (
                           <ul>
-                            {card.items.map((item) => <li key={item}><CheckCircle2 size={15} />{item}</li>)}
+                            {card.items.map((item) => (
+                              <li key={item}>
+                                <CheckCircle2 size={15} />
+                                {item}
+                              </li>
+                            ))}
                           </ul>
                         ) : null}
                       </div>

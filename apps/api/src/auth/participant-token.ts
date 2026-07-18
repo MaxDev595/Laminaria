@@ -43,7 +43,9 @@ export class ParticipantTokenService {
     const actual = Buffer.from(signature);
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null;
     try {
-      const payload = payloadSchema.parse(JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
+      const payload = payloadSchema.parse(
+        JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")),
+      );
       if (payload.exp <= Math.floor(Date.now() / 1_000)) return null;
       return {
         subject: payload.sub,
@@ -58,6 +60,9 @@ export class ParticipantTokenService {
   }
 
   private sign(encoded: string): string {
-    return createHmac("sha256", this.secret).update("laminaria-participant-v1\0").update(encoded).digest("base64url");
+    return createHmac("sha256", this.secret)
+      .update("laminaria-participant-v1\0")
+      .update(encoded)
+      .digest("base64url");
   }
 }

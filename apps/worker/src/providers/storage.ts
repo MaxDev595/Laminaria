@@ -4,7 +4,11 @@ import { ServiceNotConfiguredError } from "../errors.js";
 
 export interface StorageProvider {
   readonly configured: boolean;
-  put(input: { key: string; body: Uint8Array; contentType: string }): Promise<{ key: string; etag?: string }>;
+  put(input: {
+    key: string;
+    body: Uint8Array;
+    contentType: string;
+  }): Promise<{ key: string; etag?: string }>;
 }
 
 class DisabledStorageProvider implements StorageProvider {

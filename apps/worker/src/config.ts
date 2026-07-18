@@ -17,7 +17,10 @@ const workerConfigSchema = z.object({
   AI_BASE_URL: optionalUrl,
   SMTP_HOST: optionalString,
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
-  SMTP_SECURE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  SMTP_SECURE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   SMTP_USER: optionalString,
   SMTP_PASSWORD: optionalString,
   EMAIL_FROM: z.string().default("Laminaria <noreply@localhost>"),
@@ -26,7 +29,10 @@ const workerConfigSchema = z.object({
   S3_BUCKET: optionalString,
   S3_ACCESS_KEY: optionalString,
   S3_SECRET_KEY: optionalString,
-  S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
+  S3_FORCE_PATH_STYLE: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
 });
 
 export type WorkerConfig = z.infer<typeof workerConfigSchema>;
