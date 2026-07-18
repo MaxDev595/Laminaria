@@ -664,7 +664,7 @@ function RealtimePanel({
   const chatLocked = viewer && tab === "chat" && !viewerChatEnabled;
 
   useEffect(() => {
-    const socket = io(api.origin, {
+    const socket = io(api.realtimeOrigin, {
       auth: { token: session.realtimeToken },
       transports: ["websocket", "polling"],
       withCredentials: true,

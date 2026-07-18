@@ -22,4 +22,18 @@ describe("production-safe configuration defaults", () => {
 
     expect(config.nodeEnv).toBe("production");
   });
+
+  it("always allows the configured web application origin for realtime", () => {
+    const config = parseConfig({
+      DATABASE_URL: "postgresql://localhost/laminaria",
+      TOKEN_PEPPER: "a-production-pepper-that-is-long-enough",
+      WEB_APP_URL: "https://laminaria-api.vercel.app/",
+      CORS_ORIGINS: "https://old-preview.vercel.app",
+    });
+
+    expect(config.corsOrigins).toEqual([
+      "https://laminaria-api.vercel.app",
+      "https://old-preview.vercel.app",
+    ]);
+  });
 });

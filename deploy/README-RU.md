@@ -58,6 +58,7 @@ cd C:\Users\pc\Documents\Codex\2026-07-10\new-chat-3
 ```env
 NEXT_PUBLIC_APP_URL=https://ТВОЙ-VERCEL-ДОМЕН
 NEXT_PUBLIC_API_URL=https://ТВОЙ-RAILWAY-API-ДОМЕН
+NEXT_PUBLIC_REALTIME_URL=https://ТВОЙ-RAILWAY-API-ДОМЕН
 NEXT_PUBLIC_LIVEKIT_URL=https://ТВОЙ-LIVEKIT-ДОМЕН
 ```
 

@@ -179,11 +179,12 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
     publicApiUrl: env.PUBLIC_API_URL,
     webAppUrl: env.WEB_APP_URL,
     corsOrigins: [
-      ...new Set(
-        env.CORS_ORIGINS.split(",")
-          .map((origin) => origin.trim())
+      ...new Set([
+        env.WEB_APP_URL.replace(/\/$/, ""),
+        ...env.CORS_ORIGINS.split(",")
+          .map((origin) => origin.trim().replace(/\/$/, ""))
           .filter(Boolean),
-      ),
+      ]),
     ],
     databaseUrl: env.DATABASE_URL,
     sessionCookieName: env.SESSION_COOKIE_NAME,

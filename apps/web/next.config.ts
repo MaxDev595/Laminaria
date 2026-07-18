@@ -2,10 +2,12 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const apiProxyTarget = (process.env.API_PROXY_TARGET ?? configuredApiUrl).replace(/\/$/, "");
 const scriptPolicy = isDevelopment
   ? "'self' 'unsafe-inline' 'unsafe-eval'"
   : "'self' 'unsafe-inline'";
-const localApiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").origin;
+const localApiOrigin = new URL(configuredApiUrl).origin;
 const connectPolicy = [
   "'self'",
   "https:",
@@ -43,6 +45,10 @@ const nextConfig: NextConfig = {
     cpus: 1,
     workerThreads: true,
     optimizePackageImports: ["lucide-react", "motion", "@livekit/components-react"],
+  },
+  async rewrites() {
+    if (isDevelopment) return [];
+    return [{ source: "/v1/:path*", destination: `${apiProxyTarget}/v1/:path*` }];
   },
   async headers() {
     return [

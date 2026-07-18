@@ -1,7 +1,12 @@
-const API_ORIGIN = (
+const CONFIGURED_API_ORIGIN = (
   process.env.NEXT_PUBLIC_API_URL ??
   (process.env.NODE_ENV === "production" ? "" : "http://localhost:4000")
 ).replace(/\/$/, "");
+const API_ORIGIN = process.env.NODE_ENV === "production" ? "" : CONFIGURED_API_ORIGIN;
+const REALTIME_ORIGIN = (process.env.NEXT_PUBLIC_REALTIME_URL ?? CONFIGURED_API_ORIGIN).replace(
+  /\/$/,
+  "",
+);
 
 export class ApiError extends Error {
   constructor(
@@ -17,22 +22,6 @@ export class ApiError extends Error {
 
 let csrfToken: string | null = null;
 let csrfRequest: Promise<string> | null = null;
-const SESSION_STORAGE_KEY = "laminaria.sessionToken";
-
-function getStoredSessionToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(SESSION_STORAGE_KEY);
-}
-
-function storeSessionToken(token: string | null | undefined): void {
-  if (typeof window === "undefined" || !token) return;
-  window.localStorage.setItem(SESSION_STORAGE_KEY, token);
-}
-
-function clearSessionToken(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(SESSION_STORAGE_KEY);
-}
 
 async function getCsrfToken(): Promise<string> {
   if (csrfToken) return csrfToken;
@@ -68,9 +57,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   const headers = new Headers(options.headers);
   headers.set("accept", "application/json");
   if (options.body && !headers.has("content-type")) headers.set("content-type", "application/json");
-  const sessionToken = getStoredSessionToken();
-  if (sessionToken && !headers.has("authorization"))
-    headers.set("authorization", `Bearer ${sessionToken}`);
   if (isUnsafe(method)) headers.set("x-csrf-token", await getCsrfToken());
 
   let response: Response;
@@ -105,7 +91,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     const errorBody = body.error ?? body;
     if (response.status === 403 && errorBody.code === "FORBIDDEN" && isUnsafe(method))
       csrfToken = null;
-    if (response.status === 401 && sessionToken) clearSessionToken();
     throw new ApiError(
       response.status,
       errorBody.code ?? "REQUEST_FAILED",
@@ -119,18 +104,14 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
 export const api = {
   origin: API_ORIGIN,
+  realtimeOrigin: REALTIME_ORIGIN,
   authProviders: (signal?: AbortSignal) =>
     apiFetch<AuthProvidersPayload>("/v1/auth/providers", { signal }),
   me: (signal?: AbortSignal) => apiFetch<AuthPayload>("/v1/auth/me", { signal }),
   serviceStatus: (signal?: AbortSignal) =>
     apiFetch<ServiceStatusPayload>("/v1/system/services", { signal }),
   signIn: (input: { email: string; password: string }) =>
-    apiFetch<AuthPayload>("/v1/auth/sign-in", { method: "POST", body: JSON.stringify(input) }).then(
-      (payload) => {
-        storeSessionToken(payload.sessionToken);
-        return payload;
-      },
-    ),
+    apiFetch<AuthPayload>("/v1/auth/sign-in", { method: "POST", body: JSON.stringify(input) }),
   googleStartUrl: (locale: "en" | "ru") =>
     `${API_ORIGIN}/v1/auth/google/start?locale=${encodeURIComponent(locale)}`,
   signUp: (input: { name: string; email: string; password: string; locale: "en" | "ru" }) =>
@@ -138,7 +119,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  signOut: () => apiFetch<void>("/v1/auth/sign-out", { method: "POST" }).finally(clearSessionToken),
+  signOut: () => apiFetch<void>("/v1/auth/sign-out", { method: "POST" }),
   forgotPassword: (email: string) =>
     apiFetch<{ accepted: true }>("/v1/auth/forgot-password", {
       method: "POST",
@@ -241,7 +222,6 @@ export interface User {
 export interface AuthPayload {
   user: User;
   sessionExpiresAt: string;
-  sessionToken?: string;
 }
 
 export interface AuthProvidersPayload {

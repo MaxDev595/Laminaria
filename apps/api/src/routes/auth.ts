@@ -83,7 +83,6 @@ export async function registerAuthRoutes(
       return {
         user: result.actor.user,
         sessionExpiresAt: result.actor.session.expiresAt.toISOString(),
-        sessionToken: result.sessionToken,
       };
     },
   );
