@@ -10,7 +10,7 @@ import {
   useRoomContext,
   useTracks,
 } from "@livekit/components-react";
-import { ConnectionState, Track, VideoQuality } from "livekit-client";
+import { ConnectionState, ParticipantEvent, Track, VideoQuality } from "livekit-client";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -41,6 +41,7 @@ import { io, type Socket } from "socket.io-client";
 
 import { Link, useRouter } from "@/i18n/navigation";
 import { api, type PrejoinPayload } from "@/lib/api";
+import { orderBroadcastTracks } from "@/lib/stage-tracks";
 import { Badge, Button, Logo } from "@laminaria/ui";
 import { ServiceState } from "./ui";
 
@@ -280,6 +281,10 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
     ],
     { onlySubscribed: true },
   );
+  const orderedTracks = useMemo(() => orderBroadcastTracks(tracks), [tracks]);
+  const presenterIdentity = orderedTracks.find(
+    (trackRef) => trackRef.source === Track.Source.ScreenShare,
+  )?.participant.identity;
 
   useEffect(() => {
     for (const trackRef of tracks) applyViewerQuality(trackRef.publication, quality);
@@ -328,10 +333,17 @@ function BroadcastStage({ currentRole }: { currentRole: Role }) {
         <div
           className={`viewer-stage-grid ${tracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare) ? "has-screen-share" : ""}`}
         >
-          {tracks.map((trackRef) => (
+          {orderedTracks.map((trackRef) => (
             <ParticipantTile
               key={`${trackRef.participant.identity}:${trackRef.source}:${trackRef.publication?.trackSid ?? "track"}`}
               trackRef={trackRef}
+              className={
+                trackRef.source === Track.Source.ScreenShare
+                  ? "stage-screen-track"
+                  : trackRef.participant.identity === presenterIdentity
+                    ? "stage-camera-track stage-presenter-camera"
+                    : "stage-camera-track"
+              }
             />
           ))}
         </div>
@@ -441,6 +453,27 @@ function HostMediaControls({ preferences }: { preferences?: StoredRoom["preferen
   const connected = connectionState === ConnectionState.Connected;
 
   useEffect(() => {
+    const participant = room.localParticipant;
+    const syncMediaState = () => {
+      setCameraOn(participant.isCameraEnabled);
+      setMicOn(participant.isMicrophoneEnabled);
+      setScreenOn(participant.isScreenShareEnabled);
+    };
+
+    participant.on(ParticipantEvent.TrackPublished, syncMediaState);
+    participant.on(ParticipantEvent.TrackUnpublished, syncMediaState);
+    participant.on(ParticipantEvent.TrackMuted, syncMediaState);
+    participant.on(ParticipantEvent.TrackUnmuted, syncMediaState);
+
+    return () => {
+      participant.off(ParticipantEvent.TrackPublished, syncMediaState);
+      participant.off(ParticipantEvent.TrackUnpublished, syncMediaState);
+      participant.off(ParticipantEvent.TrackMuted, syncMediaState);
+      participant.off(ParticipantEvent.TrackUnmuted, syncMediaState);
+    };
+  }, [room.localParticipant]);
+
+  useEffect(() => {
     if (!connected || initialMediaApplied.current) return;
     initialMediaApplied.current = true;
 
@@ -517,6 +550,9 @@ function HostMediaControls({ preferences }: { preferences?: StoredRoom["preferen
     const next = !screenOn;
     try {
       await room.localParticipant.setScreenShareEnabled(next);
+      if (next && cameraOn && !room.localParticipant.isCameraEnabled) {
+        await room.localParticipant.setCameraEnabled(true);
+      }
       setScreenOn(next);
       setMediaError(null);
     } catch (reason) {
