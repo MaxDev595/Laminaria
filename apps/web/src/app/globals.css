@@ -4234,6 +4234,10 @@ select {
   filter: brightness(1.06);
 }
 
+.room-topbar__actions .room-chat-toggle {
+  display: none;
+}
+
 .room-end:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.08);
