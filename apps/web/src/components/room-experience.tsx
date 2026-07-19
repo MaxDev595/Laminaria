@@ -3,8 +3,8 @@
 import {
   ConnectionStateToast,
   LiveKitRoom,
-  ParticipantTile,
   RoomAudioRenderer,
+  VideoTrack,
   useConnectionState,
   useParticipants,
   useRoomContext,
@@ -13,7 +13,11 @@ import {
 import { ConnectionState, ParticipantEvent, Track, VideoQuality } from "livekit-client";
 import {
   AlertTriangle,
+  ArrowDownLeft,
+  ArrowDownRight,
   ArrowLeft,
+  ArrowUpLeft,
+  ArrowUpRight,
   Ban,
   Camera,
   CameraOff,
@@ -109,6 +113,13 @@ type Ack<T> =
 
 const QUALITY_PRESETS = ["144p", "240p", "480p", "720p", "1080p"] as const;
 const DEFAULT_STAGE_LAYOUT: StageLayout = { position: "bottom-right", sizePercent: 24 };
+
+function StageCornerIcon({ position }: { position: StageOverlayPosition }) {
+  if (position === "top-left") return <ArrowUpLeft size={18} />;
+  if (position === "top-right") return <ArrowUpRight size={18} />;
+  if (position === "bottom-left") return <ArrowDownLeft size={18} />;
+  return <ArrowDownRight size={18} />;
+}
 
 export function RoomExperience({ slug }: { slug: string }) {
   const locale = useLocale();
@@ -226,9 +237,15 @@ function RoomConnectionGuard({ session }: { session: StoredRoom }) {
     if (retrying) return;
     setRetrying(true);
     setTimedOut(false);
+    const restoreMic = room.localParticipant.isMicrophoneEnabled;
+    const restoreCamera = room.localParticipant.isCameraEnabled;
+    const restoreScreen = room.localParticipant.isScreenShareEnabled;
     try {
       await room.disconnect();
       await room.connect(session.media.url, session.media.token);
+      if (restoreMic) await room.localParticipant.setMicrophoneEnabled(true);
+      if (restoreCamera) await room.localParticipant.setCameraEnabled(true);
+      if (restoreScreen) await room.localParticipant.setScreenShareEnabled(true);
     } catch {
       setTimedOut(true);
     } finally {
@@ -300,17 +317,26 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
   const locale = useLocale();
   const [quality, setQuality] = useState<QualityPreset>("720p");
   const participants = useParticipants();
-  const tracks = useTracks(
-    [
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-      { source: Track.Source.Camera, withPlaceholder: false },
-    ],
-    { onlySubscribed: true },
-  );
+  const tracks = useTracks([Track.Source.ScreenShare, Track.Source.Camera], {
+    onlySubscribed: false,
+  });
   const orderedTracks = useMemo(() => orderBroadcastTracks(tracks), [tracks]);
   const presenterIdentity = orderedTracks.find(
     (trackRef) => trackRef.source === Track.Source.ScreenShare,
   )?.participant.identity;
+  const hasScreenShare = orderedTracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare);
+  const visibleTracks = useMemo(
+    () =>
+      hasScreenShare
+        ? orderedTracks.filter(
+            (trackRef) =>
+              trackRef.source === Track.Source.ScreenShare ||
+              (trackRef.source === Track.Source.Camera &&
+                trackRef.participant.identity === presenterIdentity),
+          )
+        : orderedTracks,
+    [hasScreenShare, orderedTracks, presenterIdentity],
+  );
 
   useEffect(() => {
     for (const trackRef of tracks) applyViewerQuality(trackRef.publication, quality);
@@ -345,7 +371,7 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
         ) : null}
       </div>
 
-      {tracks.length === 0 ? (
+      {visibleTracks.length === 0 ? (
         <div className="viewer-stage-empty">
           <Tv size={34} />
           <h2>{locale === "ru" ? "Ожидаем ведущего" : "Waiting for the host"}</h2>
@@ -357,11 +383,11 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
         </div>
       ) : (
         <div
-          className={`viewer-stage-grid ${tracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare) ? `has-screen-share overlay-${layout.position}` : ""}`}
+          className={`viewer-stage-grid ${hasScreenShare ? `has-screen-share overlay-${layout.position}` : ""}`}
           style={{ "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%` } as CSSProperties}
         >
-          {orderedTracks.map((trackRef) => (
-            <ParticipantTile
+          {visibleTracks.map((trackRef) => (
+            <VideoTrack
               key={`${trackRef.participant.identity}:${trackRef.source}:${trackRef.publication?.trackSid ?? "track"}`}
               trackRef={trackRef}
               className={
@@ -371,6 +397,7 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
                     ? "stage-camera-track stage-presenter-camera"
                     : "stage-camera-track"
               }
+              muted={trackRef.participant.isLocal}
             />
           ))}
         </div>
@@ -577,8 +604,9 @@ function HostMediaControls({ preferences }: { preferences?: StoredRoom["preferen
     const next = !screenOn;
     try {
       await room.localParticipant.setScreenShareEnabled(next);
-      if (next && cameraOn && !room.localParticipant.isCameraEnabled) {
+      if (next && !room.localParticipant.isCameraEnabled) {
         await room.localParticipant.setCameraEnabled(true);
+        setCameraOn(true);
       }
       setScreenOn(next);
       setMediaError(null);
@@ -888,7 +916,7 @@ function RealtimePanel({
                 ["bottom-left", "↙"],
                 ["bottom-right", "↘"],
               ] as const
-            ).map(([position, symbol]) => (
+            ).map(([position]) => (
               <button
                 type="button"
                 key={position}
@@ -897,7 +925,7 @@ function RealtimePanel({
                 onClick={() => updateStageLayout({ ...stageLayout, position })}
                 disabled={!connected}
               >
-                {symbol}
+                <StageCornerIcon position={position} />
               </button>
             ))}
           </div>

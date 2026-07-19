@@ -48,7 +48,7 @@ const envSchema = z
     LIVEKIT_URL: optionalUrl,
     LIVEKIT_API_KEY: optionalString,
     LIVEKIT_API_SECRET: optionalString,
-    LIVEKIT_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(300),
+    LIVEKIT_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).max(21_600).default(21_600),
     SMTP_HOST: optionalString,
     SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(1025),
     SMTP_SECURE: booleanString,
