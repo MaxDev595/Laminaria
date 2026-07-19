@@ -131,6 +131,7 @@ export function RoomExperience({ slug }: { slug: string }) {
   const [activePanel, setActivePanel] = useState<RoomPanel>("chat");
   const [quality, setQuality] = useState<QualityPreset>("720p");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
   const subscribeStorage = useCallback(() => () => undefined, []);
   const rawSession = useSyncExternalStore(
     subscribeStorage,
@@ -203,8 +204,8 @@ export function RoomExperience({ slug }: { slug: string }) {
       data-lk-theme="default"
       className={`webinar-room ${viewerRoom ? "webinar-room--viewer" : "webinar-room--host"}`}
     >
-      <RoomTopbar slug={slug} session={session} />
-      <div className="webinar-room__body">
+      <RoomTopbar slug={slug} session={session} chatCollapsed={chatCollapsed} onToggleChat={() => setChatCollapsed((value) => !value)} />
+      <div className={`webinar-room__body ${chatCollapsed ? "is-chat-collapsed" : ""}`}>
         {viewerRoom ? null : <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} />}
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
@@ -226,6 +227,8 @@ export function RoomExperience({ slug }: { slug: string }) {
           activePanel={activePanel}
           quality={quality}
           onQualityChange={setQuality}
+          collapsed={chatCollapsed}
+          onToggleCollapsed={() => setChatCollapsed((value) => !value)}
         />
         {inviteOpen ? <LiveInviteDialog session={session} onClose={() => setInviteOpen(false)} /> : null}
       </div>
@@ -517,7 +520,17 @@ function StageVideoTile({
   );
 }
 
-function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
+function RoomTopbar({
+  slug,
+  session,
+  chatCollapsed,
+  onToggleChat,
+}: {
+  slug: string;
+  session: StoredRoom;
+  chatCollapsed: boolean;
+  onToggleChat: () => void;
+}) {
   const state = useConnectionState();
   const room = useRoomContext();
   const router = useRouter();
@@ -594,6 +607,16 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
       </div>
       <div className="room-topbar__actions">
         <RoleBadge role={role} />
+        <button type="button" className="room-chat-toggle" onClick={onToggleChat}>
+          <MessageCircleMore size={16} />
+          {chatCollapsed
+            ? locale === "ru"
+              ? "Показать чат"
+              : "Show chat"
+            : locale === "ru"
+              ? "Скрыть чат"
+              : "Hide chat"}
+        </button>
         <button type="button" className="room-invite" onClick={() => void copyInviteLink()}>
           <Link2 size={16} />
           {locale === "ru" ? "Пригласить" : "Invite"}
@@ -949,6 +972,8 @@ function RealtimePanel({
   activePanel,
   quality,
   onQualityChange,
+  collapsed,
+  onToggleCollapsed,
 }: {
   slug: string;
   session: StoredRoom;
@@ -957,6 +982,8 @@ function RealtimePanel({
   activePanel: RoomPanel;
   quality: QualityPreset;
   onQualityChange: (quality: QualityPreset) => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }) {
   const locale = useLocale();
   const t = useTranslations();
@@ -1129,11 +1156,28 @@ function RealtimePanel({
     isViewerRole(roleFromMetadata(participant.metadata)),
   ).length;
 
+  if (collapsed) {
+    return (
+      <aside className="realtime-panel realtime-panel--collapsed">
+        <button type="button" onClick={onToggleCollapsed}>
+          <MessageCircleMore size={18} />
+          {locale === "ru" ? "Открыть чат" : "Open chat"}
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className="realtime-panel">
       <header className="room-panel-title">
-        <strong>{roomPanelTitle(activePanel, locale)}</strong>
-        <span>{roomPanelSubtitle(activePanel, locale, messages.length, participants.length)}</span>
+        <div>
+          <strong>{roomPanelTitle(activePanel, locale)}</strong>
+          <span>{roomPanelSubtitle(activePanel, locale, messages.length, participants.length)}</span>
+        </div>
+        <button type="button" className="room-panel-collapse" onClick={onToggleCollapsed}>
+          <X size={16} />
+          {locale === "ru" ? "Свернуть" : "Collapse"}
+        </button>
       </header>
 
       <div className="realtime-status">
