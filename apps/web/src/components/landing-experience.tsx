@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowUpRight,
@@ -97,13 +97,6 @@ export function LandingExperience() {
           </motion.div>
         </section>
 
-        <DemoPreview locale={locale} />
-        <MvpFeatures locale={locale} />
-        <PricingSection locale={locale} />
-        <ComparisonSection locale={locale} />
-        <BetaTestimonials locale={locale} />
-        <FaqSection locale={locale} />
-
         <section className="control-section section-wrap">
           <motion.div
             className="control-copy"
@@ -128,42 +121,45 @@ export function LandingExperience() {
           >
             <FeatureTile
               icon={<Video />}
-              title={locale === "ru" ? "Сцена и трансляция" : "Stage and media"}
+              title={locale === "ru" ? "РЎС†РµРЅР° Рё С‚СЂР°РЅСЃР»СЏС†РёСЏ" : "Stage and media"}
               body={
                 locale === "ru"
-                  ? "LiveKit управляет только медиапотоками и качеством соединения."
-                  : "LiveKit owns media and connection quality — nothing more."
+                  ? "LiveKit СѓРїСЂР°РІР»СЏРµС‚ С‚РѕР»СЊРєРѕ РјРµРґРёР°РїРѕС‚РѕРєР°РјРё Рё РєР°С‡РµСЃС‚РІРѕРј СЃРѕРµРґРёРЅРµРЅРёСЏ."
+                  : "LiveKit owns media and connection quality вЂ” nothing more."
               }
             />
             <FeatureTile
               icon={<UsersRound />}
-              title={locale === "ru" ? "Точные роли" : "Precise roles"}
+              title={locale === "ru" ? "РўРѕС‡РЅС‹Рµ СЂРѕР»Рё" : "Precise roles"}
               body={
                 locale === "ru"
-                  ? "Зритель остаётся зрителем, пока ведущий явно не пригласит его на сцену."
+                  ? "Р—СЂРёС‚РµР»СЊ РѕСЃС‚Р°С‘С‚СЃСЏ Р·СЂРёС‚РµР»РµРј, РїРѕРєР° РІРµРґСѓС‰РёР№ СЏРІРЅРѕ РЅРµ РїСЂРёРіР»Р°СЃРёС‚ РµРіРѕ РЅР° СЃС†РµРЅСѓ."
                   : "An attendee stays receive-only until a host explicitly invites them on stage."
               }
             />
             <FeatureTile
               icon={<MessageCircleMore />}
-              title={locale === "ru" ? "Чистый разговор" : "A cleaner conversation"}
+              title={locale === "ru" ? "Р§РёСЃС‚С‹Р№ СЂР°Р·РіРѕРІРѕСЂ" : "A cleaner conversation"}
               body={
                 locale === "ru"
-                  ? "Чат, вопросы и опросы проверяются сервером до публикации."
+                  ? "Р§Р°С‚, РІРѕРїСЂРѕСЃС‹ Рё РѕРїСЂРѕСЃС‹ РїСЂРѕРІРµСЂСЏСЋС‚СЃСЏ СЃРµСЂРІРµСЂРѕРј РґРѕ РїСѓР±Р»РёРєР°С†РёРё."
                   : "Chat, Q&A, and polls are server-validated before they reach the room."
               }
             />
             <FeatureTile
               icon={<ChartNoAxesCombined />}
-              title={locale === "ru" ? "Аналитика заявок" : "Registration analytics"}
+              title={locale === "ru" ? "РђРЅР°Р»РёС‚РёРєР° Р·Р°СЏРІРѕРє" : "Registration analytics"}
               body={
                 locale === "ru"
-                  ? "После регистрации организатор видит имя, email, телефон и статус участника."
+                  ? "РџРѕСЃР»Рµ СЂРµРіРёСЃС‚СЂР°С†РёРё РѕСЂРіР°РЅРёР·Р°С‚РѕСЂ РІРёРґРёС‚ РёРјСЏ, email, С‚РµР»РµС„РѕРЅ Рё СЃС‚Р°С‚СѓСЃ СѓС‡Р°СЃС‚РЅРёРєР°."
                   : "After registration, the host sees attendee name, email, phone, and registration status."
               }
             />
           </motion.div>
         </section>
+
+        <DemoPreview locale={locale} />
+        <MvpFeatures locale={locale} />
 
         <section className="workflow-section" id="workflow">
           <div className="section-wrap">
@@ -215,7 +211,7 @@ export function LandingExperience() {
             </div>
             <div className="orbit orbit--one" aria-hidden="true" />
             <div className="orbit orbit--two" aria-hidden="true" />
-            <span className="timezone timezone--one">UTC−8</span>
+            <span className="timezone timezone--one">UTCв€’8</span>
             <span className="timezone timezone--two">UTC+1</span>
             <span className="timezone timezone--three">UTC+5</span>
           </motion.div>
@@ -235,19 +231,19 @@ export function LandingExperience() {
               <li>
                 <Check size={16} />
                 {locale === "ru"
-                  ? "Переключение языка без перезагрузки"
+                  ? "РџРµСЂРµРєР»СЋС‡РµРЅРёРµ СЏР·С‹РєР° Р±РµР· РїРµСЂРµР·Р°РіСЂСѓР·РєРё"
                   : "Language switching without a reload"}
               </li>
               <li>
                 <Check size={16} />
                 {locale === "ru"
-                  ? "Дата и время в часовом поясе посетителя"
-                  : "Date and time in every visitor’s time zone"}
+                  ? "Р”Р°С‚Р° Рё РІСЂРµРјСЏ РІ С‡Р°СЃРѕРІРѕРј РїРѕСЏСЃРµ РїРѕСЃРµС‚РёС‚РµР»СЏ"
+                  : "Date and time in every visitorвЂ™s time zone"}
               </li>
               <li>
                 <Check size={16} />
                 {locale === "ru"
-                  ? "Зрительский сценарий для desktop и mobile"
+                  ? "Р—СЂРёС‚РµР»СЊСЃРєРёР№ СЃС†РµРЅР°СЂРёР№ РґР»СЏ desktop Рё mobile"
                   : "Attendee flow shaped for desktop and mobile"}
               </li>
             </motion.ul>
@@ -267,19 +263,23 @@ export function LandingExperience() {
             <div className="security-points">
               <span>
                 <LockKeyhole size={16} />
-                {locale === "ru" ? "Защищённые сессии" : "Secure server sessions"}
+                {locale === "ru" ? "Р—Р°С‰РёС‰С‘РЅРЅС‹Рµ СЃРµСЃСЃРёРё" : "Secure server sessions"}
               </span>
               <span>
                 <Mic2 size={16} />
-                {locale === "ru" ? "Короткоживущие права" : "Short-lived media grants"}
+                {locale === "ru" ? "РљРѕСЂРѕС‚РєРѕР¶РёРІСѓС‰РёРµ РїСЂР°РІР°" : "Short-lived media grants"}
               </span>
               <span>
                 <Captions size={16} />
-                {locale === "ru" ? "Доступность по умолчанию" : "Accessibility by default"}
+                {locale === "ru" ? "Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ" : "Accessibility by default"}
               </span>
             </div>
           </div>
         </section>
+
+        <ComparisonSection locale={locale} />
+        <FaqSection locale={locale} />
+        <PricingSection locale={locale} />
 
         <section className="final-cta section-wrap">
           <motion.div
@@ -290,11 +290,15 @@ export function LandingExperience() {
           >
             <div className="final-cta__glow" aria-hidden="true" />
             <Logo compact />
-            <h2>{t("landing.ctaTitle")}</h2>
-            <p>{t("landing.ctaBody")}</p>
+            <h2>{locale === "ru" ? "РЎРѕР·РґР°Р№С‚Рµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ, РІ РєРѕС‚РѕСЂРѕРµ С…РѕС‡РµС‚СЃСЏ РІРѕР№С‚Рё." : "Create a space people want to enter."}</h2>
+            <p>
+              {locale === "ru"
+                ? "РќР°С‡РЅРёС‚Рµ СЃРѕ Starter РІСЃРµРіРѕ Р·Р° $3/РјРµСЃСЏС†. РљРѕРіРґР° Р°СѓРґРёС‚РѕСЂРёСЏ РІС‹СЂР°СЃС‚РµС‚ вЂ” РІС‹ СЃРјРѕР¶РµС‚Рµ РїРµСЂРµР№С‚Рё РЅР° Р±РѕР»РµРµ РІС‹СЃРѕРєРёР№ С‚Р°СЂРёС„ РІ Р»СЋР±РѕР№ РјРѕРјРµРЅС‚."
+                : "Start with Starter for just $3/month. When your audience grows, you can upgrade anytime."}
+            </p>
             <Link href="/sign-up">
               <Button size="lg">
-                {t("landing.primaryCta")}
+                {locale === "ru" ? "РЎРѕР·РґР°С‚СЊ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ" : "Create space"}
                 <ArrowUpRight size={18} />
               </Button>
             </Link>
@@ -304,13 +308,13 @@ export function LandingExperience() {
       <footer className="marketing-footer section-wrap">
         <Logo />
         <p>
-          © 2026 Laminaria.{" "}
+          В© 2026 Laminaria.{" "}
           {locale === "ru"
-            ? "Комната для идей, которым нужен масштаб."
+            ? "РљРѕРјРЅР°С‚Р° РґР»СЏ РёРґРµР№, РєРѕС‚РѕСЂС‹Рј РЅСѓР¶РµРЅ РјР°СЃС€С‚Р°Р±."
             : "Room for ideas that need to travel."}
         </p>
         <div>
-          <Link href="/docs">{locale === "ru" ? "Документация" : "Docs"}</Link>
+          <Link href="/docs">{locale === "ru" ? "Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ" : "Docs"}</Link>
           <Link href="/sign-in">{t("auth.signIn")}</Link>
           <a href="#security">{t("shell.security")}</a>
         </div>
@@ -322,7 +326,7 @@ export function LandingExperience() {
 function DemoPreview({ locale }: { locale: string }) {
   const isRu = locale === "ru";
   const steps = isRu
-    ? ["Создание вебинара", "Запуск эфира", "Чат и AI", "Аналитика"]
+    ? ["РЎРѕР·РґР°РЅРёРµ РІРµР±РёРЅР°СЂР°", "Р—Р°РїСѓСЃРє СЌС„РёСЂР°", "Р§Р°С‚ Рё AI", "РђРЅР°Р»РёС‚РёРєР°"]
     : ["Create webinar", "Go live", "Chat and AI", "Analytics"];
 
   return (
@@ -336,14 +340,14 @@ function DemoPreview({ locale }: { locale: string }) {
       >
         <motion.span className="section-kicker" variants={reveal}>
           <Sparkles size={17} />
-          {isRu ? "Демо продукта" : "Product demo"}
+          {isRu ? "Р”РµРјРѕ РїСЂРѕРґСѓРєС‚Р°" : "Product demo"}
         </motion.span>
         <motion.h2 variants={reveal}>
-          {isRu ? "Посмотрите, как Laminaria работает за 30 секунд" : "See Laminaria in action in 30 seconds"}
+          {isRu ? "РџРѕСЃРјРѕС‚СЂРёС‚Рµ, РєР°Рє Laminaria СЂР°Р±РѕС‚Р°РµС‚ Р·Р° 30 СЃРµРєСѓРЅРґ" : "See Laminaria in action in 30 seconds"}
         </motion.h2>
         <motion.p variants={reveal}>
           {isRu
-            ? "Один плавный сценарий: создание вебинара, запуск эфира, живой чат, AI-помощник и аналитика после события."
+            ? "РћРґРёРЅ РїР»Р°РІРЅС‹Р№ СЃС†РµРЅР°СЂРёР№: СЃРѕР·РґР°РЅРёРµ РІРµР±РёРЅР°СЂР°, Р·Р°РїСѓСЃРє СЌС„РёСЂР°, Р¶РёРІРѕР№ С‡Р°С‚, AI-РїРѕРјРѕС‰РЅРёРє Рё Р°РЅР°Р»РёС‚РёРєР° РїРѕСЃР»Рµ СЃРѕР±С‹С‚РёСЏ."
             : "One smooth flow: create a webinar, start the live room, chat with viewers, use AI and read analytics after the event."}
         </motion.p>
       </motion.div>
@@ -371,23 +375,23 @@ function DemoPreview({ locale }: { locale: string }) {
           <div className="demo-reel__stage">
             <div className="demo-card demo-card--create">
               <Radio size={22} />
-              <strong>{isRu ? "Новый вебинар" : "New webinar"}</strong>
-              <span>{isRu ? "30 сек настройки" : "30 sec setup"}</span>
+              <strong>{isRu ? "РќРѕРІС‹Р№ РІРµР±РёРЅР°СЂ" : "New webinar"}</strong>
+              <span>{isRu ? "30 СЃРµРє РЅР°СЃС‚СЂРѕР№РєРё" : "30 sec setup"}</span>
             </div>
             <div className="demo-card demo-card--live">
               <Video size={22} />
-              <strong>{isRu ? "Эфир запущен" : "Live room is ready"}</strong>
-              <span>HD · Chat · Screen</span>
+              <strong>{isRu ? "Р­С„РёСЂ Р·Р°РїСѓС‰РµРЅ" : "Live room is ready"}</strong>
+              <span>HD В· Chat В· Screen</span>
             </div>
             <div className="demo-card demo-card--ai">
               <Bot size={22} />
               <strong>AI Assistant</strong>
-              <span>{isRu ? "Собрал 4 вопроса" : "Grouped 4 questions"}</span>
+              <span>{isRu ? "РЎРѕР±СЂР°Р» 4 РІРѕРїСЂРѕСЃР°" : "Grouped 4 questions"}</span>
             </div>
             <div className="demo-card demo-card--analytics">
               <BarChart3 size={22} />
-              <strong>{isRu ? "Аналитика" : "Analytics"}</strong>
-              <span>{isRu ? "Посетители и заявки" : "Attendance and leads"}</span>
+              <strong>{isRu ? "РђРЅР°Р»РёС‚РёРєР°" : "Analytics"}</strong>
+              <span>{isRu ? "РџРѕСЃРµС‚РёС‚РµР»Рё Рё Р·Р°СЏРІРєРё" : "Attendance and leads"}</span>
             </div>
           </div>
         </div>
@@ -416,8 +420,8 @@ function MvpFeatures({ locale }: { locale: string }) {
   return (
     <section className="mvp-features section-wrap" id="features">
       <SectionHead
-        kicker={isRu ? "Возможности MVP" : "MVP features"}
-        title={isRu ? "Полный набор для первого коммерческого релиза" : "The complete feature set for a commercial MVP"}
+        kicker={isRu ? "Р’РѕР·РјРѕР¶РЅРѕСЃС‚Рё MVP" : "MVP features"}
+        title={isRu ? "РџРѕР»РЅС‹Р№ РЅР°Р±РѕСЂ РґР»СЏ РїРµСЂРІРѕРіРѕ РєРѕРјРјРµСЂС‡РµСЃРєРѕРіРѕ СЂРµР»РёР·Р°" : "The complete feature set for a commercial MVP"}
       />
       <div className="mvp-features__grid">
         {features.map(([title, icon]) => (
@@ -445,32 +449,32 @@ function PricingSection({ locale }: { locale: string }) {
     {
       name: "Starter",
       price: "$3",
-      note: isRu ? "для проверки спроса" : "to validate demand",
+      note: isRu ? "РґР»СЏ РїСЂРѕРІРµСЂРєРё СЃРїСЂРѕСЃР°" : "to validate demand",
       items: ["Up to 25 participants", "HD Video", "Chat", "Screen Share"],
-      cta: isRu ? "Начать" : "Start",
+      cta: isRu ? "РќР°С‡Р°С‚СЊ" : "Start",
     },
     {
       name: "Pro",
       price: "$12",
-      note: isRu ? "самый популярный" : "most popular",
+      note: isRu ? "СЃР°РјС‹Р№ РїРѕРїСѓР»СЏСЂРЅС‹Р№" : "most popular",
       featured: true,
       items: ["Up to 150 participants", "AI", "Recording", "Analytics", "Polls", "Branding"],
-      cta: isRu ? "Выбрать Pro" : "Choose Pro",
+      cta: isRu ? "Р’С‹Р±СЂР°С‚СЊ Pro" : "Choose Pro",
     },
     {
       name: "Business",
       price: "$29",
-      note: isRu ? "для команд" : "for teams",
+      note: isRu ? "РґР»СЏ РєРѕРјР°РЅРґ" : "for teams",
       items: ["Up to 1000 participants", "API", "White Label", "Team", "All AI features"],
-      cta: isRu ? "Для бизнеса" : "Go Business",
+      cta: isRu ? "Р”Р»СЏ Р±РёР·РЅРµСЃР°" : "Go Business",
     },
   ];
 
   return (
     <section className="landing-pricing section-wrap" id="pricing">
       <SectionHead
-        kicker={isRu ? "Тарифы" : "Pricing"}
-        title={isRu ? "Простая цена, чтобы быстро проверить рынок" : "Simple pricing to validate the market fast"}
+        kicker={isRu ? "РўР°СЂРёС„С‹" : "Pricing"}
+        title={isRu ? "РџСЂРѕСЃС‚Р°СЏ С†РµРЅР°, С‡С‚РѕР±С‹ Р±С‹СЃС‚СЂРѕ РїСЂРѕРІРµСЂРёС‚СЊ СЂС‹РЅРѕРє" : "Simple pricing to validate the market fast"}
       />
       <div className="landing-pricing__grid">
         {plans.map((plan) => (
@@ -486,7 +490,7 @@ function PricingSection({ locale }: { locale: string }) {
             {plan.featured ? (
               <span className="landing-price-card__badge">
                 <Star size={14} />
-                {isRu ? "Популярный" : "Popular"}
+                {isRu ? "РџРѕРїСѓР»СЏСЂРЅС‹Р№" : "Popular"}
               </span>
             ) : null}
             <h3>{plan.name}</h3>
@@ -522,8 +526,8 @@ function ComparisonSection({ locale }: { locale: string }) {
   return (
     <section className="landing-comparison section-wrap">
       <SectionHead
-        kicker={isRu ? "Сравнение" : "Comparison"}
-        title={isRu ? "Чем Laminaria выделяется уже в MVP" : "Where Laminaria already stands out"}
+        kicker={isRu ? "РЎСЂР°РІРЅРµРЅРёРµ" : "Comparison"}
+        title={isRu ? "Р§РµРј Laminaria РІС‹РґРµР»СЏРµС‚СЃСЏ СѓР¶Рµ РІ MVP" : "Where Laminaria already stands out"}
       />
       <div className="landing-comparison__table">
         <div className="landing-comparison__row is-head">
@@ -545,59 +549,16 @@ function ComparisonSection({ locale }: { locale: string }) {
   );
 }
 
-function BetaTestimonials({ locale }: { locale: string }) {
-  const isRu = locale === "ru";
-  const items = isRu
-    ? [
-        ["Beta creator", "Комната выглядит намного спокойнее, чем обычные webinar tools."],
-        ["Online school", "AI-модерация — сильная причина попробовать продукт."],
-        ["Startup team", "Лендинг и комната ощущаются как SaaS, за который можно платить."],
-      ]
-    : [
-        ["Beta creator", "The room feels much calmer than typical webinar tools."],
-        ["Online school", "AI moderation is a strong reason to try the product."],
-        ["Startup team", "The landing and room already feel like a paid SaaS."],
-      ];
-
-  return (
-    <section className="beta-testimonials section-wrap">
-      <SectionHead
-        kicker={isRu ? "Beta отзывы" : "Beta testimonials"}
-        title={isRu ? "Социальное доказательство без фейковых логотипов" : "Social proof without fake customer logos"}
-      />
-      <div className="beta-testimonials__grid">
-        {items.map(([name, quote]) => (
-          <motion.article
-            key={name}
-            className="beta-testimonial-card"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.25 }}
-            variants={reveal}
-            whileHover={{ y: -6 }}
-          >
-            <span>
-              <UsersRound size={18} />
-            </span>
-            <p>“{quote}”</p>
-            <strong>{name}</strong>
-          </motion.article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function FaqSection({ locale }: { locale: string }) {
   const isRu = locale === "ru";
   const items = isRu
     ? [
-        ["Сколько участников можно пригласить?", "Starter поддерживает до 25 участников, Pro до 150, Business до 1000."],
-        ["Есть ли запись вебинара?", "Да, запись входит в Pro и Business."],
-        ["Работает ли на телефоне?", "Да, лендинг, регистрация и комната адаптированы под мобильные устройства."],
-        ["Нужно ли что-то устанавливать?", "Нет, всё работает в браузере."],
-        ["Можно ли брендировать вебинар?", "Да, брендинг доступен в Pro и Business."],
-        ["Можно ли отменить подписку?", "Да, отменить можно в любой момент."],
+        ["РЎРєРѕР»СЊРєРѕ СѓС‡Р°СЃС‚РЅРёРєРѕРІ РјРѕР¶РЅРѕ РїСЂРёРіР»Р°СЃРёС‚СЊ?", "Starter РїРѕРґРґРµСЂР¶РёРІР°РµС‚ РґРѕ 25 СѓС‡Р°СЃС‚РЅРёРєРѕРІ, Pro РґРѕ 150, Business РґРѕ 1000."],
+        ["Р•СЃС‚СЊ Р»Рё Р·Р°РїРёСЃСЊ РІРµР±РёРЅР°СЂР°?", "Р”Р°, Р·Р°РїРёСЃСЊ РІС…РѕРґРёС‚ РІ Pro Рё Business."],
+        ["Р Р°Р±РѕС‚Р°РµС‚ Р»Рё РЅР° С‚РµР»РµС„РѕРЅРµ?", "Р”Р°, Р»РµРЅРґРёРЅРі, СЂРµРіРёСЃС‚СЂР°С†РёСЏ Рё РєРѕРјРЅР°С‚Р° Р°РґР°РїС‚РёСЂРѕРІР°РЅС‹ РїРѕРґ РјРѕР±РёР»СЊРЅС‹Рµ СѓСЃС‚СЂРѕР№СЃС‚РІР°."],
+        ["РќСѓР¶РЅРѕ Р»Рё С‡С‚Рѕ-С‚Рѕ СѓСЃС‚Р°РЅР°РІР»РёРІР°С‚СЊ?", "РќРµС‚, РІСЃС‘ СЂР°Р±РѕС‚Р°РµС‚ РІ Р±СЂР°СѓР·РµСЂРµ."],
+        ["РњРѕР¶РЅРѕ Р»Рё Р±СЂРµРЅРґРёСЂРѕРІР°С‚СЊ РІРµР±РёРЅР°СЂ?", "Р”Р°, Р±СЂРµРЅРґРёРЅРі РґРѕСЃС‚СѓРїРµРЅ РІ Pro Рё Business."],
+        ["РњРѕР¶РЅРѕ Р»Рё РѕС‚РјРµРЅРёС‚СЊ РїРѕРґРїРёСЃРєСѓ?", "Р”Р°, РѕС‚РјРµРЅРёС‚СЊ РјРѕР¶РЅРѕ РІ Р»СЋР±РѕР№ РјРѕРјРµРЅС‚."],
       ]
     : [
         ["How many participants can join?", "Starter supports up to 25 participants, Pro up to 150, Business up to 1000."],
@@ -610,7 +571,7 @@ function FaqSection({ locale }: { locale: string }) {
 
   return (
     <section className="landing-faq section-wrap" id="faq">
-      <SectionHead kicker="FAQ" title={isRu ? "Коротко о главном" : "The essentials, answered"} />
+      <SectionHead kicker="FAQ" title={isRu ? "РљРѕСЂРѕС‚РєРѕ Рѕ РіР»Р°РІРЅРѕРј" : "The essentials, answered"} />
       <div className="landing-faq__list">
         {items.map(([question, answer]) => (
           <details key={question}>
@@ -688,10 +649,10 @@ function RoomIllustration({
       <div className="room-mock-grid">
         <div className="room-mock-speakers">
           <div className="room-mock-speaker is-main">
-            <span>{locale === "ru" ? "Вы" : "You"}</span>
+            <span>{locale === "ru" ? "Р’С‹" : "You"}</span>
           </div>
           <div className="room-mock-speaker is-guest">
-            <span>{locale === "ru" ? "Спикер" : "Speaker"}</span>
+            <span>{locale === "ru" ? "РЎРїРёРєРµСЂ" : "Speaker"}</span>
           </div>
           <div className="room-mock-tools">
             <span>
@@ -709,10 +670,10 @@ function RoomIllustration({
           <div className="stage-light" aria-hidden="true" />
           <span className="stage-caption">
             <MonitorUp size={14} />
-            {locale === "ru" ? "Вы демонстрируете экран" : "You are sharing your screen"}
+            {locale === "ru" ? "Р’С‹ РґРµРјРѕРЅСЃС‚СЂРёСЂСѓРµС‚Рµ СЌРєСЂР°РЅ" : "You are sharing your screen"}
           </span>
-          <h3>{locale === "ru" ? "Как запускать вебинары, которые досматривают" : "Run webinars people finish"}</h3>
-          <p>{locale === "ru" ? "Практичный формат для продаж, обучения и комьюнити." : "A practical format for sales, learning, and communities."}</p>
+          <h3>{locale === "ru" ? "РљР°Рє Р·Р°РїСѓСЃРєР°С‚СЊ РІРµР±РёРЅР°СЂС‹, РєРѕС‚РѕСЂС‹Рµ РґРѕСЃРјР°С‚СЂРёРІР°СЋС‚" : "Run webinars people finish"}</h3>
+          <p>{locale === "ru" ? "РџСЂР°РєС‚РёС‡РЅС‹Р№ С„РѕСЂРјР°С‚ РґР»СЏ РїСЂРѕРґР°Р¶, РѕР±СѓС‡РµРЅРёСЏ Рё РєРѕРјСЊСЋРЅРёС‚Рё." : "A practical format for sales, learning, and communities."}</p>
           <div className="room-slide-shape" aria-hidden="true" />
           <div className="room-annotation-bar">
             <span />
@@ -724,14 +685,14 @@ function RoomIllustration({
           <strong>{t("room.chat")}</strong>
           <p>
             <span>Anna</span>
-            {locale === "ru" ? "Отличная тема" : "Great topic"}
+            {locale === "ru" ? "РћС‚Р»РёС‡РЅР°СЏ С‚РµРјР°" : "Great topic"}
           </p>
           <p className="is-you">
-            <span>{locale === "ru" ? "Вы" : "You"}</span>
-            {locale === "ru" ? "Сейчас покажу на слайде." : "I'll show it on the slide."}
+            <span>{locale === "ru" ? "Р’С‹" : "You"}</span>
+            {locale === "ru" ? "РЎРµР№С‡Р°СЃ РїРѕРєР°Р¶Сѓ РЅР° СЃР»Р°Р№РґРµ." : "I'll show it on the slide."}
           </p>
           <div>
-            <small>{locale === "ru" ? "Сообщение..." : "Message..."}</small>
+            <small>{locale === "ru" ? "РЎРѕРѕР±С‰РµРЅРёРµ..." : "Message..."}</small>
             <Send size={14} />
           </div>
         </div>
@@ -806,3 +767,4 @@ function WorkflowStep({
     </motion.article>
   );
 }
+

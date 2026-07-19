@@ -1511,6 +1511,11 @@ select {
   color: var(--color-muted-foreground);
 }
 
+.landing-comparison__row > span:not(:first-child) {
+  justify-self: center;
+  text-align: center;
+}
+
 .landing-comparison__row.is-head {
   background: color-mix(in srgb, var(--color-primary) 7%, transparent);
 }
@@ -1525,7 +1530,9 @@ select {
   height: 1.9rem;
   display: inline-grid;
   place-items: center;
-  margin: 0.75rem 1rem;
+  justify-self: center;
+  margin: 0.75rem 0;
+  padding: 0;
   border-radius: 999px;
 }
 
