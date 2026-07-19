@@ -358,14 +358,8 @@ function RoomEnded({ slug, status }: { slug: string; status: EndedStatus }) {
         }
         action={
           <div className="service-actions">
-            <Link href="/dashboard">
-              <Button>
-                <ArrowLeft size={17} />
-                Dashboard
-              </Button>
-            </Link>
             <Link href={`/w/${slug}`}>
-              <Button variant="secondary">
+              <Button>
                 {locale === "ru" ? "Страница вебинара" : "Webinar page"}
               </Button>
             </Link>
@@ -495,7 +489,9 @@ function BroadcastStage({
                   <span>{locale === "ru" ? "Инструменты" : "Tools"}</span>
                   <small>{locale === "ru" ? "Эфир под рукой" : "Live controls"}</small>
                 </header>
-                <HostMediaControls preferences={session.preferences} variant="panel" />
+                <span className="presenter-tools-card__hint">
+                  {locale === "ru" ? "Быстрые кнопки находятся снизу сцены." : "Quick controls are at the bottom of the stage."}
+                </span>
               </section>
             ) : null}
             {canEndWebinar(currentRole) ? <EndWebinarButton slug={slug} session={session} /> : null}
@@ -519,6 +515,11 @@ function BroadcastStage({
           )}
         </div>
       )}
+      {canPublishMedia(currentRole) ? (
+        <div className="host-bottom-controls">
+          <HostMediaControls preferences={session.preferences} variant="bottom" />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -562,7 +563,7 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
   async function leaveRoom() {
     sessionStorage.removeItem(`laminaria-room:${slug}`);
     await room.disconnect();
-    router.replace("/dashboard");
+    router.replace(roomExitHref(slug, role));
   }
 
   async function copyInviteLink() {
@@ -584,7 +585,7 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
       await api.endWebinar(session.webinarId);
       sessionStorage.removeItem(`laminaria-room:${slug}`);
       await room.disconnect();
-      router.replace("/dashboard");
+      router.replace(roomExitHref(slug, role));
     } catch (reason) {
       setEndError(
         reason instanceof Error
@@ -665,7 +666,7 @@ function EndWebinarButton({ slug, session }: { slug: string; session: StoredRoom
       await api.endWebinar(session.webinarId);
       sessionStorage.removeItem(`laminaria-room:${slug}`);
       await room.disconnect();
-      router.replace("/dashboard");
+      router.replace(roomExitHref(slug, session.participant.role));
     } catch (reason) {
       setEndError(
         reason instanceof Error
@@ -704,7 +705,7 @@ function HostMediaControls({
   variant = "topbar",
 }: {
   preferences?: StoredRoom["preferences"];
-  variant?: "topbar" | "panel";
+  variant?: "topbar" | "panel" | "bottom";
 }) {
   const locale = useLocale();
   const room = useRoomContext();
@@ -1755,6 +1756,10 @@ function isViewerRole(role: string): boolean {
 
 function canModerate(role: string): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
+}
+
+function roomExitHref(slug: string, role: Role): string {
+  return canManageStage(role) || role === "MODERATOR" || role === "SPEAKER" ? "/dashboard" : `/w/${slug}`;
 }
 
 function applyViewerQuality(publication: unknown, quality: QualityPreset): void {

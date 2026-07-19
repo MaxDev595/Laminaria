@@ -4722,10 +4722,54 @@ select {
 }
 
 .broadcast-stage {
+  position: relative;
   min-height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-3);
+}
+
+.host-bottom-controls {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(30rem, calc(100% - 2rem));
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 70%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--ocean-950) 76%, transparent);
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.42),
+    var(--highlight-inset);
+  backdrop-filter: blur(18px);
+}
+
+.host-bottom-controls .host-media-controls-wrap,
+.host-bottom-controls .host-media-controls {
+  width: 100%;
+}
+
+.host-bottom-controls .host-media-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.host-bottom-controls .host-media-controls button {
+  min-height: 2.75rem;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+}
+
+.presenter-tools-card__hint {
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .broadcast-toolbar {
