@@ -7,7 +7,6 @@ import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Button, Logo } from "@laminaria/ui";
 import { LanguageSwitcher } from "./language-switcher";
-import { ThemeToggle } from "./theme-toggle";
 
 export function MarketingHeader() {
   const t = useTranslations();
@@ -35,7 +34,6 @@ export function MarketingHeader() {
         </nav>
         <div className="header-actions">
           <LanguageSwitcher />
-          <ThemeToggle />
           <Link href="/sign-in" className="header-signin">
             {t("auth.signIn")}
           </Link>

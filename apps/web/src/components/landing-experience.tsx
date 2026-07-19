@@ -7,11 +7,14 @@ import {
   Check,
   ChevronDown,
   CircleGauge,
+  Copy,
   Globe2,
   LockKeyhole,
   MessageCircleMore,
   Mic2,
+  MonitorUp,
   Radio,
+  Send,
   ShieldCheck,
   UsersRound,
   Video,
@@ -311,20 +314,63 @@ function RoomIllustration({
       <div className="room-illustration__topbar">
         <div>
           <span className="status-pulse" />
-          <strong>{t("landing.roomReady")}</strong>
+          <strong>Laminaria</strong>
         </div>
         <span className="room-time">00:42:18</span>
+        <span className="room-top-users">
+          <UsersRound size={14} />
+          56
+        </span>
       </div>
-      <div className="room-stage">
-        <div className="stage-light" aria-hidden="true" />
-        <div className="speaker-mark">
-          <span />
-          <span />
-          <span />
+      <div className="room-mock-grid">
+        <div className="room-mock-speakers">
+          <div className="room-mock-speaker is-main">
+            <span>{locale === "ru" ? "Вы" : "You"}</span>
+          </div>
+          <div className="room-mock-speaker is-guest">
+            <span>{locale === "ru" ? "Спикер" : "Speaker"}</span>
+          </div>
+          <div className="room-mock-tools">
+            <span>
+              <Mic2 size={15} />
+            </span>
+            <span>
+              <Video size={15} />
+            </span>
+            <span>
+              <MonitorUp size={15} />
+            </span>
+          </div>
         </div>
-        <div className="stage-caption">
-          <Radio size={14} />
-          {t("landing.liveCaption")}
+        <div className="room-stage">
+          <div className="stage-light" aria-hidden="true" />
+          <span className="stage-caption">
+            <MonitorUp size={14} />
+            {locale === "ru" ? "Вы демонстрируете экран" : "You are sharing your screen"}
+          </span>
+          <h3>{locale === "ru" ? "Как запускать вебинары, которые досматривают" : "Run webinars people finish"}</h3>
+          <p>{locale === "ru" ? "Практичный формат для продаж, обучения и комьюнити." : "A practical format for sales, learning, and communities."}</p>
+          <div className="room-slide-shape" aria-hidden="true" />
+          <div className="room-annotation-bar">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+        <div className="room-mock-chat">
+          <strong>{t("room.chat")}</strong>
+          <p>
+            <span>Anna</span>
+            {locale === "ru" ? "Отличная тема" : "Great topic"}
+          </p>
+          <p className="is-you">
+            <span>{locale === "ru" ? "Вы" : "You"}</span>
+            {locale === "ru" ? "Сейчас покажу на слайде." : "I'll show it on the slide."}
+          </p>
+          <div>
+            <small>{locale === "ru" ? "Сообщение..." : "Message..."}</small>
+            <Send size={14} />
+          </div>
         </div>
       </div>
       <div className="room-controls">
@@ -340,24 +386,10 @@ function RoomIllustration({
         <span className="room-control">
           <MessageCircleMore size={17} />
         </span>
+        <span className="room-control room-control--active">
+          <Copy size={17} />
+        </span>
       </div>
-      <motion.div
-        className="permission-float permission-float--audience"
-        animate={{ y: [0, -4, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-      >
-        <UsersRound size={16} />
-        <span>{t("landing.audienceMode")}</span>
-        <Check size={14} />
-      </motion.div>
-      <motion.div
-        className="permission-float permission-float--speaker"
-        animate={{ y: [0, 5, 0] }}
-        transition={{ duration: 6, repeat: Infinity, delay: 0.7 }}
-      >
-        <Mic2 size={16} />
-        <span>{t("landing.speakerMode")}</span>
-      </motion.div>
       <span className="room-locale">{locale.toUpperCase()}</span>
     </motion.div>
   );

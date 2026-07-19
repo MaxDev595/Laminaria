@@ -25,7 +25,6 @@ import { api, ApiError, friendlyError } from "@/lib/api";
 import { Button, Logo, Skeleton } from "@laminaria/ui";
 import { DashboardContextProvider } from "./dashboard-context";
 import { LanguageSwitcher } from "./language-switcher";
-import { ThemeToggle } from "./theme-toggle";
 import { ServiceState } from "./ui";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -234,7 +233,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="topbar-actions">
               <LanguageSwitcher />
-              <ThemeToggle />
               {canCreateWebinars ? (
                 <Link href="/dashboard/webinars/new">
                   <Button size="sm">

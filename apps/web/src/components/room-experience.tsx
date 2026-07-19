@@ -22,7 +22,10 @@ import {
   Camera,
   CameraOff,
   CheckCircle2,
+  ChartNoAxesColumn,
+  CircleDot,
   HelpCircle,
+  Link2,
   LoaderCircle,
   MessageCircleMore,
   Mic,
@@ -32,6 +35,7 @@ import {
   ShieldCheck,
   Signal,
   SlidersHorizontal,
+  Settings,
   Square,
   Tv,
   UsersRound,
@@ -200,9 +204,10 @@ export function RoomExperience({ slug }: { slug: string }) {
     >
       <RoomTopbar slug={slug} session={session} />
       <div className="webinar-room__body">
+        <RoomRail />
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
-          <BroadcastStage currentRole={session.participant.role} layout={stageLayout} />
+          <BroadcastStage slug={slug} session={session} currentRole={session.participant.role} layout={stageLayout} />
           <RoomAudioRenderer />
           <ConnectionStateToast />
         </section>
@@ -215,6 +220,38 @@ export function RoomExperience({ slug }: { slug: string }) {
         />
       </div>
     </LiveKitRoom>
+  );
+}
+
+function RoomRail() {
+  const t = useTranslations();
+  const locale = useLocale();
+  const items = [
+    { label: locale === "ru" ? "Сцена" : "Stage", icon: Tv, active: true },
+    { label: t("room.chat"), icon: MessageCircleMore },
+    { label: locale === "ru" ? "Участники" : "Participants", icon: UsersRound },
+    { label: locale === "ru" ? "Статистика" : "Stats", icon: ChartNoAxesColumn },
+    { label: locale === "ru" ? "Настройки" : "Settings", icon: Settings },
+  ];
+
+  return (
+    <nav className="room-rail" aria-label={locale === "ru" ? "Навигация эфира" : "Room navigation"}>
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <button
+            type="button"
+            key={item.label}
+            className={item.active ? "is-active" : ""}
+            aria-label={item.label}
+            title={item.label}
+          >
+            <Icon size={18} />
+            {item.active ? <CircleDot size={9} className="room-rail__dot" /> : null}
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -315,7 +352,17 @@ function RoomEnded({ slug, status }: { slug: string; status: EndedStatus }) {
   );
 }
 
-function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: StageLayout }) {
+function BroadcastStage({
+  slug,
+  session,
+  currentRole,
+  layout,
+}: {
+  slug: string;
+  session: StoredRoom;
+  currentRole: Role;
+  layout: StageLayout;
+}) {
   const locale = useLocale();
   const [quality, setQuality] = useState<QualityPreset>("720p");
   const participants = useParticipants();
@@ -349,6 +396,7 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
   );
   const hasSecondPresenter = Boolean(hostCamera && featuredCamera);
   const hasPresenterStack = Boolean(hostCamera || featuredCamera);
+  const hasPresenterColumn = hasPresenterStack || canPublishMedia(currentRole) || canEndWebinar(currentRole);
   const hasStageContent = Boolean(screenTrack);
 
   useEffect(() => {
@@ -398,12 +446,14 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
         <div
           className={`broadcast-stage-layout ${hasStageContent ? "has-content" : "camera-only"} ${
             hasSecondPresenter ? "has-featured-speaker" : "single-presenter"
-          } ${hasPresenterStack ? "" : "no-presenter-stack"} ${
+          } ${hasPresenterColumn ? "" : "no-presenter-stack"} ${
             hasScreenShare ? `has-screen-share overlay-${layout.position}` : ""
           }`}
           style={{ "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%` } as CSSProperties}
         >
-          {hasPresenterStack ? (
+          {hasPresenterColumn ? (
+          <aside className="presenter-column" aria-label={locale === "ru" ? "Панель ведущего" : "Presenter panel"}>
+            {hasPresenterStack ? (
             <div className="presenter-stack" aria-label={locale === "ru" ? "Ведущие эфира" : "On-stage speakers"}>
               {hostCamera ? (
                 <StageVideoTile
@@ -428,6 +478,18 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
                 />
               ) : null}
             </div>
+            ) : null}
+            {canPublishMedia(currentRole) ? (
+              <section className="presenter-tools-card" aria-label={locale === "ru" ? "Инструменты ведущего" : "Presenter tools"}>
+                <header>
+                  <span>{locale === "ru" ? "Инструменты" : "Tools"}</span>
+                  <small>{locale === "ru" ? "Эфир под рукой" : "Live controls"}</small>
+                </header>
+                <HostMediaControls preferences={session.preferences} variant="panel" />
+              </section>
+            ) : null}
+            {canEndWebinar(currentRole) ? <EndWebinarButton slug={slug} session={session} /> : null}
+          </aside>
           ) : null}
           {screenTrack ? (
             <div className="stage-content-frame">
@@ -438,7 +500,13 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
                 muted={screenTrack.participant.isLocal}
               />
             </div>
-          ) : null}
+          ) : (
+            <div className="stage-content-frame stage-content-frame--empty">
+              <Tv size={38} />
+              <span>{locale === "ru" ? "Контент появится здесь" : "Content will appear here"}</span>
+              <small>{locale === "ru" ? "Включите демонстрацию экрана, чтобы зрители увидели материал." : "Start screen sharing to show your material to viewers."}</small>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -475,16 +543,21 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
-  const [ending, setEnding] = useState(false);
-  const [endError, setEndError] = useState("");
   const role = session.participant.role;
   const connected = state === ConnectionState.Connected;
   const reconnecting = state === ConnectionState.Reconnecting;
+  const [ending, setEnding] = useState(false);
+  const [endError, setEndError] = useState("");
 
   async function leaveRoom() {
     sessionStorage.removeItem(`laminaria-room:${slug}`);
     await room.disconnect();
     router.replace("/dashboard");
+  }
+
+  async function copyInviteLink() {
+    const inviteUrl = `${window.location.origin}/${locale}/w/${slug}`;
+    await navigator.clipboard.writeText(inviteUrl);
   }
 
   async function endWebinar() {
@@ -531,7 +604,10 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
       </div>
       <div className="room-topbar__actions">
         <RoleBadge role={role} />
-        {canPublishMedia(role) ? <HostMediaControls preferences={session.preferences} /> : null}
+        <button type="button" className="room-invite" onClick={() => void copyInviteLink()}>
+          <Link2 size={16} />
+          {locale === "ru" ? "Пригласить" : "Invite"}
+        </button>
         {canEndWebinar(role) ? (
           <button
             type="button"
@@ -558,7 +634,68 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
   );
 }
 
-function HostMediaControls({ preferences }: { preferences?: StoredRoom["preferences"] }) {
+function EndWebinarButton({ slug, session }: { slug: string; session: StoredRoom }) {
+  const room = useRoomContext();
+  const router = useRouter();
+  const locale = useLocale();
+  const [ending, setEnding] = useState(false);
+  const [endError, setEndError] = useState("");
+
+  async function endWebinar() {
+    if (ending || !canEndWebinar(session.participant.role)) return;
+    const confirmed = window.confirm(
+      locale === "ru"
+        ? "Завершить эфир для всех участников?"
+        : "End the webinar for every participant?",
+    );
+    if (!confirmed) return;
+    setEnding(true);
+    setEndError("");
+    try {
+      await api.endWebinar(session.webinarId);
+      sessionStorage.removeItem(`laminaria-room:${slug}`);
+      await room.disconnect();
+      router.replace("/dashboard");
+    } catch (reason) {
+      setEndError(
+        reason instanceof Error
+          ? reason.message
+          : locale === "ru"
+            ? "Не удалось завершить эфир."
+            : "Could not end the webinar.",
+      );
+      setEnding(false);
+    }
+  }
+
+  return (
+    <div className="presenter-end-wrap">
+      <button
+        type="button"
+        className="room-end"
+        onClick={() => void endWebinar()}
+        disabled={ending}
+        title={locale === "ru" ? "Завершить эфир для всех" : "End webinar for everyone"}
+      >
+        {ending ? <LoaderCircle className="spin" size={17} /> : <Square size={16} />}
+        {locale === "ru" ? "Завершить эфир" : "End webinar"}
+      </button>
+      {endError ? (
+        <span className="room-end-error" role="alert">
+          {endError}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function HostMediaControls({
+  preferences,
+  variant = "topbar",
+}: {
+  preferences?: StoredRoom["preferences"];
+  variant?: "topbar" | "panel";
+}) {
   const locale = useLocale();
   const room = useRoomContext();
   const connectionState = useConnectionState();
@@ -685,7 +822,7 @@ function HostMediaControls({ preferences }: { preferences?: StoredRoom["preferen
   }
 
   return (
-    <div className="host-media-controls-wrap">
+    <div className={`host-media-controls-wrap host-media-controls-wrap--${variant}`}>
       <div className="host-media-controls">
         <button
           type="button"
