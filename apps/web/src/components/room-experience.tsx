@@ -42,6 +42,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   type CSSProperties,
+  type ComponentProps,
   useCallback,
   useEffect,
   useMemo,
@@ -98,6 +99,7 @@ type Role = "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" |
 type EndedStatus = "ENDED" | "CANCELLED" | "ARCHIVED";
 type QualityPreset = "144p" | "240p" | "480p" | "720p" | "1080p";
 type StageOverlayPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+type StageTrackReference = NonNullable<ComponentProps<typeof VideoTrack>["trackRef"]>;
 
 interface StageLayout {
   position: StageOverlayPosition;
@@ -325,18 +327,29 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
     (trackRef) => trackRef.source === Track.Source.ScreenShare,
   )?.participant.identity;
   const hasScreenShare = orderedTracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare);
-  const visibleTracks = useMemo(
-    () =>
-      hasScreenShare
-        ? orderedTracks.filter(
-            (trackRef) =>
-              trackRef.source === Track.Source.ScreenShare ||
-              (trackRef.source === Track.Source.Camera &&
-                trackRef.participant.identity === presenterIdentity),
-          )
-        : orderedTracks,
-    [hasScreenShare, orderedTracks, presenterIdentity],
+  const screenTrack = orderedTracks.find((trackRef) => trackRef.source === Track.Source.ScreenShare);
+  const cameraTracks = useMemo(
+    () => orderedTracks.filter((trackRef) => trackRef.source === Track.Source.Camera),
+    [orderedTracks],
   );
+  const hostCamera = useMemo(
+    () =>
+      cameraTracks.find((trackRef) => isHostRole(roleFromMetadata(trackRef.participant.metadata))) ??
+      cameraTracks.find((trackRef) => trackRef.participant.identity === presenterIdentity) ??
+      cameraTracks.find((trackRef) => canPublishMedia(roleFromMetadata(trackRef.participant.metadata))),
+    [cameraTracks, presenterIdentity],
+  );
+  const featuredCamera = useMemo(
+    () =>
+      cameraTracks.find(
+        (trackRef) =>
+          trackRef !== hostCamera && isFeaturedSpeakerRole(roleFromMetadata(trackRef.participant.metadata)),
+      ) ?? cameraTracks.find((trackRef) => trackRef !== hostCamera),
+    [cameraTracks, hostCamera],
+  );
+  const hasSecondPresenter = Boolean(hostCamera && featuredCamera);
+  const hasPresenterStack = Boolean(hostCamera || featuredCamera);
+  const hasStageContent = Boolean(screenTrack);
 
   useEffect(() => {
     for (const trackRef of tracks) applyViewerQuality(trackRef.publication, quality);
@@ -371,7 +384,7 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
         ) : null}
       </div>
 
-      {visibleTracks.length === 0 ? (
+      {!hasPresenterStack && !screenTrack ? (
         <div className="viewer-stage-empty">
           <Tv size={34} />
           <h2>{locale === "ru" ? "Ожидаем ведущего" : "Waiting for the host"}</h2>
@@ -383,26 +396,76 @@ function BroadcastStage({ currentRole, layout }: { currentRole: Role; layout: St
         </div>
       ) : (
         <div
-          className={`viewer-stage-grid ${hasScreenShare ? `has-screen-share overlay-${layout.position}` : ""}`}
+          className={`broadcast-stage-layout ${hasStageContent ? "has-content" : "camera-only"} ${
+            hasSecondPresenter ? "has-featured-speaker" : "single-presenter"
+          } ${hasPresenterStack ? "" : "no-presenter-stack"} ${
+            hasScreenShare ? `has-screen-share overlay-${layout.position}` : ""
+          }`}
           style={{ "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%` } as CSSProperties}
         >
-          {visibleTracks.map((trackRef) => (
-            <VideoTrack
-              key={`${trackRef.participant.identity}:${trackRef.source}:${trackRef.publication?.trackSid ?? "track"}`}
-              trackRef={trackRef}
-              className={
-                trackRef.source === Track.Source.ScreenShare
-                  ? "stage-screen-track"
-                  : trackRef.participant.identity === presenterIdentity
-                    ? "stage-camera-track stage-presenter-camera"
-                    : "stage-camera-track"
-              }
-              muted={trackRef.participant.isLocal}
-            />
-          ))}
+          {hasPresenterStack ? (
+            <div className="presenter-stack" aria-label={locale === "ru" ? "Ведущие эфира" : "On-stage speakers"}>
+              {hostCamera ? (
+                <StageVideoTile
+                  trackRef={hostCamera}
+                  label={locale === "ru" ? "Ведущий" : "Host"}
+                  className="is-host"
+                />
+              ) : null}
+              {featuredCamera ? (
+                <StageVideoTile
+                  trackRef={featuredCamera}
+                  label={
+                    isFeaturedSpeakerRole(roleFromMetadata(featuredCamera.participant.metadata))
+                      ? locale === "ru"
+                        ? "Спикер"
+                        : "Speaker"
+                      : locale === "ru"
+                        ? "Гость"
+                        : "Guest"
+                  }
+                  className="is-featured"
+                />
+              ) : null}
+            </div>
+          ) : null}
+          {screenTrack ? (
+            <div className="stage-content-frame">
+              <VideoTrack
+                key={`${screenTrack.participant.identity}:${screenTrack.source}:${screenTrack.publication?.trackSid ?? "track"}`}
+                trackRef={screenTrack}
+                className="stage-screen-track"
+                muted={screenTrack.participant.isLocal}
+              />
+            </div>
+          ) : null}
         </div>
       )}
     </div>
+  );
+}
+
+function StageVideoTile({
+  trackRef,
+  label,
+  className,
+}: {
+  trackRef: StageTrackReference;
+  label: string;
+  className: string;
+}) {
+  return (
+    <figure className={`presenter-video-tile ${className}`}>
+      <VideoTrack
+        key={`${trackRef.participant.identity}:${trackRef.source}:${trackRef.publication?.trackSid ?? "track"}`}
+        trackRef={trackRef}
+        muted={trackRef.participant.isLocal}
+      />
+      <figcaption>
+        <span>{trackRef.participant.name || trackRef.participant.identity || label}</span>
+        <small>{label}</small>
+      </figcaption>
+    </figure>
   );
 }
 
@@ -910,13 +973,8 @@ function RealtimePanel({
             aria-label={locale === "ru" ? "Угол вебкамеры" : "Camera corner"}
           >
             {(
-              [
-                ["top-left", "↖"],
-                ["top-right", "↗"],
-                ["bottom-left", "↙"],
-                ["bottom-right", "↘"],
-              ] as const
-            ).map(([position]) => (
+              ["top-left", "top-right", "bottom-left", "bottom-right"] as const
+            ).map((position) => (
               <button
                 type="button"
                 key={position}
@@ -1388,6 +1446,14 @@ function isQuestion(item: ChatMessage | Question): item is Question {
 
 function canPublishMedia(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "SPEAKER";
+}
+
+function isHostRole(role: Role): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST";
+}
+
+function isFeaturedSpeakerRole(role: Role): boolean {
+  return role === "SPEAKER" || role === "GUEST";
 }
 
 function canEndWebinar(role: Role): boolean {
