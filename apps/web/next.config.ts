@@ -3,6 +3,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const apiProxyTarget = (
+  process.env.API_PROXY_TARGET ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  (isDevelopment ? "http://localhost:4000" : "https://laminaria.onrender.com")
+).replace(/\/$/, "");
 const scriptPolicy = isDevelopment
   ? "'self' 'unsafe-inline' 'unsafe-eval'"
   : "'self' 'unsafe-inline'";
@@ -44,6 +49,14 @@ const nextConfig: NextConfig = {
     cpus: 1,
     workerThreads: true,
     optimizePackageImports: ["lucide-react", "motion", "@livekit/components-react"],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/v1/:path*",
+        destination: `${apiProxyTarget}/v1/:path*`,
+      },
+    ];
   },
   async headers() {
     return [
