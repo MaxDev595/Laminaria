@@ -104,6 +104,7 @@ type EndedStatus = "ENDED" | "CANCELLED" | "ARCHIVED";
 type QualityPreset = "144p" | "240p" | "480p" | "720p" | "1080p";
 type StageOverlayPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 type StageTrackReference = NonNullable<ComponentProps<typeof VideoTrack>["trackRef"]>;
+type RoomPanel = "stage" | "chat" | "participants" | "stats" | "settings";
 
 interface StageLayout {
   position: StageOverlayPosition;
@@ -131,6 +132,8 @@ export function RoomExperience({ slug }: { slug: string }) {
   const locale = useLocale();
   const [endedStatus, setEndedStatus] = useState<EndedStatus | null>(null);
   const [stageLayout, setStageLayout] = useState<StageLayout>(DEFAULT_STAGE_LAYOUT);
+  const [activePanel, setActivePanel] = useState<RoomPanel>("chat");
+  const [quality, setQuality] = useState<QualityPreset>("720p");
   const subscribeStorage = useCallback(() => () => undefined, []);
   const rawSession = useSyncExternalStore(
     subscribeStorage,
@@ -204,10 +207,16 @@ export function RoomExperience({ slug }: { slug: string }) {
     >
       <RoomTopbar slug={slug} session={session} />
       <div className="webinar-room__body">
-        <RoomRail />
+        <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} />
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
-          <BroadcastStage slug={slug} session={session} currentRole={session.participant.role} layout={stageLayout} />
+          <BroadcastStage
+            slug={slug}
+            session={session}
+            currentRole={session.participant.role}
+            layout={stageLayout}
+            quality={quality}
+          />
           <RoomAudioRenderer />
           <ConnectionStateToast />
         </section>
@@ -217,13 +226,22 @@ export function RoomExperience({ slug }: { slug: string }) {
           onEnded={handleEnded}
           stageLayout={stageLayout}
           onStageLayoutChange={setStageLayout}
+          activePanel={activePanel}
+          quality={quality}
+          onQualityChange={setQuality}
         />
       </div>
     </LiveKitRoom>
   );
 }
 
-function RoomRail() {
+function RoomRail({
+  activePanel,
+  onPanelChange,
+}: {
+  activePanel: RoomPanel;
+  onPanelChange: (panel: RoomPanel) => void;
+}) {
   const t = useTranslations();
   const locale = useLocale();
   const items = [
@@ -234,20 +252,26 @@ function RoomRail() {
     { label: locale === "ru" ? "Настройки" : "Settings", icon: Settings },
   ];
 
+  const panelIds: RoomPanel[] = ["stage", "chat", "participants", "stats", "settings"];
+
   return (
     <nav className="room-rail" aria-label={locale === "ru" ? "Навигация эфира" : "Room navigation"}>
-      {items.map((item) => {
+      {items.map((item, index) => {
         const Icon = item.icon;
+        const panel = panelIds[index] ?? "chat";
+        const active = activePanel === panel;
         return (
           <button
             type="button"
             key={item.label}
-            className={item.active ? "is-active" : ""}
+            className={active ? "is-active" : ""}
             aria-label={item.label}
+            aria-pressed={active}
             title={item.label}
+            onClick={() => onPanelChange(panel)}
           >
             <Icon size={18} />
-            {item.active ? <CircleDot size={9} className="room-rail__dot" /> : null}
+            {active ? <CircleDot size={9} className="room-rail__dot" /> : null}
           </button>
         );
       })}
@@ -357,14 +381,15 @@ function BroadcastStage({
   session,
   currentRole,
   layout,
+  quality,
 }: {
   slug: string;
   session: StoredRoom;
   currentRole: Role;
   layout: StageLayout;
+  quality: QualityPreset;
 }) {
   const locale = useLocale();
-  const [quality, setQuality] = useState<QualityPreset>("720p");
   const participants = useParticipants();
   const tracks = useTracks([Track.Source.ScreenShare, Track.Source.Camera], {
     onlySubscribed: false,
@@ -415,21 +440,6 @@ function BroadcastStage({
           <span>{viewerCount}</span>
           <small>{locale === "ru" ? "зрителей" : "viewers"}</small>
         </div>
-        {!canPublishMedia(currentRole) ? (
-          <label className="quality-select">
-            <span>{locale === "ru" ? "Качество" : "Quality"}</span>
-            <select
-              value={quality}
-              onChange={(event) => setQuality(event.target.value as QualityPreset)}
-            >
-              {QUALITY_PRESETS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
       </div>
 
       {!hasPresenterStack && !screenTrack ? (
@@ -863,20 +873,24 @@ function RealtimePanel({
   onEnded,
   stageLayout,
   onStageLayoutChange,
+  activePanel,
+  quality,
+  onQualityChange,
 }: {
   slug: string;
   session: StoredRoom;
   onEnded: (status: EndedStatus) => void;
   stageLayout: StageLayout;
   onStageLayoutChange: (layout: StageLayout) => void;
+  activePanel: RoomPanel;
+  quality: QualityPreset;
+  onQualityChange: (quality: QualityPreset) => void;
 }) {
   const locale = useLocale();
   const t = useTranslations();
   const room = useRoomContext();
   const router = useRouter();
-  const [tab, setTab] = useState<"chat" | "questions">("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [text, setText] = useState("");
   const [connected, setConnected] = useState(false);
@@ -889,7 +903,8 @@ function RealtimePanel({
   const socketRef = useRef<Socket | null>(null);
   const viewer = isViewerRole(session.participant.role);
   const canModerateChat = canModerate(session.participant.role);
-  const chatLocked = viewer && tab === "chat" && !viewerChatEnabled;
+  const chatLocked = viewer && !viewerChatEnabled;
+  const participants = useParticipants();
 
   useEffect(() => {
     const socket = io(api.realtimeOrigin, {
@@ -940,14 +955,6 @@ function RealtimePanel({
     socket.on("chat:deleted", (payload: { messageId: string }) =>
       setMessages((current) => current.filter((item) => item.id !== payload.messageId)),
     );
-    socket.on("question:created", (question: Question) =>
-      setQuestions((current) =>
-        current.some((item) => item.id === question.id) ? current : [...current, question],
-      ),
-    );
-    socket.on("question:updated", (question: Question) =>
-      setQuestions((current) => current.map((item) => (item.id === question.id ? question : item))),
-    );
     return () => {
       socket.emit("webinar:leave", { webinarId: session.webinarId });
       socket.disconnect();
@@ -978,11 +985,10 @@ function RealtimePanel({
     if (!body || !socket?.connected || chatLocked) return;
     setSending(true);
     setError("");
-    const event = tab === "chat" ? "chat:send" : "question:ask";
     socket.emit(
-      event,
+      "chat:send",
       { webinarId: session.webinarId, idempotencyKey: crypto.randomUUID(), body },
-      (ack: Ack<ChatMessage | Question>) => {
+      (ack: Ack<ChatMessage>) => {
         setSending(false);
         if (!ack.ok) {
           setError(ack.error.message);
@@ -1056,34 +1062,19 @@ function RealtimePanel({
     );
   }
 
-  const items = tab === "chat" ? messages : questions;
+  const tab = "chat" as const;
+  const items = messages;
+  const activeRestrictions = restrictions.filter((restriction) => restriction.active);
+  const viewerCount = participants.filter((participant) =>
+    isViewerRole(roleFromMetadata(participant.metadata)),
+  ).length;
 
   return (
     <aside className="realtime-panel">
-      <div className="realtime-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "chat"}
-          onClick={() => setTab("chat")}
-        >
-          <MessageCircleMore size={17} />
-          {t("room.chat")}
-          <span>{messages.length}</span>
-          {tab === "chat" ? <motion.i layoutId="realtime-tab" /> : null}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "questions"}
-          onClick={() => setTab("questions")}
-        >
-          <HelpCircle size={17} />
-          {t("room.questions")}
-          <span>{questions.length}</span>
-          {tab === "questions" ? <motion.i layoutId="realtime-tab" /> : null}
-        </button>
-      </div>
+      <header className="room-panel-title">
+        <strong>{roomPanelTitle(activePanel, locale)}</strong>
+        <span>{roomPanelSubtitle(activePanel, locale, messages.length, participants.length)}</span>
+      </header>
 
       <div className="realtime-status">
         <span className={connected ? "is-live" : ""} />
@@ -1096,7 +1087,29 @@ function RealtimePanel({
             : "Restoring realtime..."}
       </div>
 
-      {canManageStage(session.participant.role) ? (
+      {activePanel === "settings" ? (
+        <section className="room-settings-card">
+          <header>
+            <Settings size={16} />
+            <strong>{locale === "ru" ? "Качество просмотра" : "Viewing quality"}</strong>
+          </header>
+          <label className="quality-select quality-select--settings">
+            <span>{locale === "ru" ? "Качество" : "Quality"}</span>
+            <select
+              value={quality}
+              onChange={(event) => onQualityChange(event.target.value as QualityPreset)}
+            >
+              {QUALITY_PRESETS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+        </section>
+      ) : null}
+
+      {activePanel === "settings" && canManageStage(session.participant.role) ? (
         <section
           className="stage-layout-controls"
           aria-label={locale === "ru" ? "Положение вебкамеры" : "Camera overlay layout"}
@@ -1148,7 +1161,7 @@ function RealtimePanel({
         </section>
       ) : null}
 
-      {canModerateChat ? (
+      {activePanel === "chat" && canModerateChat ? (
         <button
           type="button"
           className="chat-gate-toggle"
@@ -1165,7 +1178,26 @@ function RealtimePanel({
         </button>
       ) : null}
 
-      <div className="realtime-list" role="log" aria-live="polite">
+      {activePanel === "stage" ? (
+        <RoomStagePanel locale={locale} viewerCount={viewerCount} canPublish={canPublishMedia(session.participant.role)} />
+      ) : null}
+
+      {activePanel === "participants" ? (
+        <RoomParticipantsPanel participants={participants} locale={locale} />
+      ) : null}
+
+      {activePanel === "stats" ? (
+        <RoomStatsPanel
+          locale={locale}
+          viewerCount={viewerCount}
+          participantCount={participants.length}
+          messageCount={messages.length}
+          restrictionCount={activeRestrictions.length}
+          chatEnabled={viewerChatEnabled}
+        />
+      ) : null}
+
+      <div className={`realtime-list ${activePanel === "chat" ? "" : "is-hidden"}`} role="log" aria-live="polite">
         <AnimatePresence initial={false}>
           {items.length === 0 ? (
             <motion.div
@@ -1294,7 +1326,7 @@ function RealtimePanel({
         </AnimatePresence>
       </div>
 
-      {canModerateChat && restrictions.length > 0 ? (
+      {activePanel === "settings" && canModerateChat && restrictions.length > 0 ? (
         <div className="restriction-list">
           <strong>{locale === "ru" ? "Ограничения эфира" : "Live restrictions"}</strong>
           {restrictions.map((restriction) => (
@@ -1360,6 +1392,7 @@ function RealtimePanel({
         </div>
       ) : null}
 
+      {activePanel === "chat" ? (
       <form
         className="realtime-composer"
         onSubmit={(event) => {
@@ -1387,8 +1420,9 @@ function RealtimePanel({
           {sending ? <LoaderCircle className="spin" size={18} /> : <Send size={18} />}
         </button>
       </form>
+      ) : null}
 
-      {chatLocked ? (
+      {activePanel === "chat" && chatLocked ? (
         <div className="realtime-error" role="status">
           <AlertTriangle size={15} />
           {locale === "ru"
@@ -1398,6 +1432,120 @@ function RealtimePanel({
       ) : null}
     </aside>
   );
+}
+
+function RoomStagePanel({
+  locale,
+  viewerCount,
+  canPublish,
+}: {
+  locale: string;
+  viewerCount: number;
+  canPublish: boolean;
+}) {
+  return (
+    <section className="room-side-card">
+      <Tv size={18} />
+      <div>
+        <strong>{locale === "ru" ? "Сцена эфира" : "Live stage"}</strong>
+        <p>
+          {canPublish
+            ? locale === "ru"
+              ? "Камера, микрофон и демонстрация включаются в панели ведущего слева."
+              : "Camera, mic, and screen share are controlled from the presenter panel."
+            : locale === "ru"
+              ? "Вы смотрите сцену как зритель. Камера и микрофон для зрителей отключены."
+              : "You are watching as an attendee. Camera and mic are disabled for viewers."}
+        </p>
+      </div>
+      <span>{locale === "ru" ? `${viewerCount} зрителей` : `${viewerCount} viewers`}</span>
+    </section>
+  );
+}
+
+function RoomParticipantsPanel({
+  participants,
+  locale,
+}: {
+  participants: ReturnType<typeof useParticipants>;
+  locale: string;
+}) {
+  return (
+    <div className="room-participants-panel">
+      {participants.map((participant) => {
+        const role = roleFromMetadata(participant.metadata);
+        const name = participant.name || participant.identity;
+        return (
+          <article key={participant.identity} className="room-participant-row">
+            <span>{name.slice(0, 1).toUpperCase()}</span>
+            <div>
+              <strong>{name}</strong>
+              <small>{roleLabel(role, locale)}</small>
+            </div>
+            <i className={participant.isSpeaking ? "is-speaking" : ""}>
+              {participant.isSpeaking ? (locale === "ru" ? "говорит" : "speaking") : "online"}
+            </i>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function RoomStatsPanel({
+  locale,
+  viewerCount,
+  participantCount,
+  messageCount,
+  restrictionCount,
+  chatEnabled,
+}: {
+  locale: string;
+  viewerCount: number;
+  participantCount: number;
+  messageCount: number;
+  restrictionCount: number;
+  chatEnabled: boolean;
+}) {
+  const stats = [
+    { label: locale === "ru" ? "Зрители" : "Viewers", value: viewerCount },
+    { label: locale === "ru" ? "Всего в комнате" : "In room", value: participantCount },
+    { label: locale === "ru" ? "Сообщения" : "Messages", value: messageCount },
+    { label: locale === "ru" ? "Ограничения" : "Restrictions", value: restrictionCount },
+  ];
+  return (
+    <div className="room-stats-panel">
+      {stats.map((stat) => (
+        <article key={stat.label}>
+          <strong>{stat.value}</strong>
+          <span>{stat.label}</span>
+        </article>
+      ))}
+      <section className="room-side-card">
+        <MessageCircleMore size={18} />
+        <div>
+          <strong>{locale === "ru" ? "Чат зрителей" : "Viewer chat"}</strong>
+          <p>{chatEnabled ? (locale === "ru" ? "Открыт" : "Open") : locale === "ru" ? "Закрыт" : "Closed"}</p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function roomPanelTitle(panel: RoomPanel, locale: string): string {
+  if (panel === "stage") return locale === "ru" ? "Сцена" : "Stage";
+  if (panel === "participants") return locale === "ru" ? "Участники" : "Participants";
+  if (panel === "stats") return locale === "ru" ? "Статистика" : "Stats";
+  if (panel === "settings") return locale === "ru" ? "Настройки" : "Settings";
+  return locale === "ru" ? "Чат" : "Chat";
+}
+
+function roomPanelSubtitle(panel: RoomPanel, locale: string, messageCount: number, participantCount: number): string {
+  if (panel === "chat") return locale === "ru" ? `${messageCount} сообщений` : `${messageCount} messages`;
+  if (panel === "participants") return locale === "ru" ? `${participantCount} онлайн` : `${participantCount} online`;
+  if (panel === "settings") return locale === "ru" ? "Качество и сцена" : "Quality and stage";
+  if (panel === "stats") return locale === "ru" ? "Живые показатели" : "Live metrics";
+  return locale === "ru" ? "Управление сценой" : "Stage control";
 }
 
 function ModerationDialog({

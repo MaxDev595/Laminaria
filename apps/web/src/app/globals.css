@@ -5438,6 +5438,166 @@ select {
   background: var(--color-surface-soft);
 }
 
+.room-panel-title {
+  padding: var(--space-3) var(--space-3) 0;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.room-panel-title strong {
+  color: var(--color-foreground);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.room-panel-title span {
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+}
+
+.room-side-card,
+.room-settings-card {
+  margin: 0 var(--space-3);
+  padding: 0.8rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  box-shadow: var(--highlight-inset);
+}
+
+.room-side-card > svg,
+.room-settings-card > header svg {
+  color: var(--color-primary-strong);
+}
+
+.room-side-card strong,
+.room-settings-card strong {
+  color: var(--color-foreground);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.room-side-card p {
+  margin: 0.25rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.room-side-card > span {
+  grid-column: 1 / -1;
+  width: max-content;
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.room-settings-card {
+  grid-template-columns: 1fr;
+}
+
+.room-settings-card header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quality-select--settings {
+  width: 100%;
+  justify-content: space-between;
+  border-radius: var(--radius-md);
+}
+
+.room-participants-panel,
+.room-stats-panel {
+  min-height: 0;
+  margin: 0 var(--space-3);
+  display: grid;
+  gap: 0.55rem;
+  overflow: auto;
+}
+
+.room-participant-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+}
+
+.room-participant-row > span {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.7rem;
+  color: white;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  font-weight: 950;
+}
+
+.room-participant-row strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-foreground);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-participant-row small,
+.room-participant-row i {
+  color: var(--color-muted-foreground);
+  font-size: 0.65rem;
+  font-style: normal;
+}
+
+.room-participant-row i.is-speaking {
+  color: var(--color-success);
+  font-weight: 900;
+}
+
+.room-stats-panel {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.room-stats-panel article {
+  min-height: 5rem;
+  padding: 0.8rem;
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+}
+
+.room-stats-panel article strong {
+  color: var(--color-primary-strong);
+  font-size: 1.45rem;
+  font-weight: 950;
+}
+
+.room-stats-panel article span {
+  color: var(--color-muted-foreground);
+  font-size: 0.72rem;
+}
+
+.room-stats-panel .room-side-card {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .realtime-status {
   min-height: 2rem;
   padding: 0 var(--space-3);
@@ -5547,6 +5707,10 @@ select {
   flex-direction: column;
   gap: var(--space-3);
   scrollbar-width: thin;
+}
+
+.realtime-list.is-hidden {
+  display: none;
 }
 
 .realtime-empty {
