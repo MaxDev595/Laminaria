@@ -148,6 +148,7 @@ export function RoomExperience({ slug }: { slug: string }) {
       return null;
     }
   }, [rawSession]);
+  const viewerRoom = session ? isViewerRole(session.participant.role) : false;
 
   const handleEnded = useCallback(
     (status: EndedStatus) => {
@@ -203,15 +204,14 @@ export function RoomExperience({ slug }: { slug: string }) {
         },
       }}
       data-lk-theme="default"
-      className="webinar-room"
+      className={`webinar-room ${viewerRoom ? "webinar-room--viewer" : "webinar-room--host"}`}
     >
       <RoomTopbar slug={slug} session={session} />
       <div className="webinar-room__body">
-        <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} />
+        {viewerRoom ? null : <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} />}
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
           <BroadcastStage
-            slug={slug}
             session={session}
             currentRole={session.participant.role}
             layout={stageLayout}
@@ -371,13 +371,11 @@ function RoomEnded({ slug, status }: { slug: string; status: EndedStatus }) {
 }
 
 function BroadcastStage({
-  slug,
   session,
   currentRole,
   layout,
   quality,
 }: {
-  slug: string;
   session: StoredRoom;
   currentRole: Role;
   layout: StageLayout;
@@ -415,7 +413,7 @@ function BroadcastStage({
   );
   const hasSecondPresenter = Boolean(hostCamera && featuredCamera);
   const hasPresenterStack = Boolean(hostCamera || featuredCamera);
-  const hasPresenterColumn = hasPresenterStack || canPublishMedia(currentRole) || canEndWebinar(currentRole);
+  const hasPresenterColumn = hasScreenShare && hasPresenterStack;
   const hasStageContent = Boolean(screenTrack);
 
   useEffect(() => {
@@ -445,6 +443,31 @@ function BroadcastStage({
               ? "Зрители не создают плитки на сцене. Здесь появится только камера, экран или спикер эфира."
               : "Viewers do not create stage tiles. Only host camera, screen share, or speakers appear here."}
           </p>
+        </div>
+      ) : !screenTrack ? (
+        <div className={`camera-full-stage ${hasSecondPresenter ? "has-featured-speaker" : "single-presenter"}`}>
+          {hostCamera ? (
+            <StageVideoTile
+              trackRef={hostCamera}
+              label={locale === "ru" ? "Ведущий" : "Host"}
+              className="is-host"
+            />
+          ) : null}
+          {featuredCamera ? (
+            <StageVideoTile
+              trackRef={featuredCamera}
+              label={
+                isFeaturedSpeakerRole(roleFromMetadata(featuredCamera.participant.metadata))
+                  ? locale === "ru"
+                    ? "Спикер"
+                    : "Speaker"
+                  : locale === "ru"
+                    ? "Гость"
+                    : "Guest"
+              }
+              className="is-featured"
+            />
+          ) : null}
         </div>
       ) : (
         <div
@@ -483,18 +506,6 @@ function BroadcastStage({
               ) : null}
             </div>
             ) : null}
-            {canPublishMedia(currentRole) ? (
-              <section className="presenter-tools-card" aria-label={locale === "ru" ? "Инструменты ведущего" : "Presenter tools"}>
-                <header>
-                  <span>{locale === "ru" ? "Инструменты" : "Tools"}</span>
-                  <small>{locale === "ru" ? "Эфир под рукой" : "Live controls"}</small>
-                </header>
-                <span className="presenter-tools-card__hint">
-                  {locale === "ru" ? "Быстрые кнопки находятся снизу сцены." : "Quick controls are at the bottom of the stage."}
-                </span>
-              </section>
-            ) : null}
-            {canEndWebinar(currentRole) ? <EndWebinarButton slug={slug} session={session} /> : null}
           </aside>
           ) : null}
           {screenTrack ? (
@@ -699,6 +710,8 @@ function EndWebinarButton({ slug, session }: { slug: string; session: StoredRoom
     </div>
   );
 }
+
+void EndWebinarButton;
 
 function HostMediaControls({
   preferences,
