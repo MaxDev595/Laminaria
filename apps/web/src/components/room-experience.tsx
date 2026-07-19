@@ -109,6 +109,8 @@ type RoomPanel = "stage" | "chat" | "participants" | "stats" | "settings";
 interface StageLayout {
   position: StageOverlayPosition;
   sizePercent: number;
+  widthPercent: number;
+  heightPercent: number;
 }
 
 interface StageLayoutEvent extends StageLayout {
@@ -119,7 +121,12 @@ type Ack<T> =
   | { ok: false; error: { code: string; message: string } };
 
 const QUALITY_PRESETS = ["144p", "240p", "480p", "720p", "1080p"] as const;
-const DEFAULT_STAGE_LAYOUT: StageLayout = { position: "bottom-right", sizePercent: 24 };
+const DEFAULT_STAGE_LAYOUT: StageLayout = {
+  position: "bottom-right",
+  sizePercent: 24,
+  widthPercent: 24,
+  heightPercent: 24,
+};
 
 function StageCornerIcon({ position }: { position: StageOverlayPosition }) {
   if (position === "top-left") return <ArrowUpLeft size={18} />;
@@ -476,7 +483,13 @@ function BroadcastStage({
           } ${hasPresenterColumn ? "" : "no-presenter-stack"} ${
             hasScreenShare ? `has-screen-share overlay-${layout.position}` : ""
           }`}
-          style={{ "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%` } as CSSProperties}
+          style={
+            {
+              "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%`,
+              "--stage-camera-width": `${Math.min(layout.widthPercent, 50)}%`,
+              "--stage-camera-height": `${Math.min(layout.heightPercent, 70)}%`,
+            } as CSSProperties
+          }
         >
           {hasPresenterColumn ? (
           <aside className="presenter-column" aria-label={locale === "ru" ? "Панель ведущего" : "Presenter panel"}>
@@ -945,7 +958,12 @@ function RealtimePanel({
     });
     socket.on("stage:layout", (layout: StageLayoutEvent) => {
       if (layout.webinarId !== session.webinarId) return;
-      onStageLayoutChange({ position: layout.position, sizePercent: layout.sizePercent });
+      onStageLayoutChange({
+        position: layout.position,
+        sizePercent: layout.sizePercent,
+        widthPercent: layout.widthPercent ?? layout.sizePercent,
+        heightPercent: layout.heightPercent ?? layout.sizePercent,
+      });
     });
     socket.on("moderation:restriction", (restriction: Restriction) => {
       if (restriction.targetId === currentActorId(session))
@@ -986,6 +1004,8 @@ function RealtimePanel({
         idempotencyKey: crypto.randomUUID(),
         position: next.position,
         sizePercent: Math.max(15, Math.min(50, Math.round(next.sizePercent))),
+        widthPercent: Math.max(15, Math.min(50, Math.round(next.widthPercent))),
+        heightPercent: Math.max(15, Math.min(70, Math.round(next.heightPercent))),
       },
       (ack: Ack<StageLayoutEvent>) => {
         if (!ack.ok) setError(ack.error.message);
@@ -1151,6 +1171,26 @@ function RealtimePanel({
               </button>
             ))}
           </div>
+          <div className="stage-orientation-controls">
+            <button
+              type="button"
+              onClick={() =>
+                updateStageLayout({ ...stageLayout, widthPercent: 34, heightPercent: 22, sizePercent: 34 })
+              }
+              disabled={!connected}
+            >
+              {locale === "ru" ? "Горизонтально" : "Horizontal"}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                updateStageLayout({ ...stageLayout, widthPercent: 22, heightPercent: 40, sizePercent: 22 })
+              }
+              disabled={!connected}
+            >
+              {locale === "ru" ? "Вертикально" : "Vertical"}
+            </button>
+          </div>
           <label className="stage-size-control">
             <span>
               {locale === "ru" ? "Размер" : "Size"} <strong>{stageLayout.sizePercent}%</strong>
@@ -1163,7 +1203,44 @@ function RealtimePanel({
               value={stageLayout.sizePercent}
               disabled={!connected}
               onChange={(event) =>
-                updateStageLayout({ ...stageLayout, sizePercent: Number(event.target.value) })
+                updateStageLayout({
+                  ...stageLayout,
+                  sizePercent: Number(event.target.value),
+                  widthPercent: Number(event.target.value),
+                  heightPercent: Number(event.target.value),
+                })
+              }
+            />
+          </label>
+          <label className="stage-size-control">
+            <span>
+              {locale === "ru" ? "Ширина" : "Width"} <strong>{stageLayout.widthPercent}%</strong>
+            </span>
+            <input
+              type="range"
+              min="15"
+              max="50"
+              step="1"
+              value={stageLayout.widthPercent}
+              disabled={!connected}
+              onChange={(event) =>
+                updateStageLayout({ ...stageLayout, widthPercent: Number(event.target.value) })
+              }
+            />
+          </label>
+          <label className="stage-size-control">
+            <span>
+              {locale === "ru" ? "Высота" : "Height"} <strong>{stageLayout.heightPercent}%</strong>
+            </span>
+            <input
+              type="range"
+              min="15"
+              max="70"
+              step="1"
+              value={stageLayout.heightPercent}
+              disabled={!connected}
+              onChange={(event) =>
+                updateStageLayout({ ...stageLayout, heightPercent: Number(event.target.value) })
               }
             />
           </label>

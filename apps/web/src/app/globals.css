@@ -4117,11 +4117,10 @@ select {
 }
 
 .webinar-room {
-  min-height: 100svh !important;
-  height: auto !important;
-  overflow: auto;
+  height: 100svh !important;
+  overflow: hidden;
   display: grid !important;
-  grid-template-rows: 4rem minmax(42rem, 1fr);
+  grid-template-rows: 4rem minmax(0, 1fr);
   background:
     radial-gradient(
       circle at 20% -10%,
@@ -4501,10 +4500,11 @@ select {
 .presenter-column {
   position: absolute;
   z-index: 8;
-  width: min(var(--stage-camera-size, 24%), 50%);
+  width: min(var(--stage-camera-width, var(--stage-camera-size, 24%)), 50%);
+  height: min(var(--stage-camera-height, var(--stage-camera-size, 24%)), 70%);
   min-width: min(13rem, 42vw);
+  min-height: 8rem;
   max-width: 50%;
-  aspect-ratio: 16 / 9;
   display: block;
   filter: drop-shadow(0 22px 50px rgba(0, 0, 0, 0.42));
 }
@@ -4775,10 +4775,10 @@ select {
 }
 
 .host-bottom-controls {
-  position: absolute;
+  position: fixed;
   z-index: 20;
   left: 50%;
-  bottom: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: min(30rem, calc(100% - 2rem));
   padding: 0.35rem;
@@ -5743,6 +5743,28 @@ select {
   gap: 0.4rem;
 }
 
+.stage-orientation-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.stage-orientation-controls button {
+  min-height: 2.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  color: var(--color-foreground);
+  background: var(--color-surface-soft);
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.stage-orientation-controls button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
 .stage-corner-picker button {
   min-height: 2.1rem;
   border: 1px solid var(--color-border);
@@ -6063,12 +6085,12 @@ select {
 
   .webinar-room__body {
     grid-template-columns: 3.5rem minmax(0, 1fr);
-    grid-template-rows: minmax(34rem, auto) minmax(18rem, auto);
+    grid-template-rows: minmax(0, 1fr) minmax(18rem, 32svh);
   }
 
   .webinar-room--viewer .webinar-room__body {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(34rem, auto) minmax(18rem, auto);
+    grid-template-rows: minmax(0, 1fr) minmax(18rem, 32svh);
   }
 
   .room-rail {
@@ -6270,6 +6292,12 @@ select {
     grid-template-rows: auto auto;
   }
 
+  .webinar-room {
+    height: auto !important;
+    min-height: 100svh !important;
+    overflow: auto;
+  }
+
   .room-rail {
     grid-row: auto;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -6326,7 +6354,8 @@ select {
   }
 
   .presenter-column {
-    width: min(var(--stage-camera-size, 32%), 50%);
+    width: min(var(--stage-camera-width, 32%), 50%);
+    height: min(var(--stage-camera-height, 32%), 70%);
     min-width: 8.5rem;
   }
 

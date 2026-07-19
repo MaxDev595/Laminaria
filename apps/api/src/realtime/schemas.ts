@@ -55,6 +55,8 @@ export const stageLayoutSchema = z
     ...webinarMutation,
     position: z.enum(["top-left", "top-right", "bottom-left", "bottom-right"]),
     sizePercent: z.number().int().min(15).max(50),
+    widthPercent: z.number().int().min(15).max(50).optional(),
+    heightPercent: z.number().int().min(15).max(70).optional(),
   })
   .strict();
 

@@ -290,6 +290,8 @@ export interface StageLayoutChanged {
   webinarId: string;
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   sizePercent: number;
+  widthPercent: number;
+  heightPercent: number;
 }
 
 export interface ModerationRestrictionChanged {

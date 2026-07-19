@@ -473,6 +473,8 @@ function registerJoinHandlers(socket: RealtimeSocket, dependencies: ResolvedDepe
             webinarId,
             position: "bottom-right",
             sizePercent: 24,
+            widthPercent: 24,
+            heightPercent: 24,
           },
         );
         return { data: participant, replayed: false };
@@ -513,6 +515,8 @@ function registerStageHandlers(socket: RealtimeSocket, dependencies: ResolvedDep
           webinarId: validated.webinarId,
           position: validated.position,
           sizePercent: validated.sizePercent,
+          widthPercent: validated.widthPercent ?? validated.sizePercent,
+          heightPercent: validated.heightPercent ?? validated.sizePercent,
         };
         stageLayoutByWebinar.set(validated.webinarId, layout);
         socket.to(webinarRoom(validated.webinarId)).emit("stage:layout", layout);
