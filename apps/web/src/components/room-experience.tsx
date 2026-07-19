@@ -389,7 +389,6 @@ function BroadcastStage({
   quality: QualityPreset;
 }) {
   const locale = useLocale();
-  const participants = useParticipants();
   const tracks = useTracks([Track.Source.ScreenShare, Track.Source.Camera], {
     onlySubscribed: false,
   });
@@ -427,20 +426,8 @@ function BroadcastStage({
     for (const trackRef of tracks) applyViewerQuality(trackRef.publication, quality);
   }, [quality, tracks]);
 
-  const viewerCount = participants.filter((participant) =>
-    isViewerRole(roleFromMetadata(participant.metadata)),
-  ).length;
-
   return (
     <div className="broadcast-stage">
-      <div className="broadcast-toolbar">
-        <div className="viewer-counter">
-          <UsersRound size={17} />
-          <span>{viewerCount}</span>
-          <small>{locale === "ru" ? "зрителей" : "viewers"}</small>
-        </div>
-      </div>
-
       {!hasPresenterStack && !screenTrack ? (
         <div className="viewer-stage-empty">
           <Tv size={34} />
