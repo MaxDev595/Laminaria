@@ -223,6 +223,7 @@ export async function registerWebinarRoutes(
         metadata: { subject },
       });
       return {
+        workspaceId: access.webinar.workspaceId,
         webinarId: access.webinar.id,
         media,
         realtimeToken: roomAccess.participants.issue({

@@ -298,6 +298,7 @@ export interface CreateWebinarInput {
 }
 
 export interface PrejoinPayload {
+  workspaceId?: string;
   webinarId: string;
   media: {
     roomName: string;

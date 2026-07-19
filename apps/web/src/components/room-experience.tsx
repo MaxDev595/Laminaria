@@ -13,11 +13,7 @@ import {
 import { ConnectionState, ParticipantEvent, Track, VideoQuality } from "livekit-client";
 import {
   AlertTriangle,
-  ArrowDownLeft,
-  ArrowDownRight,
   ArrowLeft,
-  ArrowUpLeft,
-  ArrowUpRight,
   Ban,
   Camera,
   CameraOff,
@@ -128,19 +124,13 @@ const DEFAULT_STAGE_LAYOUT: StageLayout = {
   heightPercent: 24,
 };
 
-function StageCornerIcon({ position }: { position: StageOverlayPosition }) {
-  if (position === "top-left") return <ArrowUpLeft size={18} />;
-  if (position === "top-right") return <ArrowUpRight size={18} />;
-  if (position === "bottom-left") return <ArrowDownLeft size={18} />;
-  return <ArrowDownRight size={18} />;
-}
-
 export function RoomExperience({ slug }: { slug: string }) {
   const locale = useLocale();
   const [endedStatus, setEndedStatus] = useState<EndedStatus | null>(null);
   const [stageLayout, setStageLayout] = useState<StageLayout>(DEFAULT_STAGE_LAYOUT);
   const [activePanel, setActivePanel] = useState<RoomPanel>("chat");
   const [quality, setQuality] = useState<QualityPreset>("720p");
+  const [inviteOpen, setInviteOpen] = useState(false);
   const subscribeStorage = useCallback(() => () => undefined, []);
   const rawSession = useSyncExternalStore(
     subscribeStorage,
@@ -223,6 +213,7 @@ export function RoomExperience({ slug }: { slug: string }) {
             currentRole={session.participant.role}
             layout={stageLayout}
             quality={quality}
+            onInvite={() => setInviteOpen(true)}
           />
           <RoomAudioRenderer />
           <ConnectionStateToast />
@@ -231,12 +222,12 @@ export function RoomExperience({ slug }: { slug: string }) {
           slug={slug}
           session={session}
           onEnded={handleEnded}
-          stageLayout={stageLayout}
           onStageLayoutChange={setStageLayout}
           activePanel={activePanel}
           quality={quality}
           onQualityChange={setQuality}
         />
+        {inviteOpen ? <LiveInviteDialog session={session} onClose={() => setInviteOpen(false)} /> : null}
       </div>
     </LiveKitRoom>
   );
@@ -382,43 +373,34 @@ function BroadcastStage({
   currentRole,
   layout,
   quality,
+  onInvite,
 }: {
   session: StoredRoom;
   currentRole: Role;
   layout: StageLayout;
   quality: QualityPreset;
+  onInvite: () => void;
 }) {
   const locale = useLocale();
   const tracks = useTracks([Track.Source.ScreenShare, Track.Source.Camera], {
     onlySubscribed: false,
   });
   const orderedTracks = useMemo(() => orderBroadcastTracks(tracks), [tracks]);
-  const presenterIdentity = orderedTracks.find(
-    (trackRef) => trackRef.source === Track.Source.ScreenShare,
-  )?.participant.identity;
   const hasScreenShare = orderedTracks.some((trackRef) => trackRef.source === Track.Source.ScreenShare);
   const screenTrack = orderedTracks.find((trackRef) => trackRef.source === Track.Source.ScreenShare);
   const cameraTracks = useMemo(
     () => orderedTracks.filter((trackRef) => trackRef.source === Track.Source.Camera),
     [orderedTracks],
   );
-  const hostCamera = useMemo(
-    () =>
-      cameraTracks.find((trackRef) => isHostRole(roleFromMetadata(trackRef.participant.metadata))) ??
-      cameraTracks.find((trackRef) => trackRef.participant.identity === presenterIdentity) ??
-      cameraTracks.find((trackRef) => canPublishMedia(roleFromMetadata(trackRef.participant.metadata))),
-    [cameraTracks, presenterIdentity],
-  );
-  const featuredCamera = useMemo(
-    () =>
-      cameraTracks.find(
-        (trackRef) =>
-          trackRef !== hostCamera && isFeaturedSpeakerRole(roleFromMetadata(trackRef.participant.metadata)),
-      ) ?? cameraTracks.find((trackRef) => trackRef !== hostCamera),
-    [cameraTracks, hostCamera],
-  );
-  const hasSecondPresenter = Boolean(hostCamera && featuredCamera);
-  const hasPresenterStack = Boolean(hostCamera || featuredCamera);
+  const presenterCameras = useMemo(() => {
+    const preferred = cameraTracks.filter((trackRef) =>
+      canPublishMedia(roleFromMetadata(trackRef.participant.metadata)),
+    );
+    const fallback = cameraTracks.filter((trackRef) => !preferred.includes(trackRef));
+    return [...preferred, ...fallback].slice(0, 3);
+  }, [cameraTracks]);
+  const hasSecondPresenter = presenterCameras.length > 1;
+  const hasPresenterStack = presenterCameras.length > 0;
   const hasPresenterColumn = hasScreenShare && hasPresenterStack;
   const hasStageContent = Boolean(screenTrack);
 
@@ -439,42 +421,26 @@ function BroadcastStage({
           </p>
         </div>
       ) : !screenTrack ? (
-        <div className={`camera-full-stage ${hasSecondPresenter ? "has-featured-speaker" : "single-presenter"}`}>
-          {hostCamera ? (
+        <div className={`camera-full-stage presenter-count-${presenterCameras.length}`}>
+          {presenterCameras.map((trackRef, index) => (
             <StageVideoTile
-              trackRef={hostCamera}
-              label={locale === "ru" ? "Ведущий" : "Host"}
-              className="is-host"
+              key={`${trackRef.participant.identity}:${trackRef.publication?.trackSid ?? index}`}
+              trackRef={trackRef}
+              label={presenterLabel(roleFromMetadata(trackRef.participant.metadata), locale, index)}
+              className={index === 0 ? "is-host" : "is-featured"}
             />
-          ) : null}
-          {featuredCamera ? (
-            <StageVideoTile
-              trackRef={featuredCamera}
-              label={
-                isFeaturedSpeakerRole(roleFromMetadata(featuredCamera.participant.metadata))
-                  ? locale === "ru"
-                    ? "Спикер"
-                    : "Speaker"
-                  : locale === "ru"
-                    ? "Гость"
-                    : "Guest"
-              }
-              className="is-featured"
-            />
-          ) : null}
+          ))}
         </div>
       ) : (
         <div
           className={`broadcast-stage-layout ${hasStageContent ? "has-content" : "camera-only"} ${
             hasSecondPresenter ? "has-featured-speaker" : "single-presenter"
-          } ${hasPresenterColumn ? "" : "no-presenter-stack"} ${
+          } presenter-count-${presenterCameras.length} ${hasPresenterColumn ? "" : "no-presenter-stack"} ${
             hasScreenShare ? `has-screen-share overlay-${layout.position}` : ""
           }`}
           style={
             {
               "--stage-camera-size": `${Math.min(layout.sizePercent, 50)}%`,
-              "--stage-camera-width": `${Math.min(layout.widthPercent, 50)}%`,
-              "--stage-camera-height": `${Math.min(layout.heightPercent, 70)}%`,
             } as CSSProperties
           }
         >
@@ -482,28 +448,14 @@ function BroadcastStage({
           <aside className="presenter-column" aria-label={locale === "ru" ? "Панель ведущего" : "Presenter panel"}>
             {hasPresenterStack ? (
             <div className="presenter-stack" aria-label={locale === "ru" ? "Ведущие эфира" : "On-stage speakers"}>
-              {hostCamera ? (
+              {presenterCameras.map((trackRef, index) => (
                 <StageVideoTile
-                  trackRef={hostCamera}
-                  label={locale === "ru" ? "Ведущий" : "Host"}
-                  className="is-host"
+                  key={`${trackRef.participant.identity}:${trackRef.publication?.trackSid ?? index}`}
+                  trackRef={trackRef}
+                  label={presenterLabel(roleFromMetadata(trackRef.participant.metadata), locale, index)}
+                  className={index === 0 ? "is-host" : "is-featured"}
                 />
-              ) : null}
-              {featuredCamera ? (
-                <StageVideoTile
-                  trackRef={featuredCamera}
-                  label={
-                    isFeaturedSpeakerRole(roleFromMetadata(featuredCamera.participant.metadata))
-                      ? locale === "ru"
-                        ? "Спикер"
-                        : "Speaker"
-                      : locale === "ru"
-                        ? "Гость"
-                        : "Guest"
-                  }
-                  className="is-featured"
-                />
-              ) : null}
+              ))}
             </div>
             ) : null}
           </aside>
@@ -529,6 +481,12 @@ function BroadcastStage({
       {canPublishMedia(currentRole) ? (
         <div className="host-bottom-controls">
           <HostMediaControls preferences={session.preferences} variant="bottom" />
+          {canInviteOnStage(currentRole) ? (
+            <button type="button" className="host-bottom-invite" onClick={onInvite}>
+              <UsersRound size={17} />
+              {locale === "ru" ? "Пригласить" : "Invite"}
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -733,12 +691,17 @@ function HostMediaControls({
   const locale = useLocale();
   const room = useRoomContext();
   const connectionState = useConnectionState();
+  const screenShareTracks = useTracks([Track.Source.ScreenShare], {
+    onlySubscribed: false,
+  });
   const [cameraOn, setCameraOn] = useState(room.localParticipant.isCameraEnabled);
   const [micOn, setMicOn] = useState(room.localParticipant.isMicrophoneEnabled);
   const [screenOn, setScreenOn] = useState(room.localParticipant.isScreenShareEnabled);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const initialMediaApplied = useRef(false);
   const connected = connectionState === ConnectionState.Connected;
+  const screenShareOwner = screenShareTracks.find((trackRef) => !trackRef.participant.isLocal);
+  const screenBlockedByOther = Boolean(screenShareOwner && !screenOn);
 
   useEffect(() => {
     const participant = room.localParticipant;
@@ -834,7 +797,7 @@ function HostMediaControls({
   }
 
   async function toggleScreen() {
-    if (!connected) return;
+    if (!connected || screenBlockedByOther) return;
     const next = !screenOn;
     try {
       await room.localParticipant.setScreenShareEnabled(next);
@@ -880,7 +843,14 @@ function HostMediaControls({
           type="button"
           className={screenOn ? "is-on" : ""}
           onClick={() => void toggleScreen()}
-          disabled={!connected}
+          disabled={!connected || screenBlockedByOther}
+          title={
+            screenBlockedByOther
+              ? locale === "ru"
+                ? "Демонстрацию уже показывает другой ведущий"
+                : "Another presenter is already sharing"
+              : undefined
+          }
         >
           <MonitorUp size={17} />
           {locale === "ru" ? "Экран" : "Screen"}
@@ -891,11 +861,90 @@ function HostMediaControls({
   );
 }
 
+function LiveInviteDialog({ session, onClose }: { session: StoredRoom; onClose: () => void }) {
+  const locale = useLocale();
+  const participants = useParticipants();
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"COHOST" | "SPEAKER" | "MODERATOR">("SPEAKER");
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  const canAssign = Boolean(session.workspaceId) && canManageStage(session.participant.role);
+
+  async function submit() {
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !session.workspaceId || busy) return;
+    setBusy(true);
+    setStatus("");
+    try {
+      await api.assignWebinarHost(session.workspaceId, session.webinarId, { email: cleanEmail, role });
+      setStatus(locale === "ru" ? "Роль назначена. Пользователь может зайти в эфир." : "Role assigned. User can join the live room.");
+      setEmail("");
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : locale === "ru" ? "Не удалось пригласить." : "Invite failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="live-invite-modal" role="dialog" aria-modal="true">
+      <button type="button" className="live-invite-modal__backdrop" onClick={onClose} aria-label="Close" />
+      <section className="live-invite-modal__panel">
+        <header>
+          <div>
+            <strong>{locale === "ru" ? "Пригласить в эфир" : "Invite on stage"}</strong>
+            <p>
+              {locale === "ru"
+                ? "Назначь спикера или соведущего по email. Если он уже назначен — просто заходит в трансляцию."
+                : "Assign a speaker or co-host by email. If already assigned, they just join the broadcast."}
+            </p>
+          </div>
+          <button type="button" onClick={onClose}>
+            <X size={17} />
+          </button>
+        </header>
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="name@example.com"
+          />
+        </label>
+        <label>
+          <span>{locale === "ru" ? "Роль" : "Role"}</span>
+          <select value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
+            <option value="SPEAKER">{locale === "ru" ? "Спикер" : "Speaker"}</option>
+            <option value="COHOST">{locale === "ru" ? "Соведущий" : "Co-host"}</option>
+            <option value="MODERATOR">{locale === "ru" ? "Модератор" : "Moderator"}</option>
+          </select>
+        </label>
+        <button type="button" className="live-invite-modal__submit" onClick={() => void submit()} disabled={!canAssign || !email.trim() || busy}>
+          {busy ? <LoaderCircle className="spin" size={17} /> : <UsersRound size={17} />}
+          {locale === "ru" ? "Назначить" : "Assign"}
+        </button>
+        {!canAssign ? (
+          <p className="live-invite-modal__status">
+            {locale === "ru" ? "Назначать роли может только главный ведущий/соведущий." : "Only host/co-host can assign stage roles."}
+          </p>
+        ) : null}
+        {status ? <p className="live-invite-modal__status">{status}</p> : null}
+        <div className="live-invite-modal__online">
+          <strong>{locale === "ru" ? "Сейчас в комнате" : "In room now"}</strong>
+          {participants.slice(0, 6).map((participant) => (
+            <span key={participant.identity}>{participant.name || participant.identity}</span>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function RealtimePanel({
   slug,
   session,
   onEnded,
-  stageLayout,
   onStageLayoutChange,
   activePanel,
   quality,
@@ -904,7 +953,6 @@ function RealtimePanel({
   slug: string;
   session: StoredRoom;
   onEnded: (status: EndedStatus) => void;
-  stageLayout: StageLayout;
   onStageLayoutChange: (layout: StageLayout) => void;
   activePanel: RoomPanel;
   quality: QualityPreset;
@@ -990,25 +1038,6 @@ function RealtimePanel({
       socketRef.current = null;
     };
   }, [locale, onEnded, onStageLayoutChange, room, router, session, slug]);
-
-  function updateStageLayout(next: StageLayout) {
-    const socket = socketRef.current;
-    if (!socket?.connected || !canManageStage(session.participant.role)) return;
-    socket.emit(
-      "stage:set_layout",
-      {
-        webinarId: session.webinarId,
-        idempotencyKey: crypto.randomUUID(),
-        position: next.position,
-        sizePercent: Math.max(15, Math.min(50, Math.round(next.sizePercent))),
-        widthPercent: Math.max(15, Math.min(50, Math.round(next.widthPercent))),
-        heightPercent: Math.max(15, Math.min(70, Math.round(next.heightPercent))),
-      },
-      (ack: Ack<StageLayoutEvent>) => {
-        if (!ack.ok) setError(ack.error.message);
-      },
-    );
-  }
 
   async function send() {
     const body = text.trim();
@@ -1141,111 +1170,16 @@ function RealtimePanel({
       ) : null}
 
       {activePanel === "settings" && canManageStage(session.participant.role) ? (
-        <section
-          className="stage-layout-controls"
-          aria-label={locale === "ru" ? "Положение вебкамеры" : "Camera overlay layout"}
-        >
-          <header>
-            <MonitorUp size={16} />
-            <strong>{locale === "ru" ? "Вебка поверх экрана" : "Camera over screen"}</strong>
-          </header>
-          <div
-            className="stage-corner-picker"
-            aria-label={locale === "ru" ? "Угол вебкамеры" : "Camera corner"}
-          >
-            {(
-              ["top-left", "top-right", "bottom-left", "bottom-right"] as const
-            ).map((position) => (
-              <button
-                type="button"
-                key={position}
-                className={stageLayout.position === position ? "is-active" : ""}
-                aria-pressed={stageLayout.position === position}
-                onClick={() => updateStageLayout({ ...stageLayout, position })}
-                disabled={!connected}
-              >
-                <StageCornerIcon position={position} />
-              </button>
-            ))}
+        <section className="room-side-card">
+          <MonitorUp size={18} />
+          <div>
+            <strong>{locale === "ru" ? "Вебки регулируются автоматически" : "Cameras are automatic"}</strong>
+            <p>
+              {locale === "ru"
+                ? "Слева показывается до 3 ведущих. Размеры меняются сами от количества активных камер."
+                : "Up to 3 presenters appear on the left. Tile sizes adapt automatically."}
+            </p>
           </div>
-          <div className="stage-orientation-controls">
-            <button
-              type="button"
-              onClick={() =>
-                updateStageLayout({ ...stageLayout, widthPercent: 34, heightPercent: 22, sizePercent: 34 })
-              }
-              disabled={!connected}
-            >
-              {locale === "ru" ? "Горизонтально" : "Horizontal"}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                updateStageLayout({ ...stageLayout, widthPercent: 22, heightPercent: 40, sizePercent: 22 })
-              }
-              disabled={!connected}
-            >
-              {locale === "ru" ? "Вертикально" : "Vertical"}
-            </button>
-          </div>
-          <label className="stage-size-control">
-            <span>
-              {locale === "ru" ? "Размер" : "Size"} <strong>{stageLayout.sizePercent}%</strong>
-            </span>
-            <input
-              type="range"
-              min="15"
-              max="50"
-              step="1"
-              value={stageLayout.sizePercent}
-              disabled={!connected}
-              onChange={(event) =>
-                updateStageLayout({
-                  ...stageLayout,
-                  sizePercent: Number(event.target.value),
-                  widthPercent: Number(event.target.value),
-                  heightPercent: Number(event.target.value),
-                })
-              }
-            />
-          </label>
-          <label className="stage-size-control">
-            <span>
-              {locale === "ru" ? "Ширина" : "Width"} <strong>{stageLayout.widthPercent}%</strong>
-            </span>
-            <input
-              type="range"
-              min="15"
-              max="50"
-              step="1"
-              value={stageLayout.widthPercent}
-              disabled={!connected}
-              onChange={(event) =>
-                updateStageLayout({ ...stageLayout, widthPercent: Number(event.target.value) })
-              }
-            />
-          </label>
-          <label className="stage-size-control">
-            <span>
-              {locale === "ru" ? "Высота" : "Height"} <strong>{stageLayout.heightPercent}%</strong>
-            </span>
-            <input
-              type="range"
-              min="15"
-              max="70"
-              step="1"
-              value={stageLayout.heightPercent}
-              disabled={!connected}
-              onChange={(event) =>
-                updateStageLayout({ ...stageLayout, heightPercent: Number(event.target.value) })
-              }
-            />
-          </label>
-          <small>
-            {locale === "ru"
-              ? "Максимум — половина сцены. Изменения сразу видят зрители."
-              : "Maximum is half the stage. Viewers see changes instantly."}
-          </small>
         </section>
       ) : null}
 
@@ -1765,6 +1699,13 @@ function roleLabel(role: Role, locale: string): string {
   return "";
 }
 
+function presenterLabel(role: Role, locale: string, index: number): string {
+  if (role === "OWNER" || role === "HOST") return locale === "ru" ? "Ведущий" : "Host";
+  if (role === "COHOST") return locale === "ru" ? "Соведущий" : "Co-host";
+  if (role === "SPEAKER") return locale === "ru" ? "Спикер" : "Speaker";
+  return index === 0 ? (locale === "ru" ? "Ведущий" : "Host") : locale === "ru" ? "Гость" : "Guest";
+}
+
 function roleClass(role: Role): string {
   if (role === "OWNER" || role === "HOST" || role === "COHOST") return "is-admin";
   if (role === "MODERATOR") return "is-moderator";
@@ -1821,14 +1762,6 @@ function canPublishMedia(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "SPEAKER";
 }
 
-function isHostRole(role: Role): boolean {
-  return role === "OWNER" || role === "HOST" || role === "COHOST";
-}
-
-function isFeaturedSpeakerRole(role: Role): boolean {
-  return role === "SPEAKER" || role === "GUEST";
-}
-
 function canEndWebinar(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST";
 }
@@ -1837,12 +1770,16 @@ function canManageStage(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST";
 }
 
+function canInviteOnStage(role: Role): boolean {
+  return role === "OWNER" || role === "HOST" || role === "COHOST";
+}
+
 function isViewerRole(role: string): boolean {
   return role === "ATTENDEE" || role === "GUEST";
 }
 
 function canModerate(role: string): boolean {
-  return role === "OWNER" || role === "HOST" || role === "COHOST" || role === "MODERATOR";
+  return role === "OWNER" || role === "HOST" || role === "MODERATOR";
 }
 
 function roomExitHref(slug: string, role: Role): string {
