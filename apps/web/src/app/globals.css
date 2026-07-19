@@ -4143,6 +4143,28 @@ select {
   backdrop-filter: blur(20px);
 }
 
+.room-brand-cluster {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topbar-viewer-count {
+  min-height: 2.15rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  box-shadow: var(--highlight-inset);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
 .room-connection {
   min-width: 0;
   display: flex;

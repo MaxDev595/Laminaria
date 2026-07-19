@@ -578,11 +578,15 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
   const router = useRouter();
   const t = useTranslations();
   const locale = useLocale();
+  const participants = useParticipants();
   const role = session.participant.role;
   const connected = state === ConnectionState.Connected;
   const reconnecting = state === ConnectionState.Reconnecting;
   const [ending, setEnding] = useState(false);
   const [endError, setEndError] = useState("");
+  const viewerCount = participants.filter((participant) =>
+    isViewerRole(roleFromMetadata(participant.metadata)),
+  ).length;
 
   async function leaveRoom() {
     sessionStorage.removeItem(`laminaria-room:${slug}`);
@@ -624,7 +628,13 @@ function RoomTopbar({ slug, session }: { slug: string; session: StoredRoom }) {
 
   return (
     <header className="room-topbar">
-      <Logo />
+      <div className="room-brand-cluster">
+        <Logo />
+        <div className="topbar-viewer-count" title={locale === "ru" ? "Зрители онлайн" : "Viewers online"}>
+          <UsersRound size={16} />
+          <span>{viewerCount}</span>
+        </div>
+      </div>
       <div
         className={`room-connection ${connected ? "is-connected" : reconnecting ? "is-reconnecting" : ""}`}
       >
