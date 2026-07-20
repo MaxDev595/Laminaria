@@ -1163,7 +1163,7 @@ select {
   min-height: 10rem;
   padding-block: var(--space-8);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: var(--space-8);
   border-top: 1px solid var(--color-border);
@@ -1178,6 +1178,78 @@ select {
 .marketing-footer > div {
   display: flex;
   gap: var(--space-5);
+}
+
+.marketing-footer__socials {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.marketing-footer__socials a {
+  position: relative;
+  width: 2.45rem;
+  height: 2.45rem;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle at 35% 15%,
+      color-mix(in srgb, var(--white) 10%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--color-surface-soft) 72%, transparent);
+  color: var(--color-subtle-foreground);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--white) 4%, transparent) inset;
+  transition:
+    transform 360ms var(--ease-out),
+    color 360ms var(--ease-out),
+    border-color 360ms var(--ease-out),
+    box-shadow 360ms var(--ease-out);
+}
+
+.marketing-footer__socials a::before {
+  position: absolute;
+  inset: auto 20% -55%;
+  height: 70%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 26%, transparent);
+  filter: blur(12px);
+  opacity: 0;
+  transition:
+    opacity 360ms var(--ease-out),
+    transform 360ms var(--ease-out);
+  content: "";
+}
+
+.marketing-footer__socials svg {
+  position: relative;
+  z-index: 1;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: currentColor;
+  transition: transform 360ms var(--ease-out);
+}
+
+.marketing-footer__socials a:hover {
+  transform: translate3d(0, -0.18rem, 0);
+  border-color: color-mix(in srgb, var(--color-primary) 58%, transparent);
+  color: var(--color-foreground);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 14%, transparent) inset,
+    0 18px 38px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.marketing-footer__socials a:hover::before {
+  opacity: 1;
+  transform: translateY(-18%);
+}
+
+.marketing-footer__socials a:hover svg {
+  transform: scale(1.08) rotate(-4deg);
 }
 
 .marketing-footer a:hover {

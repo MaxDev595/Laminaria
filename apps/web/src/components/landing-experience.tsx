@@ -319,10 +319,59 @@ export function LandingExperience() {
           <Link href="/sign-in">{t("auth.signIn")}</Link>
           <a href="#security">{t("shell.security")}</a>
         </div>
+        <nav
+          className="marketing-footer__socials"
+          aria-label={locale === "ru" ? "Социальные сети Laminaria" : "Laminaria social links"}
+        >
+          {socialLinks.map((social) => (
+            <a key={social.label} href={social.href} aria-label={social.label}>
+              {social.icon}
+            </a>
+          ))}
+        </nav>
       </footer>
     </div>
   );
 }
+
+const socialLinks = [
+  {
+    label: "X",
+    href: "https://x.com/",
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14.66 10.33 22.1 2h-1.76l-6.46 7.23L8.72 2H2.78l7.8 10.94L2.78 22h1.76l6.82-7.63L16.8 22h5.94l-8.08-11.67Zm-2.41 2.7-.79-1.09L5.17 3.28h2.7l5.08 7 .79 1.09 6.6 9.1h-2.7l-5.39-7.44Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Reddit",
+    href: "https://www.reddit.com/",
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.6 11.1c.9 0 1.6.72 1.6 1.6 0 .64-.37 1.2-.9 1.45.04.22.06.44.06.67 0 2.92-4.18 5.29-9.34 5.29S2.68 17.74 2.68 14.82c0-.22.02-.44.06-.65a1.6 1.6 0 1 1 1.76-2.6c1.6-1.18 4.05-1.94 6.78-2.04l1.28-5.98a.65.65 0 0 1 .77-.5l4.2.9a1.55 1.55 0 1 1-.28 1.28l-3.54-.76-1.08 5.06c2.8.08 5.3.84 6.93 2.04.29-.3.66-.47 1.08-.47ZM8.75 14.15a1.35 1.35 0 1 0 0-2.7 1.35 1.35 0 0 0 0 2.7Zm6.49 3.02c.22-.22.22-.58 0-.8a.57.57 0 0 0-.8 0c-.56.56-1.7.78-2.44.78-.75 0-1.88-.22-2.44-.78a.57.57 0 0 0-.8.8c.9.9 2.46 1.12 3.24 1.12s2.34-.22 3.24-1.12Zm.03-3.02a1.35 1.35 0 1 0 0-2.7 1.35 1.35 0 0 0 0 2.7Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Telegram",
+    href: "https://t.me/",
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21.62 3.42a1.35 1.35 0 0 0-1.4-.18L3.2 9.82c-.74.29-1.2.86-1.17 1.45.03.6.55 1.09 1.33 1.27l4.33 1.02 1.66 5.22c.22.69.68 1.11 1.24 1.14.55.03 1.03-.32 1.37-.95l2.06-3.9 4.45 3.29c.46.34.95.43 1.37.24.41-.18.7-.6.8-1.18l1.92-12.68c.08-.55-.1-1.05-.94-1.32ZM9.1 13.18l8.83-5.57c.38-.24.74.22.41.52l-7.29 6.58-.28 3.02-1.67-4.55Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "TikTok",
+    href: "https://www.tiktok.com/",
+    icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15.7 2.5c.32 2.58 1.77 4.12 4.3 4.28v3.23a7.65 7.65 0 0 1-4.22-1.32v6.26c0 3.16-1.92 6.05-5.76 6.05-3.5 0-5.8-2.28-5.8-5.33 0-3.45 2.68-5.64 6.28-5.36v3.34c-1.5-.23-2.7.55-2.7 1.9 0 1.23.88 2.08 2.17 2.08 1.52 0 2.24-.98 2.24-2.62V2.5h3.49Z" />
+      </svg>
+    ),
+  },
+];
 
 function DemoPreview({ locale }: { locale: string }) {
   const isRu = locale === "ru";
