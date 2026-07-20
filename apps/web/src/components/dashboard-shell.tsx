@@ -162,7 +162,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         >
           {availableWorkspaces.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} \u00b7 {item.role}
+              {item.name} {" · "} {item.role}
             </option>
           ))}
         </select>

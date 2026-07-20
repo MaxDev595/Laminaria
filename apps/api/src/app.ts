@@ -10,6 +10,7 @@ import { AuthService } from "./auth/service.js";
 import { parseConfig, type AppConfig } from "./config.js";
 import { registerErrorHandler } from "./errors.js";
 import { LiveKitTokenService } from "./livekit/token-service.js";
+import { LiveKitRecordingService } from "./livekit/recording-service.js";
 import { PrismaUnitOfWork } from "./repositories/prisma.js";
 import type { UnitOfWork } from "./repositories/contracts.js";
 import {
@@ -90,6 +91,7 @@ export async function buildApplication(
   const mail = config.mail ? new SmtpMailAdapter(config.mail) : new NotConfiguredMailAdapter();
   const participants = new ParticipantTokenService(config.tokenPepper);
   const livekit = new LiveKitTokenService(config.livekit);
+  const recordings = new LiveKitRecordingService(config.livekit, config.storage);
   const auth = new AuthService(repositories, mail, config);
   const publicRegistration = new PublicRegistrationService(
     repositories,
@@ -121,6 +123,7 @@ export async function buildApplication(
   await registerSystemRoutes(app, config);
   await registerWebinarRoutes(app, repositories, {
     livekit,
+    recordings,
     participants,
     realtime: {
       webinarEnded(event) {

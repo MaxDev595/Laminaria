@@ -1,12 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   CheckCircle2,
   DatabaseZap,
   Mail,
+  LoaderCircle,
   Settings,
+  Trash2,
+  UserPlus,
   UsersRound,
   Video,
 } from "lucide-react";
@@ -28,14 +31,9 @@ export function DashboardSection({ section }: { section: DashboardSectionName })
     return <DashboardOverview filter={section} />;
   if (section === "recordings") return <DashboardRecordings />;
   if (section === "analytics") return <AnalyticsSection />;
+  if (section === "team") return <TeamSection />;
 
   const copy = {
-    team: {
-      title: t("nav.team"),
-      body: t("dashboard.teamBody"),
-      icon: <UsersRound size={24} />,
-      service: t("dashboard.teamState"),
-    },
     settings: {
       title: t("nav.settings"),
       body: t("dashboard.settingsBody"),
@@ -56,6 +54,117 @@ export function DashboardSection({ section }: { section: DashboardSectionName })
         />
       </div>
       {section === "settings" ? <ServiceStatusGrid /> : null}
+    </div>
+  );
+}
+
+function TeamSection() {
+  const locale = useLocale();
+  const { workspace } = useDashboard();
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
+  const [message, setMessage] = useState("");
+  const membersQuery = useQuery({
+    queryKey: ["workspace-members", workspace.id],
+    queryFn: () => api.listWorkspaceMembers(workspace.id),
+  });
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ["workspace-members", workspace.id] });
+  const addMember = useMutation({
+    mutationFn: () => api.addWorkspaceMember(workspace.id, { email: email.trim(), role }),
+    onSuccess: async () => {
+      setEmail("");
+      setMessage(locale === "ru" ? "Участник добавлен" : "Member added");
+      await refresh();
+    },
+    onError: (error) => setMessage(friendlyError(error, locale)),
+  });
+
+  async function changeRole(userId: string, nextRole: "ADMIN" | "MEMBER") {
+    setMessage("");
+    try {
+      await api.updateWorkspaceMember(workspace.id, userId, nextRole);
+      await refresh();
+    } catch (error) {
+      setMessage(friendlyError(error, locale));
+    }
+  }
+
+  async function removeMember(userId: string) {
+    if (!window.confirm(locale === "ru" ? "Удалить участника из команды?" : "Remove this team member?")) return;
+    setMessage("");
+    try {
+      await api.removeWorkspaceMember(workspace.id, userId);
+      await refresh();
+    } catch (error) {
+      setMessage(friendlyError(error, locale));
+    }
+  }
+
+  const members = membersQuery.data?.members ?? [];
+  return (
+    <div className="dashboard-page">
+      <PageHeading
+        eyebrow={workspace.name}
+        title={locale === "ru" ? "Команда" : "Team"}
+        body={
+          locale === "ru"
+            ? "Добавляйте зарегистрированных пользователей и управляйте доступом к пространству."
+            : "Add registered users and manage workspace access."
+        }
+      />
+      <form
+        className="team-invite-card"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setMessage("");
+          if (email.trim()) addMember.mutate();
+        }}
+      >
+        <UserPlus size={21} />
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder={locale === "ru" ? "Email пользователя" : "User email"}
+        />
+        <select value={role} onChange={(event) => setRole(event.target.value as "ADMIN" | "MEMBER") }>
+          <option value="MEMBER">{locale === "ru" ? "Участник" : "Member"}</option>
+          <option value="ADMIN">{locale === "ru" ? "Администратор" : "Admin"}</option>
+        </select>
+        <Button type="submit" disabled={addMember.isPending}>
+          {addMember.isPending ? <LoaderCircle className="spin" size={16} /> : <UserPlus size={16} />}
+          {locale === "ru" ? "Добавить" : "Add"}
+        </Button>
+      </form>
+      {message ? <p className="team-feedback" role="status">{message}</p> : null}
+      {membersQuery.isLoading ? (
+        <div className="recordings-grid"><ServiceState icon={<UsersRound size={20} />} title={locale === "ru" ? "Загрузка команды" : "Loading team"} description="Laminaria" /></div>
+      ) : membersQuery.isError ? (
+        <ServiceState icon={<UsersRound size={20} />} title={locale === "ru" ? "Команда недоступна" : "Team unavailable"} description={friendlyError(membersQuery.error, locale)} />
+      ) : (
+        <div className="team-members-list">
+          {members.map((member) => (
+            <article className="team-member-row" key={member.userId}>
+              <span className="team-member-avatar">{(member.name || member.email).slice(0, 1).toUpperCase()}</span>
+              <div><strong>{member.name || member.email}</strong><small>{member.email}</small></div>
+              {member.role === "OWNER" ? (
+                <span className="team-owner-badge">OWNER</span>
+              ) : (
+                <>
+                  <select value={member.role} onChange={(event) => void changeRole(member.userId, event.target.value as "ADMIN" | "MEMBER") }>
+                    <option value="MEMBER">{locale === "ru" ? "Участник" : "Member"}</option>
+                    <option value="ADMIN">{locale === "ru" ? "Администратор" : "Admin"}</option>
+                  </select>
+                  <button type="button" className="team-remove" onClick={() => void removeMember(member.userId)} aria-label={locale === "ru" ? "Удалить" : "Remove"}><Trash2 size={17} /></button>
+                </>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

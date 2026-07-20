@@ -11,6 +11,7 @@ import {
 import { WEBINAR_STATUSES, type WebinarStatus } from "../domain/models.js";
 import { AppError } from "../errors.js";
 import { LiveKitTokenService } from "../livekit/token-service.js";
+import { LiveKitRecordingService } from "../livekit/recording-service.js";
 import type { UnitOfWork } from "../repositories/contracts.js";
 import { WebinarService, type UpdateWebinarInput } from "../webinars/service.js";
 
@@ -68,6 +69,7 @@ export async function registerWebinarRoutes(
   repositories: UnitOfWork,
   roomAccess: {
     livekit: LiveKitTokenService;
+    recordings: LiveKitRecordingService;
     participants: ParticipantTokenService;
     realtime?: {
       webinarEnded(event: { webinarId: string; status: "ENDED" | "CANCELLED" | "ARCHIVED" }): void;
@@ -192,10 +194,13 @@ export async function registerWebinarRoutes(
       const body = transitionSchema.parse(request.body);
       const closingLiveRoom = shouldCloseLiveRoom(existing.status, body.status);
       if (closingLiveRoom) {
+        await syncAutomaticRecording(repositories, existing, body.status, roomAccess.recordings);
         await roomAccess.livekit.closeRoom(existing.livekitRoomName);
       }
       const webinar = await service.transition(params.webinarId, body.status, body.version);
-      await syncAutomaticRecording(repositories, existing, webinar.status);
+      if (!closingLiveRoom) {
+        await syncAutomaticRecording(repositories, webinar, webinar.status, roomAccess.recordings);
+      }
       if (isTerminalRoomStatus(webinar.status)) {
         roomAccess.realtime?.webinarEnded({
           webinarId: webinar.id,
@@ -265,9 +270,9 @@ export async function registerWebinarRoutes(
       if (access.webinar.status !== "LIVE") {
         throw new AppError(409, "CONFLICT", "The webinar is not live");
       }
+      await syncAutomaticRecording(repositories, access.webinar, "ENDED", roomAccess.recordings);
       await roomAccess.livekit.closeRoom(access.webinar.livekitRoomName);
       const webinar = await service.transition(access.webinar.id, "ENDED", access.webinar.version);
-      await syncAutomaticRecording(repositories, access.webinar, "ENDED");
       roomAccess.realtime?.webinarEnded({ webinarId: webinar.id, status: "ENDED" });
       return { webinar };
     },
@@ -386,32 +391,91 @@ function isTerminalRoomStatus(status: WebinarStatus): status is "ENDED" | "CANCE
 
 async function syncAutomaticRecording(
   repositories: UnitOfWork,
-  webinar: { id: string; recordingEnabled: boolean; startedAt?: Date | null },
+  webinar: {
+    id: string;
+    livekitRoomName: string;
+    recordingEnabled: boolean;
+    startedAt?: Date | null;
+  },
   nextStatus: WebinarStatus,
+  recordingService: LiveKitRecordingService,
 ): Promise<void> {
   if (!webinar.recordingEnabled) return;
   const now = new Date();
   if (nextStatus === "LIVE") {
-    await repositories.recordings.ensureAutomaticForWebinar({
-      webinarId: webinar.id,
-      provider: "livekit-egress",
-      status: "RECORDING",
-      startedAt: now,
-      endedAt: now,
-    });
+    if (!recordingService.configured) {
+      await repositories.recordings.ensureAutomaticForWebinar({
+        webinarId: webinar.id,
+        provider: "livekit-egress",
+        status: "FAILED",
+        startedAt: now,
+        endedAt: now,
+        failureCode: "EGRESS_NOT_CONFIGURED",
+        failureMessage: "LiveKit Egress and S3-compatible storage must be configured before recording.",
+      });
+      return;
+    }
+    try {
+      const result = await recordingService.start(webinar.livekitRoomName, webinar.id);
+      await repositories.recordings.ensureAutomaticForWebinar({
+        webinarId: webinar.id,
+        provider: "livekit-egress",
+        status: "RECORDING",
+        startedAt: now,
+        endedAt: now,
+        externalId: result.externalId,
+        storageKey: result.storageKey,
+        playbackUrl: result.playbackUrl,
+        mimeType: "video/mp4",
+      });
+    } catch (error) {
+      await repositories.recordings.ensureAutomaticForWebinar({
+        webinarId: webinar.id,
+        provider: "livekit-egress",
+        status: "FAILED",
+        startedAt: now,
+        endedAt: now,
+        failureCode: "EGRESS_START_FAILED",
+        failureMessage: error instanceof Error ? error.message : "LiveKit Egress could not start.",
+      });
+    }
     return;
   }
   if (nextStatus === "ENDED") {
-    await repositories.recordings.ensureAutomaticForWebinar({
-      webinarId: webinar.id,
-      provider: "livekit-egress",
-      status: "FAILED",
-      startedAt: webinar.startedAt ?? null,
-      endedAt: now,
-      failureCode: "EGRESS_NOT_CONFIGURED",
-      failureMessage:
-        "Automatic recording is enabled for this plan, but LiveKit Egress/S3 is not configured yet.",
-    });
+    const active = (await repositories.recordings.listByWebinar(webinar.id)).find(
+      (recording) => recording.status === "RECORDING" && recording.externalId,
+    );
+    if (!active?.externalId || !active.storageKey) return;
+    try {
+      const result = await recordingService.stop(active.externalId, active.storageKey);
+      await repositories.recordings.ensureAutomaticForWebinar({
+        webinarId: webinar.id,
+        provider: "livekit-egress",
+        status: "READY",
+        startedAt: active.startedAt,
+        endedAt: now,
+        externalId: result.externalId,
+        storageKey: result.storageKey,
+        playbackUrl: result.playbackUrl,
+        mimeType: "video/mp4",
+        sizeBytes: result.sizeBytes,
+        durationSeconds: result.durationSeconds,
+        availableAt: now,
+      });
+    } catch (error) {
+      await repositories.recordings.ensureAutomaticForWebinar({
+        webinarId: webinar.id,
+        provider: "livekit-egress",
+        status: "FAILED",
+        startedAt: active.startedAt,
+        endedAt: now,
+        externalId: active.externalId,
+        storageKey: active.storageKey,
+        playbackUrl: active.playbackUrl,
+        failureCode: "EGRESS_STOP_FAILED",
+        failureMessage: error instanceof Error ? error.message : "LiveKit Egress could not finish.",
+      });
+    }
   }
 }
 

@@ -385,6 +385,40 @@ export class PrismaUnitOfWork implements UnitOfWork {
           role,
         }));
       },
+
+      listMembers: async (workspaceId) => {
+        const members = await this.#client.workspaceMember.findMany({
+          where: { workspaceId, deletedAt: null, user: { deletedAt: null } },
+          select: {
+            userId: true,
+            role: true,
+            joinedAt: true,
+            user: { select: { name: true, email: true, avatarUrl: true } },
+          },
+          orderBy: [{ role: "asc" }, { joinedAt: "asc" }],
+        });
+        return members.map(({ user, ...member }) => ({ ...member, ...user }));
+      },
+
+      updateMemberRole: async (workspaceId, userId, role) => {
+        const result = await this.#client.workspaceMember.updateMany({
+          where: { workspaceId, userId, deletedAt: null, role: { not: "OWNER" } },
+          data: { role },
+        });
+        if (result.count !== 1) return null;
+        const member = await this.#client.workspaceMember.findUnique({
+          where: { workspaceId_userId: { workspaceId, userId } },
+        });
+        return member ? mapWorkspaceMember(member) : null;
+      },
+
+      removeMember: async (workspaceId, userId, at) => {
+        const result = await this.#client.workspaceMember.updateMany({
+          where: { workspaceId, userId, deletedAt: null, role: { not: "OWNER" } },
+          data: { deletedAt: at },
+        });
+        return result.count === 1;
+      },
     };
   }
 
@@ -645,15 +679,24 @@ export class PrismaUnitOfWork implements UnitOfWork {
           where: {
             webinarSessionId: session.id,
             provider: input.provider,
-            externalId: null,
             deletedAt: null,
           },
+          orderBy: { createdAt: "desc" },
         });
 
         const data = {
           status: input.status,
           startedAt: input.startedAt,
           endedAt: input.endedAt,
+          ...(input.externalId !== undefined ? { externalId: input.externalId } : {}),
+          ...(input.storageKey !== undefined ? { storageKey: input.storageKey } : {}),
+          ...(input.playbackUrl !== undefined ? { playbackUrl: input.playbackUrl } : {}),
+          ...(input.mimeType !== undefined ? { mimeType: input.mimeType } : {}),
+          ...(input.sizeBytes !== undefined
+            ? { sizeBytes: input.sizeBytes === null ? null : BigInt(input.sizeBytes) }
+            : {}),
+          ...(input.durationSeconds !== undefined ? { durationSeconds: input.durationSeconds } : {}),
+          ...(input.availableAt !== undefined ? { availableAt: input.availableAt } : {}),
           ...(input.status === "FAILED"
             ? {
                 failureCode: input.failureCode ?? "EGRESS_NOT_CONFIGURED",
@@ -670,7 +713,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
               data: {
                 webinarSessionId: session.id,
                 provider: input.provider,
-                externalId: null,
+                externalId: input.externalId ?? null,
                 ...data,
               },
             });

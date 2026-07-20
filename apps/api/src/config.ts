@@ -65,6 +65,7 @@ const envSchema = z
     BILLING_API_KEY: optionalString,
     BILLING_WEBHOOK_SECRET: optionalString,
     STORAGE_ENDPOINT: optionalUrl,
+    STORAGE_PUBLIC_URL: optionalUrl,
     STORAGE_REGION: optionalString,
     STORAGE_BUCKET: optionalString,
     STORAGE_ACCESS_KEY_ID: optionalString,
@@ -142,6 +143,7 @@ export type AppConfig = Readonly<{
   billing: Readonly<{ provider: string; apiKey: string; webhookSecret: string }> | null;
   storage: Readonly<{
     endpoint: string;
+    publicUrl: string | null;
     region: string;
     bucket: string;
     accessKeyId: string;
@@ -218,12 +220,15 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
       apiKey: env.BILLING_API_KEY,
       webhookSecret: env.BILLING_WEBHOOK_SECRET,
     }),
-    storage: configured({
+    storage: (() => {
+      const value = configured({
       endpoint: env.STORAGE_ENDPOINT,
       region: env.STORAGE_REGION,
       bucket: env.STORAGE_BUCKET,
       accessKeyId: env.STORAGE_ACCESS_KEY_ID,
       secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
-    }),
+      });
+      return value ? { ...value, publicUrl: env.STORAGE_PUBLIC_URL ?? null } : null;
+    })(),
   };
 }

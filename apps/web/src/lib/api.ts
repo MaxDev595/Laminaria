@@ -138,6 +138,32 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  listWorkspaceMembers: (workspaceId: string) =>
+    apiFetch<{ members: WorkspaceMember[] }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,
+    ),
+  addWorkspaceMember: (
+    workspaceId: string,
+    input: { email: string; role: "ADMIN" | "MEMBER" },
+  ) =>
+    apiFetch<{ member: Pick<WorkspaceMember, "userId" | "role"> }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,
+      { method: "POST", body: JSON.stringify(input) },
+    ),
+  updateWorkspaceMember: (
+    workspaceId: string,
+    userId: string,
+    role: "ADMIN" | "MEMBER",
+  ) =>
+    apiFetch<{ member: Pick<WorkspaceMember, "userId" | "role"> }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userId)}`,
+      { method: "PATCH", body: JSON.stringify({ role }) },
+    ),
+  removeWorkspaceMember: (workspaceId: string, userId: string) =>
+    apiFetch<void>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userId)}`,
+      { method: "DELETE" },
+    ),
   listWebinars: (workspaceId: string) =>
     apiFetch<{ webinars: Webinar[] }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars`),
   createWebinar: (workspaceId: string, input: CreateWebinarInput) =>
@@ -258,6 +284,15 @@ export interface Workspace {
   name: string;
   slug: string;
   role?: "OWNER" | "ADMIN" | "MEMBER";
+}
+
+export interface WorkspaceMember {
+  userId: string;
+  role: "OWNER" | "ADMIN" | "MEMBER";
+  joinedAt: string;
+  name: string | null;
+  email: string;
+  avatarUrl: string | null;
 }
 
 export type WebinarStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED" | "ARCHIVED";

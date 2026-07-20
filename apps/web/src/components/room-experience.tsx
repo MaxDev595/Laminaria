@@ -204,7 +204,14 @@ export function RoomExperience({ slug }: { slug: string }) {
       data-lk-theme="default"
       className={`webinar-room ${viewerRoom ? "webinar-room--viewer" : "webinar-room--host"}`}
     >
-      <RoomTopbar slug={slug} session={session} chatCollapsed={chatCollapsed} onToggleChat={() => setChatCollapsed((value) => !value)} />
+      <RoomTopbar
+        slug={slug}
+        session={session}
+        chatCollapsed={chatCollapsed}
+        onToggleChat={() => setChatCollapsed((value) => !value)}
+        quality={quality}
+        onQualityChange={setQuality}
+      />
       <div className={`webinar-room__body ${chatCollapsed ? "is-chat-collapsed" : ""}`}>
         {viewerRoom ? null : <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} />}
         <section className="live-stage">
@@ -525,11 +532,15 @@ function RoomTopbar({
   session,
   chatCollapsed,
   onToggleChat,
+  quality,
+  onQualityChange,
 }: {
   slug: string;
   session: StoredRoom;
   chatCollapsed: boolean;
   onToggleChat: () => void;
+  quality: QualityPreset;
+  onQualityChange: (quality: QualityPreset) => void;
 }) {
   const state = useConnectionState();
   const room = useRoomContext();
@@ -606,6 +617,26 @@ function RoomTopbar({
         </span>
       </div>
       <div className="room-topbar__actions">
+        {isViewerRole(role) ? (
+          <label
+            className="quality-select quality-select--topbar"
+            title={locale === "ru" ? "\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0432\u0438\u0434\u0435\u043e" : "Video quality"}
+          >
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            <span>{locale === "ru" ? "\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e" : "Quality"}</span>
+            <select
+              value={quality}
+              aria-label={locale === "ru" ? "\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0432\u0438\u0434\u0435\u043e" : "Video quality"}
+              onChange={(event) => onQualityChange(event.target.value as QualityPreset)}
+            >
+              {QUALITY_PRESETS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <RoleBadge role={role} />
         <button type="button" className="room-chat-toggle" onClick={onToggleChat}>
           <MessageCircleMore size={16} />

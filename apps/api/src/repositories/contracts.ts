@@ -65,6 +65,22 @@ export interface WorkspaceRepository {
   listForUser(
     userId: string,
   ): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]>;
+  listMembers(workspaceId: string): Promise<
+    readonly {
+      userId: string;
+      role: WorkspaceRole;
+      joinedAt: Date;
+      name: string | null;
+      email: string;
+      avatarUrl: string | null;
+    }[]
+  >;
+  updateMemberRole(
+    workspaceId: string,
+    userId: string,
+    role: Exclude<WorkspaceRole, "OWNER">,
+  ): Promise<WorkspaceMemberRecord | null>;
+  removeMember(workspaceId: string, userId: string, at: Date): Promise<boolean>;
 }
 
 export interface WebinarRepository {
@@ -119,9 +135,16 @@ export interface RecordingRepository {
   ensureAutomaticForWebinar(input: {
     webinarId: string;
     provider: string;
-    status: "RECORDING" | "PROCESSING" | "FAILED";
+    status: "RECORDING" | "PROCESSING" | "READY" | "FAILED";
     startedAt: Date | null;
     endedAt: Date;
+    externalId?: string;
+    storageKey?: string;
+    playbackUrl?: string | null;
+    mimeType?: string;
+    sizeBytes?: number | null;
+    durationSeconds?: number | null;
+    availableAt?: Date | null;
     failureCode?: string;
     failureMessage?: string;
   }): Promise<RecordingRecord>;

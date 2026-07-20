@@ -36,6 +36,9 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       upsertMember: unavailable,
       createWithOwner: unavailable,
       listForUser: unavailable,
+      listMembers: unavailable,
+      updateMemberRole: unavailable,
+      removeMember: unavailable,
     },
     webinars: {
       findById: unavailable,
