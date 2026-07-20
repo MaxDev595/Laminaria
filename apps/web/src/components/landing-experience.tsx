@@ -30,8 +30,9 @@ import {
   Waves,
   X,
 } from "lucide-react";
-import { motion, useScroll, useSpring } from "motion/react";
+import { AnimatePresence, motion, useScroll, useSpring } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Badge, Button, Logo } from "@laminaria/ui";
 import { MarketingHeader } from "./marketing-header";
@@ -293,8 +294,8 @@ export function LandingExperience() {
             <h2>{locale === "ru" ? "Создайте пространство, в которое хочется войти." : "Create a space people want to enter."}</h2>
             <p>
               {locale === "ru"
-                ? "Начните со Starter всего за $3/месяц. Когда аудитория вырастет — вы сможете перейти на более высокий тариф в любой момент."
-                : "Start with Starter for just $3/month. When your audience grows, you can upgrade anytime."}
+                ? "Начните бесплатно с Free. Когда аудитория вырастет — вы сможете перейти на Pro или Business в любой момент."
+                : "Start free with Free. When your audience grows, you can upgrade to Pro or Business anytime."}
             </p>
             <Link href="/sign-up">
               <Button size="lg">
@@ -408,8 +409,6 @@ function MvpFeatures({ locale }: { locale: string }) {
     ["Live Chat", <MessageCircleMore key="chat" />],
     ["Polls", <BarChart3 key="polls" />],
     ["Q&A", <FileQuestion key="qa" />],
-    ["AI Moderator", <ShieldCheck key="moderator" />],
-    ["AI Assistant", <Bot key="bot" />],
     ["Recording", <Clapperboard key="recording" />],
     ["Analytics", <ChartNoAxesCombined key="analytics" />],
     ["Branding", <Palette key="branding" />],
@@ -445,27 +444,41 @@ function MvpFeatures({ locale }: { locale: string }) {
 
 function PricingSection({ locale }: { locale: string }) {
   const isRu = locale === "ru";
+  const [billing, setBilling] = useState<"yearly" | "monthly">("yearly");
+  const yearly = billing === "yearly";
   const plans = [
     {
-      name: "Starter",
-      price: "$3",
-      note: isRu ? "для проверки спроса" : "to validate demand",
-      items: ["Up to 25 participants", "HD Video", "Chat", "Screen Share"],
+      name: "Free",
+      price: "$0",
+      originalPrice: null,
+      note: isRu ? "для первых тестов" : "for first tests",
+      period: isRu ? "/месяц" : "/month",
+      items: isRu
+        ? ["До 25 участников", "HD-видео", "Чат", "Демонстрация экрана"]
+        : ["Up to 25 participants", "HD Video", "Chat", "Screen Share"],
       cta: isRu ? "Начать" : "Start",
     },
     {
       name: "Pro",
-      price: "$12",
+      price: yearly ? "$120" : "$12",
+      originalPrice: yearly ? "$144" : "$15",
       note: isRu ? "самый популярный" : "most popular",
+      period: yearly ? (isRu ? "/год" : "/year") : isRu ? "/месяц" : "/month",
       featured: true,
-      items: ["Up to 150 participants", "AI", "Recording", "Analytics", "Polls", "Branding"],
+      items: isRu
+        ? ["До 150 участников", "Запись", "Аналитика", "Опросы", "Брендинг"]
+        : ["Up to 150 participants", "Recording", "Analytics", "Polls", "Branding"],
       cta: isRu ? "Выбрать Pro" : "Choose Pro",
     },
     {
       name: "Business",
-      price: "$29",
+      price: yearly ? "$290" : "$29",
+      originalPrice: yearly ? "$348" : "$36",
       note: isRu ? "для команд" : "for teams",
-      items: ["Up to 1000 participants", "API", "White Label", "Team", "All AI features"],
+      period: yearly ? (isRu ? "/год" : "/year") : isRu ? "/месяц" : "/month",
+      items: isRu
+        ? ["До 1000 участников", "API", "White Label", "Команда"]
+        : ["Up to 1000 participants", "API", "White Label", "Team"],
       cta: isRu ? "Для бизнеса" : "Go Business",
     },
   ];
@@ -476,6 +489,20 @@ function PricingSection({ locale }: { locale: string }) {
         kicker={isRu ? "Тарифы" : "Pricing"}
         title={isRu ? "Простая цена, чтобы быстро проверить рынок" : "Simple pricing to validate the market fast"}
       />
+      <div className="billing-switch" role="group" aria-label={isRu ? "Период оплаты" : "Billing period"}>
+        <button
+          type="button"
+          className={yearly ? "is-active" : ""}
+          onClick={() => setBilling("yearly")}
+        >
+          {isRu ? "Год" : "Yearly"}
+          <span>{isRu ? "скидка 17%" : "save 17%"}</span>
+        </button>
+        <button type="button" className={!yearly ? "is-active" : ""} onClick={() => setBilling("monthly")}>
+          {isRu ? "Месяц" : "Monthly"}
+          <span>{isRu ? "скидка 20%" : "save 20%"}</span>
+        </button>
+      </div>
       <div className="landing-pricing__grid">
         {plans.map((plan) => (
           <motion.article
@@ -495,8 +522,9 @@ function PricingSection({ locale }: { locale: string }) {
             ) : null}
             <h3>{plan.name}</h3>
             <div className="landing-price-card__price">
+              {plan.originalPrice ? <del>{plan.originalPrice}</del> : null}
               <strong>{plan.price}</strong>
-              <span>/month</span>
+              <span>{plan.period}</span>
             </div>
             <p>{plan.note}</p>
             <ul>
@@ -551,6 +579,7 @@ function ComparisonSection({ locale }: { locale: string }) {
 
 function FaqSection({ locale }: { locale: string }) {
   const isRu = locale === "ru";
+  const [openQuestion, setOpenQuestion] = useState<string | null>(null);
   const items = isRu
     ? [
         ["Сколько участников можно пригласить?", "Starter поддерживает до 25 участников, Pro до 150, Business до 1000."],
@@ -574,13 +603,31 @@ function FaqSection({ locale }: { locale: string }) {
       <SectionHead kicker="FAQ" title={isRu ? "Коротко о главном" : "The essentials, answered"} />
       <div className="landing-faq__list">
         {items.map(([question, answer]) => (
-          <details key={question}>
-            <summary>
+          <article key={question} className={openQuestion === question ? "is-open" : ""}>
+            <button
+              type="button"
+              aria-expanded={openQuestion === question}
+              onClick={() => setOpenQuestion((current) => (current === question ? null : question))}
+            >
               {question}
-              <ChevronDown size={18} />
-            </summary>
-            <p>{answer}</p>
-          </details>
+              <motion.span animate={{ rotate: openQuestion === question ? 180 : 0 }} transition={{ duration: 0.28 }}>
+                <ChevronDown size={18} />
+              </motion.span>
+            </button>
+            <AnimatePresence initial={false}>
+              {openQuestion === question ? (
+                <motion.div
+                  className="landing-faq__answer"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <p>{answer}</p>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </article>
         ))}
       </div>
     </section>
@@ -673,7 +720,6 @@ function RoomIllustration({
             {locale === "ru" ? "Вы демонстрируете экран" : "You are sharing your screen"}
           </span>
           <h3>{locale === "ru" ? "Как запускать вебинары, которые досматривают" : "Run webinars people finish"}</h3>
-          <p>{locale === "ru" ? "Практичный формат для продаж, обучения и комьюнити." : "A practical format for sales, learning, and communities."}</p>
           <div className="room-slide-shape" aria-hidden="true" />
           <div className="room-annotation-bar">
             <span />

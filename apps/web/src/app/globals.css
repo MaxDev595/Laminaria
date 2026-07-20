@@ -66,6 +66,12 @@ select {
   background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));
 }
 
+@property --cta-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 .marketing-shell {
   position: relative;
   min-height: 100vh;
@@ -768,6 +774,8 @@ select {
 }
 
 .feature-tile {
+  position: relative;
+  overflow: hidden;
   min-height: 17rem;
   padding: clamp(1.25rem, 3vw, 2rem);
   border: 1px solid var(--color-border);
@@ -1342,6 +1350,8 @@ select {
 }
 
 .mvp-feature-card {
+  position: relative;
+  overflow: hidden;
   min-height: 8rem;
   padding: 1rem;
   display: grid;
@@ -1390,6 +1400,72 @@ select {
   gap: var(--space-4);
 }
 
+.billing-switch {
+  position: relative;
+  width: fit-content;
+  margin: clamp(1.6rem, 4vw, 2.5rem) auto 0;
+  padding: 0.35rem;
+  display: flex;
+  gap: 0.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--white) 6%, transparent), transparent 42%),
+    var(--color-surface-soft);
+  box-shadow: var(--highlight-inset), 0 18px 45px color-mix(in srgb, var(--black) 20%, transparent);
+}
+
+.billing-switch::before {
+  position: absolute;
+  inset: -0.18rem;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 28%, transparent), transparent 48%);
+  filter: blur(16px);
+  opacity: 0.7;
+  content: "";
+}
+
+.billing-switch button {
+  min-height: 2.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.95rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast),
+    background 520ms var(--ease-out),
+    transform var(--duration-fast),
+    box-shadow 520ms var(--ease-out);
+}
+
+.billing-switch button:hover {
+  transform: translateY(-1px);
+  color: var(--color-foreground);
+}
+
+.billing-switch button.is-active {
+  color: var(--color-background-deep);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+.billing-switch button span {
+  padding: 0.18rem 0.42rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-background-deep);
+  background: color-mix(in srgb, var(--white) 72%, transparent);
+  font-size: 0.66rem;
+  font-weight: 950;
+}
+
 .landing-price-card,
 .beta-testimonial-card {
   position: relative;
@@ -1427,7 +1503,19 @@ select {
   margin-top: 0.85rem;
   display: flex;
   align-items: end;
-  gap: 0.35rem;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.landing-price-card__price del {
+  transform: translateY(-0.2rem);
+  color: color-mix(in srgb, var(--color-muted-foreground) 88%, var(--black) 12%);
+  font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+  font-weight: 900;
+  line-height: 1;
+  text-decoration-thickness: 0.13em;
+  text-decoration-color: color-mix(in srgb, var(--color-muted-foreground) 92%, var(--black) 8%);
+  opacity: 0.86;
 }
 
 .landing-price-card__price strong {
@@ -1591,36 +1679,730 @@ select {
   gap: 0.7rem;
 }
 
-.landing-faq__list details {
+.landing-faq__list article {
+  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: 1rem;
   background: var(--color-surface);
   box-shadow: var(--highlight-inset);
 }
 
-.landing-faq__list summary {
+.landing-faq__list button {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.1rem;
+  border: 0;
   color: var(--color-foreground);
+  background: transparent;
+  text-align: left;
   font-weight: 850;
   cursor: pointer;
 }
 
-.landing-faq__list summary::-webkit-details-marker {
-  display: none;
-}
-
-.landing-faq__list details[open] summary svg {
-  transform: rotate(180deg);
+.landing-faq__list button > span {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
 }
 
 .landing-faq__list p {
   padding: 0 1.1rem 1.1rem;
   color: var(--color-muted-foreground);
   line-height: 1.65;
+}
+
+.landing-faq__answer {
+  overflow: hidden;
+}
+
+/* Premium landing art direction: custom, ocean-native, non-template details */
+.marketing-shell::before {
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 18%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 18rem),
+    radial-gradient(circle at 82% 32%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 24rem),
+    linear-gradient(90deg, color-mix(in srgb, var(--white) 2.5%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--white) 2%, transparent) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    6.5rem 6.5rem,
+    6.5rem 6.5rem;
+  mask-image: radial-gradient(circle at 50% 18%, black, transparent 82%);
+  pointer-events: none;
+  content: "";
+}
+
+.hero::before {
+  position: absolute;
+  z-index: 0;
+  top: 18%;
+  right: var(--page-gutter);
+  width: min(34rem, 42vw);
+  height: min(34rem, 42vw);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-radius: 42% 58% 48% 52%;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--white) 5%, transparent), transparent 42%),
+    repeating-radial-gradient(
+      circle at 42% 44%,
+      color-mix(in srgb, var(--color-primary) 12%, transparent) 0 1px,
+      transparent 1px 1.55rem
+    );
+  filter: blur(0.1px);
+  opacity: 0.48;
+  animation: laminaria-drift-shell 18s ease-in-out infinite;
+  content: "";
+}
+
+.hero__copy::before {
+  position: absolute;
+  top: -1.4rem;
+  left: -1rem;
+  width: 5.5rem;
+  height: 0.12rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--color-primary) 45%, transparent);
+  content: "";
+}
+
+.hero h1 {
+  font-weight: 720;
+}
+
+.hero h1 span {
+  background: linear-gradient(105deg, var(--color-primary-hover), var(--color-accent), #dffbff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero__trust {
+  width: fit-content;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 74%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface-soft) 68%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--white) 7%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.room-illustration {
+  border-radius: 1.2rem 2.4rem 1.45rem 3.2rem;
+  transform: rotateY(-4deg) rotateX(1.4deg) rotateZ(-0.5deg);
+  transition:
+    transform 520ms var(--ease-out),
+    box-shadow 520ms var(--ease-out),
+    border-color 520ms var(--ease-out);
+}
+
+.room-illustration:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  box-shadow:
+    var(--highlight-inset),
+    0 58px 130px color-mix(in srgb, var(--black) 48%, transparent),
+    0 0 95px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.room-illustration::after {
+  position: absolute;
+  inset: 0.45rem;
+  border-radius: inherit;
+  background:
+    linear-gradient(105deg, transparent 8%, color-mix(in srgb, var(--white) 8%, transparent) 18%, transparent 32%),
+    linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--color-primary) 7%, transparent));
+  mix-blend-mode: screen;
+  opacity: 0.38;
+  pointer-events: none;
+  content: "";
+}
+
+.room-stage {
+  border-radius: 0.9rem 1.55rem 1rem 2.1rem;
+}
+
+.room-slide-shape {
+  border-radius: 28% 72% 42% 58% / 36% 38% 62% 64%;
+  animation: laminaria-stage-shape 9s ease-in-out infinite;
+}
+
+.control-section,
+.demo-preview,
+.mvp-features,
+.workflow-section,
+.global-section,
+.security-section,
+.landing-comparison,
+.landing-faq,
+.landing-pricing {
+  position: relative;
+}
+
+.control-section::after,
+.demo-preview::after,
+.mvp-features::after,
+.landing-pricing::after {
+  position: absolute;
+  right: var(--page-gutter);
+  bottom: 0;
+  width: min(18rem, 30vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-primary) 34%, transparent), transparent);
+  content: "";
+}
+
+.feature-tile,
+.mvp-feature-card,
+.landing-price-card,
+.demo-reel,
+.landing-comparison__table,
+.landing-faq__list article,
+.security-card {
+  transform-style: preserve-3d;
+}
+
+.feature-tile:nth-child(1),
+.mvp-feature-card:nth-child(4n + 1) {
+  border-radius: 1.7rem 1rem 2.25rem 1rem;
+}
+
+.feature-tile:nth-child(2),
+.mvp-feature-card:nth-child(4n + 2) {
+  border-radius: 1rem 2.2rem 1rem 1.55rem;
+}
+
+.feature-tile:nth-child(3),
+.mvp-feature-card:nth-child(4n + 3) {
+  border-radius: 2.1rem 1.15rem 1.5rem 1rem;
+}
+
+.feature-tile:nth-child(4),
+.mvp-feature-card:nth-child(4n) {
+  border-radius: 1rem 1.45rem 2.35rem 1.75rem;
+}
+
+.feature-tile::after,
+.mvp-feature-card::after,
+.landing-price-card::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--white) 7%, transparent), transparent 38%);
+  opacity: 0;
+  transition: opacity var(--duration-normal);
+  pointer-events: none;
+  content: "";
+}
+
+.feature-tile:hover::after,
+.mvp-feature-card:hover::after,
+.landing-price-card:hover::after {
+  opacity: 1;
+}
+
+.demo-reel {
+  border-radius: 2.2rem 1.2rem 2.9rem 1.35rem;
+}
+
+.demo-reel__screen {
+  position: relative;
+  border-radius: 1.45rem 0.8rem 2.05rem 0.95rem;
+}
+
+.demo-reel__screen::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--color-primary) 6%, transparent) 48%,
+    transparent 52%
+  );
+  opacity: 0.35;
+  transform: translateY(-100%);
+  animation: laminaria-scanline 7s ease-in-out infinite;
+  pointer-events: none;
+  content: "";
+}
+
+.demo-card {
+  isolation: isolate;
+}
+
+.demo-card::before {
+  position: absolute;
+  z-index: -1;
+  right: -2rem;
+  top: -2rem;
+  width: 7rem;
+  aspect-ratio: 1;
+  border-radius: 36% 64% 52% 48%;
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  filter: blur(12px);
+  content: "";
+}
+
+.demo-card--live {
+  border-radius: 1rem 2.2rem 1.4rem 1rem;
+}
+
+.demo-card--ai {
+  border-radius: 2rem 1rem 1rem 1.55rem;
+}
+
+.demo-card--analytics {
+  border-radius: 1.1rem 1rem 2.3rem 1.7rem;
+}
+
+.mvp-features__grid {
+  grid-auto-flow: dense;
+}
+
+.mvp-feature-card:nth-child(5),
+.mvp-feature-card:nth-child(10) {
+  min-height: 10rem;
+}
+
+.landing-comparison__table {
+  border-radius: 1.6rem 1.15rem 2.15rem 1.15rem;
+}
+
+.landing-comparison__row {
+  min-height: 4rem;
+}
+
+.landing-comparison__row:hover {
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+}
+
+.landing-comparison__row > .landing-status {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--white) 14%, transparent),
+    0 8px 20px color-mix(in srgb, var(--black) 16%, transparent);
+}
+
+.landing-faq__list article {
+  transition:
+    border-color var(--duration-fast),
+    transform var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.landing-faq__list article:hover,
+.landing-faq__list article.is-open {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 82%, var(--color-primary) 4%);
+}
+
+.landing-price-card {
+  min-height: 100%;
+}
+
+.landing-price-card.is-featured {
+  transform: translateY(-0.7rem);
+  border-radius: 2.2rem 1.1rem 2.8rem 1.4rem;
+}
+
+.landing-price-card.is-featured::before {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: 43% 57% 52% 48%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--white) 18%, transparent), transparent 58%);
+  opacity: 0.45;
+  content: "";
+}
+
+.final-cta__card {
+  border-radius: 2rem 4.6rem 2.4rem 5rem;
+}
+
+.final-cta__card::before {
+  position: absolute;
+  inset: 1rem;
+  border: 1px solid color-mix(in srgb, var(--white) 7%, transparent);
+  border-radius: inherit;
+  mask-image: linear-gradient(135deg, black, transparent 55%);
+  pointer-events: none;
+  content: "";
+}
+
+/* Custom button choreography for the marketing landing */
+.hero__actions a:first-child .lm-button,
+.header-cta .lm-button,
+.final-cta .lm-button,
+.landing-price-card a {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.hero__actions a:first-child .lm-button {
+  border-color: color-mix(in srgb, var(--color-primary) 58%, transparent);
+  background:
+    radial-gradient(circle at 18% 120%, color-mix(in srgb, var(--white) 22%, transparent) 0 0.45rem, transparent 0.5rem),
+    radial-gradient(circle at 52% 130%, color-mix(in srgb, var(--white) 18%, transparent) 0 0.28rem, transparent 0.33rem),
+    radial-gradient(circle at 82% 118%, color-mix(in srgb, var(--white) 20%, transparent) 0 0.36rem, transparent 0.41rem),
+    linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background-size:
+    3.8rem 3.8rem,
+    3rem 3rem,
+    4.2rem 4.2rem,
+    auto;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--white) 13%, transparent) inset,
+    0 18px 42px color-mix(in srgb, var(--color-primary) 28%, transparent);
+  animation: laminaria-button-bubbles 4.8s linear infinite;
+}
+
+.hero__actions a:first-child .lm-button::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--white) 42%, transparent), transparent);
+  content: "";
+  pointer-events: none;
+  transition: transform 720ms var(--ease-out);
+}
+
+.hero__actions a:first-child .lm-button:hover::after {
+  transform: translateX(120%) skewX(-18deg);
+}
+
+.header-cta .lm-button {
+  min-width: 6.6rem;
+  border: 1px solid transparent;
+  color: var(--color-foreground);
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--color-primary) 9%, var(--color-background-deep)), var(--color-background-deep)) padding-box,
+    conic-gradient(
+        from var(--cta-angle, 0deg),
+        var(--color-primary),
+        transparent 28%,
+        var(--color-accent) 52%,
+        transparent 76%,
+        var(--color-primary)
+      )
+      border-box;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--white) 5%, transparent) inset,
+    0 0 0 0 color-mix(in srgb, var(--color-primary) 22%, transparent);
+  animation:
+    laminaria-soft-pulse 3.8s ease-in-out infinite,
+    laminaria-cta-border-spin 7s linear infinite;
+}
+
+.header-cta .lm-button::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at var(--cta-x, 50%) var(--cta-y, 50%), color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 7%, transparent), color-mix(in srgb, var(--color-accent) 5%, transparent));
+  opacity: 0.52;
+  content: "";
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+
+.header-cta .lm-button:hover::before {
+  opacity: 0.95;
+  transform: scale(1.04);
+}
+
+.header-cta .lm-button::after {
+  position: absolute;
+  z-index: 0;
+  left: 12%;
+  bottom: 0.3rem;
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--white) 68%, transparent);
+  box-shadow:
+    1.1rem 0.3rem 0 color-mix(in srgb, var(--white) 34%, transparent),
+    2.25rem -0.05rem 0 color-mix(in srgb, var(--color-primary-hover) 42%, transparent);
+  opacity: 0;
+  content: "";
+  transition: opacity var(--duration-fast);
+}
+
+.header-cta .lm-button:hover::after {
+  opacity: 1;
+  animation: laminaria-mini-bubbles 1.15s ease-out infinite;
+}
+
+.secondary-link {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-radius: var(--radius-pill);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--white) 4%, transparent), transparent),
+    color-mix(in srgb, var(--color-surface-soft) 70%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--white) 7%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.secondary-link::before {
+  position: absolute;
+  inset: 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
+  border-radius: inherit;
+  transform: scale(0.72);
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 62%);
+  content: "";
+  transition:
+    transform 560ms var(--ease-out),
+    opacity var(--duration-normal);
+  opacity: 0;
+}
+
+.secondary-link:hover::before {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.secondary-link svg {
+  transition: transform 420ms var(--ease-out);
+}
+
+.secondary-link:hover svg {
+  transform: translateY(0.14rem);
+}
+
+.landing-price-card a {
+  background:
+    radial-gradient(circle at 25% 140%, color-mix(in srgb, var(--white) 20%, transparent), transparent 1rem),
+    linear-gradient(135deg, var(--color-primary), var(--color-accent));
+}
+
+.landing-price-card a::before {
+  position: absolute;
+  z-index: 0;
+  inset: -45% -18%;
+  background:
+    radial-gradient(ellipse at 30% 50%, color-mix(in srgb, var(--white) 26%, transparent), transparent 28%),
+    radial-gradient(ellipse at 70% 55%, color-mix(in srgb, var(--color-primary-hover) 32%, transparent), transparent 34%);
+  transform: translateX(-34%) rotate(6deg);
+  opacity: 0;
+  content: "";
+  pointer-events: none;
+  transition:
+    transform 760ms var(--ease-out),
+    opacity var(--duration-normal);
+}
+
+.landing-price-card a:hover::before {
+  transform: translateX(28%) rotate(6deg);
+  opacity: 1;
+}
+
+.landing-price-card.is-featured a {
+  animation: laminaria-featured-breathe 3.4s ease-in-out infinite;
+}
+
+.final-cta .lm-button {
+  padding-right: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 48%, transparent);
+  background: linear-gradient(
+    115deg,
+    var(--color-primary) 0%,
+    var(--color-accent) 38%,
+    var(--color-primary-hover) 70%,
+    var(--color-primary) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  color: var(--color-background-deep);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--white) 14%, transparent) inset,
+    0 18px 52px color-mix(in srgb, var(--color-primary) 26%, transparent);
+  transition:
+    background-position 700ms var(--ease-out),
+    transform var(--duration-fast),
+    box-shadow 700ms var(--ease-out);
+}
+
+.final-cta .lm-button:hover {
+  background-position: 100% 50%;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--white) 20%, transparent) inset,
+    0 22px 70px color-mix(in srgb, var(--color-primary) 38%, transparent);
+}
+
+.final-cta .lm-button svg {
+  transition:
+    transform 420ms var(--ease-out),
+    opacity 420ms var(--ease-out);
+}
+
+.final-cta .lm-button::before {
+  position: absolute;
+  z-index: 0;
+  left: -12%;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--white) 72%, transparent);
+  box-shadow:
+    -0.85rem 0 0 color-mix(in srgb, var(--white) 35%, transparent),
+    -1.55rem 0 0 color-mix(in srgb, var(--white) 18%, transparent);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+}
+
+.final-cta .lm-button::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  transform: translateX(-120%) skewX(-16deg);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--white) 32%, transparent), transparent);
+  content: "";
+  pointer-events: none;
+  transition: transform 760ms var(--ease-out);
+}
+
+.final-cta .lm-button:hover::after {
+  transform: translateX(120%) skewX(-16deg);
+}
+
+.final-cta .lm-button:hover::before {
+  animation: laminaria-send-particle 820ms var(--ease-out) forwards;
+}
+
+.final-cta .lm-button:hover svg {
+  transform: translate3d(0.36rem, -0.18rem, 0) rotate(-12deg);
+}
+
+@keyframes laminaria-button-bubbles {
+  0% {
+    background-position:
+      0 0,
+      1rem 0.4rem,
+      2rem 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      0 -3.8rem,
+      1rem -3rem,
+      2rem -4.2rem,
+      0 0;
+  }
+}
+
+@keyframes laminaria-soft-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 0.45rem color-mix(in srgb, var(--color-primary) 0%, transparent);
+  }
+}
+
+@keyframes laminaria-cta-border-spin {
+  0% {
+    --cta-angle: 0deg;
+  }
+  100% {
+    --cta-angle: 360deg;
+  }
+}
+
+@keyframes laminaria-mini-bubbles {
+  0% {
+    transform: translateY(0) scale(0.78);
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-0.8rem) scale(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes laminaria-featured-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 28px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 48px color-mix(in srgb, var(--color-primary) 34%, transparent);
+  }
+}
+
+@keyframes laminaria-send-particle {
+  0% {
+    transform: translate3d(0, -50%, 0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(14rem, -50%, 0) scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes laminaria-drift-shell {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-4deg);
+  }
+  50% {
+    transform: translate3d(-1.3rem, 1rem, 0) rotate(3deg);
+  }
+}
+
+@keyframes laminaria-stage-shape {
+  0%,
+  100% {
+    transform: rotate(-7deg) scale(1);
+    border-radius: 28% 72% 42% 58% / 36% 38% 62% 64%;
+  }
+  50% {
+    transform: rotate(3deg) scale(1.035);
+    border-radius: 58% 42% 68% 32% / 42% 56% 44% 58%;
+  }
+}
+
+@keyframes laminaria-scanline {
+  0%,
+  28% {
+    transform: translateY(-100%);
+  }
+  54%,
+  100% {
+    transform: translateY(100%);
+  }
 }
 
 .docs-shell {
