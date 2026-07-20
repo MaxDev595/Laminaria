@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-const optionalUrl = z.preprocess((value) => (value === "" ? undefined : value), z.url().optional());
+const optionalUrl = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const normalized = value.trim();
+    return normalized === "" ? undefined : normalized;
+  },
+  z.url().optional(),
+);
 
 const optionalString = z.preprocess(
   (value) => (value === "" ? undefined : value),
