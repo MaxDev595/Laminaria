@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   CalendarCheck,
   Check,
+  ChevronDown,
   Copy,
   ExternalLink,
   LoaderCircle,
@@ -23,7 +24,7 @@ import { api, friendlyError } from "@/lib/api";
 import { localTimezone, slugify } from "@/lib/text";
 import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
-import { Field, Input, Select, Textarea } from "./ui";
+import { Field, Input, Textarea } from "./ui";
 
 const schema = z.object({
   title: z.string().trim().min(3).max(180),
@@ -125,16 +126,16 @@ export function CreateWebinarForm() {
         <h1>{t("webinar.draftCreated")}</h1>
         <p>{t("webinar.createdBody", { title: created.title })}</p>
         <div className="share-link-card">
-          <small>{locale === "ru" ? "Ссылка для участников" : "Participant link"}</small>
+          <small>{locale === "ru" ? "РЎСЃС‹Р»РєР° РґР»СЏ СѓС‡Р°СЃС‚РЅРёРєРѕРІ" : "Participant link"}</small>
           <code>{publicUrl}</code>
           <Button type="button" variant="secondary" onClick={() => void copyPublicUrl()}>
             <Copy size={17} />
             {copied
               ? locale === "ru"
-                ? "Скопировано"
+                ? "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ"
                 : "Copied"
               : locale === "ru"
-                ? "Скопировать"
+                ? "РЎРєРѕРїРёСЂРѕРІР°С‚СЊ"
                 : "Copy"}
           </Button>
         </div>
@@ -207,16 +208,24 @@ export function CreateWebinarForm() {
               <Input type="datetime-local" {...form.register("scheduledStartAt")} />
             </Field>
             <Field label={t("webinar.language")}>
-              <Select {...form.register("language")}>
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-              </Select>
+              <FancySelect
+                value={form.watch("language")}
+                options={[
+                  { value: "en", label: "English" },
+                  { value: "ru", label: "Русский" },
+                ]}
+                onChange={(value) => form.setValue("language", value, { shouldDirty: true })}
+              />
             </Field>
             <Field label={t("webinar.access")}>
-              <Select {...form.register("visibility")}>
-                <option value="PUBLIC">{t("webinar.public")}</option>
-                <option value="PRIVATE">{t("webinar.private")}</option>
-              </Select>
+              <FancySelect
+                value={form.watch("visibility")}
+                options={[
+                  { value: "PUBLIC", label: t("webinar.public") },
+                  { value: "PRIVATE", label: t("webinar.private") },
+                ]}
+                onChange={(value) => form.setValue("visibility", value, { shouldDirty: true })}
+              />
             </Field>
             <ToggleField
               label={t("webinar.guestAccess")}
@@ -296,6 +305,68 @@ export function CreateWebinarForm() {
           </Button>
         </footer>
       </form>
+    </div>
+  );
+}
+
+function FancySelect<TValue extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: TValue;
+  options: Array<{ value: TValue; label: string }>;
+  onChange: (value: TValue) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  return (
+    <div
+      className="fancy-select"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        className="fancy-select__button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected?.label}</span>
+        <ChevronDown size={17} />
+      </button>
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            className="fancy-select__menu"
+            role="listbox"
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={option.value === value}
+                className={option.value === value ? "is-active" : ""}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+              >
+                {option.label}
+                {option.value === value ? <Check size={15} /> : null}
+              </button>
+            ))}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

@@ -3124,6 +3124,26 @@ select {
   cursor: not-allowed;
 }
 
+.input[type="datetime-local"] {
+  padding-right: 3.35rem;
+}
+
+.input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  width: 1.95rem;
+  height: 1.95rem;
+  margin-right: -0.58rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0.2rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent),
+    color-mix(in srgb, var(--color-surface-soft) 86%, transparent);
+  cursor: pointer;
+  opacity: 0.9;
+  filter: invert(1) saturate(0.6);
+}
+
 .textarea {
   min-height: 8rem;
   padding-block: var(--space-3);
@@ -3153,6 +3173,117 @@ select {
 
 .select:hover {
   background-color: color-mix(in srgb, var(--color-primary) 6%, var(--input-background));
+}
+
+.fancy-select {
+  position: relative;
+  z-index: 8;
+}
+
+.fancy-select:has(.fancy-select__menu) {
+  z-index: 28;
+}
+
+.fancy-select__button {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: 0.1rem 0.72rem 0.1rem var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.05rem;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: var(--input-radius);
+  color: var(--color-foreground);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 44%),
+    color-mix(in srgb, var(--color-surface-soft) 78%, transparent);
+  box-shadow: var(--highlight-inset);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-normal) var(--ease-out),
+    background var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+
+.fancy-select__button:hover,
+.fancy-select__button[aria-expanded="true"] {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 44%),
+    color-mix(in srgb, var(--color-surface-soft) 90%, transparent);
+  box-shadow: var(--highlight-inset), 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.fancy-select__button span {
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fancy-select__button svg {
+  width: 2.05rem;
+  height: 2.05rem;
+  padding: 0.48rem;
+  display: block;
+  border-radius: 999px;
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    background var(--duration-normal) var(--ease-out);
+}
+
+.fancy-select__button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.fancy-select__menu,
+.workspace-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.42rem);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 14rem),
+    color-mix(in srgb, var(--color-surface) 96%, var(--ocean-950));
+  box-shadow: var(--shadow-lg), var(--highlight-inset);
+  backdrop-filter: blur(22px);
+}
+
+.fancy-select__menu button,
+.workspace-menu button {
+  width: 100%;
+  min-height: 2.7rem;
+  padding: 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border: 0;
+  color: var(--color-foreground);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.fancy-select__menu button:hover,
+.fancy-select__menu button.is-active,
+.workspace-menu button:hover,
+.workspace-menu button.is-active {
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
 }
 
 .password-field {
@@ -3439,6 +3570,99 @@ select {
   height: 100%;
   opacity: 0;
   cursor: pointer;
+}
+
+.workspace-chip__button {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  width: 100%;
+  min-height: 3.35rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workspace-chip--custom {
+  overflow: visible;
+}
+
+.workspace-chip--custom::after {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.workspace-chip__button > span,
+.workspace-menu button > span {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.7rem 0.7rem 0.9rem 0.5rem;
+  color: var(--color-primary-foreground);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  font-size: var(--text-xs);
+  font-weight: 750;
+}
+
+.workspace-chip__button div,
+.workspace-menu button div {
+  min-width: 0;
+  display: grid;
+}
+
+.workspace-chip__button strong,
+.workspace-menu button strong {
+  overflow: hidden;
+  color: var(--color-foreground);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-chip__button small,
+.workspace-menu button small {
+  margin-top: 0.1rem;
+  color: var(--color-subtle-foreground);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.workspace-chip__button > svg {
+  width: 2rem;
+  height: 2rem;
+  padding: 0.48rem;
+  display: block;
+  border-radius: 999px;
+  color: var(--color-primary-strong);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.workspace-chip__button[aria-expanded="true"] > svg {
+  transform: rotate(90deg);
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.workspace-menu {
+  top: calc(100% + 0.6rem);
+}
+
+.workspace-menu button {
+  justify-content: start;
+  min-height: 3.1rem;
 }
 
 .workspace-chip:focus-within {
