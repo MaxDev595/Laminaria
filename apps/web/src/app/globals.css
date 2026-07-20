@@ -3601,6 +3601,14 @@ select {
   display: block;
 }
 
+.workspace-chip--single {
+  cursor: default;
+}
+
+.workspace-chip--single .workspace-chip__button {
+  cursor: default;
+}
+
 .workspace-chip--menu::after {
   border-radius: inherit;
 }
@@ -3654,6 +3662,8 @@ select {
 
 .workspace-menu {
   top: calc(100% + 0.6rem);
+  max-height: 13rem;
+  overflow-y: auto;
 }
 
 .workspace-menu button {

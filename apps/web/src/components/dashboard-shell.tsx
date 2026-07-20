@@ -57,7 +57,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       { href: "/dashboard/upcoming", label: t("nav.upcoming"), icon: CalendarClock },
       { href: "/dashboard/past", label: t("nav.past"), icon: Video },
       { href: "/dashboard/drafts", label: t("nav.drafts"), icon: FilePenLine },
-      { href: "/dashboard/recordings", label: locale === "ru" ? "Р вЂ”Р В°Р С—Р С‘РЎРѓР С‘" : "Recordings", icon: Clapperboard },
+      { href: "/dashboard/recordings", label: locale === "ru" ? "Записи" : "Recordings", icon: Clapperboard },
       { href: "/dashboard/analytics", label: t("nav.analytics"), icon: BarChart3 },
       { href: "/dashboard/team", label: t("nav.team"), icon: UsersRound },
       { href: "/dashboard/settings", label: t("nav.settings"), icon: Settings },
@@ -117,6 +117,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     availableWorkspaces.find((item) => item.id === selectedWorkspaceId) ?? availableWorkspaces[0];
   if (!me.data || !workspace) return <DashboardSkeleton />;
   const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN";
+  const canSwitchWorkspace = availableWorkspaces.length > 1;
 
   async function signOut() {
     try {
@@ -145,7 +146,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
       <motion.div
         key={workspace.id}
-        className="workspace-chip workspace-chip--menu"
+        className={`workspace-chip workspace-chip--menu ${canSwitchWorkspace ? "" : "workspace-chip--single"}`}
         initial={{ opacity: 0, y: 8, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         whileHover={{ y: -2 }}
@@ -159,9 +160,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           type="button"
           className="workspace-chip__button"
           aria-haspopup="listbox"
-          aria-expanded={workspaceMenuOpen}
+          aria-expanded={canSwitchWorkspace && workspaceMenuOpen}
           aria-label={locale === "ru" ? "Выбрать рабочее пространство" : "Select workspace"}
-          onClick={() => setWorkspaceMenuOpen((current) => !current)}
+          onClick={() => {
+            if (canSwitchWorkspace) setWorkspaceMenuOpen((current) => !current);
+          }}
         >
           <span>{workspace.name.slice(0, 1).toUpperCase()}</span>
           <div>
@@ -170,7 +173,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         </button>
         <AnimatePresence>
-          {workspaceMenuOpen ? (
+          {canSwitchWorkspace && workspaceMenuOpen ? (
             <motion.div
               className="workspace-menu"
               role="listbox"
