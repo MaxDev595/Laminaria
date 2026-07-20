@@ -31,6 +31,7 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       invalidateForUser: unavailable,
     },
     workspaces: {
+      findActivePlanCode: unavailable,
       findMember: unavailable,
       upsertMember: unavailable,
       createWithOwner: unavailable,

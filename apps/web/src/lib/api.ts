@@ -264,6 +264,8 @@ export interface Webinar {
   visibility: "PUBLIC" | "PRIVATE";
   allowGuests: boolean;
   requireEmailRegistration: boolean;
+  maxAttendees: number | null;
+  recordingEnabled: boolean;
   version: number;
   currentUserRole?: WebinarRole | null;
 }

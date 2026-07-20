@@ -15,27 +15,26 @@ describe("plan catalog", () => {
     expect(Object.keys(PLAN_CATALOG)).toEqual(PLAN_IDS);
   });
 
-  it("leaves every unconfirmed commercial value explicitly pending", () => {
+  it("defines configured MVP prices and limits", () => {
+    expect(PLAN_CATALOG.free.price).toEqual({
+      status: "configured",
+      value: { amountMinorUnits: 0, currency: "USD", billingInterval: "month" },
+    });
+    expect(PLAN_CATALOG.professional.price).toEqual({
+      status: "configured",
+      value: { amountMinorUnits: 1_200, currency: "USD", billingInterval: "month" },
+    });
+    expect(PLAN_CATALOG.business.price).toEqual({
+      status: "configured",
+      value: { amountMinorUnits: 2_900, currency: "USD", billingInterval: "month" },
+    });
+
     for (const planId of PLAN_IDS) {
-      const plan = PLAN_CATALOG[planId];
-
-      expect(plan.price).toEqual({
-        status: "pending_business_decision",
-        value: null,
-      });
-
       for (const limit of LIMIT_KEYS) {
-        expect(plan.limits[limit]).toEqual({
-          status: "pending_business_decision",
-          value: null,
-        });
+        expect(PLAN_CATALOG[planId].limits[limit].status).toBe("configured");
       }
-
       for (const feature of FEATURE_KEYS) {
-        expect(plan.features[feature]).toEqual({
-          status: "pending_business_decision",
-          value: null,
-        });
+        expect(PLAN_CATALOG[planId].features[feature].status).toBe("configured");
       }
     }
   });
@@ -49,15 +48,30 @@ describe("plan catalog", () => {
 describe("SubscriptionService", () => {
   const service = new SubscriptionService();
 
-  it("fails closed for every pending feature decision", () => {
-    for (const planId of PLAN_IDS) {
-      for (const feature of FEATURE_KEYS) {
-        expect(service.checkFeatureAccess(planId, feature)).toEqual({
-          allowed: false,
-          reason: "pending_business_decision",
-        });
-      }
-    }
+  it("gates recording and paid features by plan", () => {
+    expect(service.checkFeatureAccess("free", "webinarRecording")).toEqual({
+      allowed: false,
+      reason: "not_included",
+    });
+    expect(service.checkFeatureAccess("professional", "webinarRecording")).toEqual({
+      allowed: true,
+      reason: "explicitly_included",
+    });
+    expect(service.checkFeatureAccess("business", "removeLaminariaBranding")).toEqual({
+      allowed: true,
+      reason: "explicitly_included",
+    });
+  });
+
+  it("enforces configured limits", () => {
+    expect(service.checkLimit("free", "maxConcurrentAttendees", 25)).toEqual({
+      allowed: true,
+      reason: "within_configured_limit",
+    });
+    expect(service.checkLimit("free", "maxConcurrentAttendees", 26)).toEqual({
+      allowed: false,
+      reason: "limit_exceeded",
+    });
   });
 
   it("fails closed for unknown plans", () => {
@@ -67,7 +81,7 @@ describe("SubscriptionService", () => {
     });
   });
 
-  it("fails closed for unknown entitlement keys", () => {
+  it("fails closed for unknown entitlement keys and invalid usage", () => {
     expect(service.checkFeatureAccess("free", "unlistedFeature")).toEqual({
       allowed: false,
       reason: "unknown_feature",
@@ -76,23 +90,16 @@ describe("SubscriptionService", () => {
       allowed: false,
       reason: "unknown_limit",
     });
-  });
-
-  it("fails closed for pending limits and rejects invalid usage", () => {
-    expect(service.checkLimit("free", "teamMembers", 0)).toEqual({
-      allowed: false,
-      reason: "pending_business_decision",
-    });
     expect(service.checkLimit("free", "teamMembers", -1)).toEqual({
       allowed: false,
       reason: "invalid_usage",
     });
   });
 
-  it("exposes a fail-closed shared feature access function", () => {
-    expect(checkFeatureAccess("business", "dataExport")).toEqual({
-      allowed: false,
-      reason: "pending_business_decision",
+  it("exposes a shared feature access function", () => {
+    expect(checkFeatureAccess("professional", "dataExport")).toEqual({
+      allowed: true,
+      reason: "explicitly_included",
     });
   });
 });

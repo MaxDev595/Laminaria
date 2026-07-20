@@ -2,6 +2,11 @@
 
 :root {
   --header-height: 4.75rem;
+  --font-sans: "Aptos", "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", ui-sans-serif,
+    system-ui, sans-serif;
+  --font-display: "Bahnschrift", "Aptos Display", "Segoe UI Variable Display", "SF Pro Display",
+    "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
 }
 
 html {
@@ -11,6 +16,13 @@ html {
 
 body {
   overflow-x: hidden;
+  font-family: var(--font-sans);
+  font-feature-settings:
+    "cv02" 1,
+    "cv03" 1,
+    "cv04" 1,
+    "ss01" 1;
+  text-rendering: geometricPrecision;
 }
 
 a {
@@ -109,9 +121,10 @@ select {
 }
 
 .lm-logo strong {
+  font-family: var(--font-display);
   font-size: 1rem;
-  font-weight: 680;
-  letter-spacing: -0.025em;
+  font-weight: 760;
+  letter-spacing: -0.045em;
 }
 
 .desktop-nav {
@@ -231,10 +244,11 @@ select {
 .hero h1 {
   margin-top: var(--space-6);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: var(--text-display);
-  font-weight: 660;
-  line-height: 0.98;
-  letter-spacing: -0.06em;
+  font-weight: 720;
+  line-height: 0.96;
+  letter-spacing: -0.075em;
   text-wrap: balance;
 }
 
@@ -751,9 +765,11 @@ select {
 .final-cta h2 {
   margin-top: var(--space-4);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4.2vw, 4.2rem);
+  font-weight: 690;
   line-height: 1.05;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.072em;
   text-wrap: balance;
 }
 
@@ -1194,9 +1210,11 @@ select {
 .demo-preview__copy h2 {
   margin-top: var(--space-4);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4.2vw, 4.4rem);
+  font-weight: 690;
   line-height: 1.04;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.072em;
   text-wrap: balance;
 }
 
@@ -1520,9 +1538,11 @@ select {
 
 .landing-price-card__price strong {
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2.4rem, 5vw, 3.3rem);
+  font-weight: 780;
   line-height: 0.9;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.075em;
 }
 
 .landing-price-card__price span,
@@ -2862,10 +2882,11 @@ select {
 .auth-atmosphere blockquote {
   margin: var(--space-5) 0 0;
   color: var(--ocean-50);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4.2vw, 4.2rem);
-  font-weight: 620;
+  font-weight: 650;
   line-height: 1.07;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.07em;
   text-wrap: balance;
 }
 
@@ -2890,9 +2911,11 @@ select {
 .auth-heading h1,
 .auth-success h1 {
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3.1rem);
+  font-weight: 680;
   line-height: 1.08;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.07em;
 }
 
 .auth-heading p,
@@ -3492,9 +3515,11 @@ select {
 .dashboard-page-heading h1 {
   margin-top: var(--space-2);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3.65rem);
+  font-weight: 670;
   line-height: 1.04;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.07em;
 }
 
 .dashboard-page-heading p {
@@ -4106,9 +4131,11 @@ select {
 .create-webinar > header h1 {
   margin-top: var(--space-3);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2.6rem, 5.5vw, 5rem);
+  font-weight: 700;
   line-height: 0.98;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.075em;
 }
 
 .create-webinar > header p {
@@ -4898,9 +4925,11 @@ select {
   max-width: 46rem;
   margin-top: var(--space-5);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2.25rem, 5vw, 4.4rem);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.075em;
 }
 
 .waiting-card > p {
@@ -5273,9 +5302,11 @@ select {
 .prejoin-panel h1 {
   margin-top: var(--space-5);
   color: var(--color-foreground);
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 680;
   line-height: 1.03;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.07em;
 }
 
 .prejoin-panel > p {

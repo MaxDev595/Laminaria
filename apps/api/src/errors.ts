@@ -7,6 +7,7 @@ export type ErrorCode =
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "CONFLICT"
+  | "PLAN_LIMIT_EXCEEDED"
   | "RATE_LIMITED"
   | "SERVICE_NOT_CONFIGURED"
   | "INTERNAL_ERROR";

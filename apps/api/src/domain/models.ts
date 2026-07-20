@@ -79,6 +79,7 @@ export interface WebinarRecord {
   allowGuests: boolean;
   requireEmailRegistration: boolean;
   maxAttendees: number | null;
+  recordingEnabled: boolean;
   livekitRoomName: string;
   createdById: string;
   version: number;

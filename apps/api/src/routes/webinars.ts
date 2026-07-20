@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { normalizePlanId, planAllows, PLAN_POLICY, type PlanId } from "../billing/plan-policy.js";
 import { ParticipantTokenService } from "../auth/participant-token.js";
 import {
   requireUser,
@@ -122,8 +123,13 @@ export async function registerWebinarRoutes(
         request.params.workspaceId,
         "webinar:create",
       );
+      const parsed = createSchema.parse(request.body);
+      const planId = await resolveWorkspacePlan(repositories, request.params.workspaceId);
+      const maxAttendees = enforceAttendeeLimit(planId, parsed.maxAttendees);
       const webinar = await service.create({
-        ...createSchema.parse(request.body),
+        ...parsed,
+        maxAttendees,
+        recordingEnabled: planAllows(planId, "webinarRecording"),
         workspaceId: request.params.workspaceId,
         createdById: actor.user.id,
       });
@@ -152,6 +158,7 @@ export async function registerWebinarRoutes(
       const existing = await service.find(params.webinarId);
       assertWorkspace(existing.workspaceId, params.workspaceId);
       const body = updateSchema.parse(request.body);
+      const planId = await resolveWorkspacePlan(repositories, params.workspaceId);
       const input: UpdateWebinarInput = {
         version: body.version,
         ...(body.title !== undefined ? { title: body.title } : {}),
@@ -165,7 +172,10 @@ export async function registerWebinarRoutes(
         ...(body.requireEmailRegistration !== undefined
           ? { requireEmailRegistration: body.requireEmailRegistration }
           : {}),
-        ...(body.maxAttendees !== undefined ? { maxAttendees: body.maxAttendees } : {}),
+        ...(body.maxAttendees !== undefined
+          ? { maxAttendees: enforceAttendeeLimit(planId, body.maxAttendees) }
+          : {}),
+        recordingEnabled: planAllows(planId, "webinarRecording"),
       };
       return { webinar: await service.update(params.webinarId, input) };
     },
@@ -338,4 +348,22 @@ function shouldCloseLiveRoom(current: WebinarStatus, next: WebinarStatus): boole
 
 function isTerminalRoomStatus(status: WebinarStatus): status is "ENDED" | "CANCELLED" | "ARCHIVED" {
   return status === "ENDED" || status === "CANCELLED" || status === "ARCHIVED";
+}
+
+async function resolveWorkspacePlan(repositories: UnitOfWork, workspaceId: string): Promise<PlanId> {
+  const planCode = await repositories.workspaces.findActivePlanCode(workspaceId);
+  return normalizePlanId(planCode);
+}
+
+function enforceAttendeeLimit(planId: PlanId, requested: number | null): number {
+  const max = PLAN_POLICY[planId].maxConcurrentAttendees;
+  const effective = requested ?? max;
+  if (effective > max) {
+    throw new AppError(402, "PLAN_LIMIT_EXCEEDED", `This plan allows up to ${max} attendees`, {
+      plan: planId,
+      limit: "maxConcurrentAttendees",
+      max,
+    });
+  }
+  return effective;
 }

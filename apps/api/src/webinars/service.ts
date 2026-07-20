@@ -18,6 +18,7 @@ export interface CreateWebinarInput {
   allowGuests: boolean;
   requireEmailRegistration: boolean;
   maxAttendees: number | null;
+  recordingEnabled: boolean;
 }
 
 export type UpdateWebinarInput = Partial<

@@ -18,6 +18,9 @@ export const LIMIT_KEYS = [
 export type LimitKey = (typeof LIMIT_KEYS)[number];
 
 export const FEATURE_KEYS = [
+  "webinarRecording",
+  "polls",
+  "advancedModeration",
   "additionalRoomStyles",
   "interfaceElementCustomization",
   "customLogo",
@@ -67,58 +70,136 @@ export interface PlanDefinition {
 
 export type PlanCatalog = Readonly<Record<PlanId, PlanDefinition>>;
 
-const pendingDecision = <T>(): BusinessDecision<T> =>
+const configuredDecision = <T>(value: T): BusinessDecision<T> =>
   Object.freeze({
-    status: "pending_business_decision",
-    value: null,
+    status: "configured",
+    value,
   });
 
-const pendingLimits = (): PlanDefinition["limits"] =>
+const configuredLimits = (input: Record<LimitKey, number>): PlanDefinition["limits"] =>
   Object.freeze({
-    maxConcurrentAttendees: pendingDecision<number>(),
-    concurrentWebinars: pendingDecision<number>(),
-    recordingRetentionDays: pendingDecision<number>(),
-    storageBytes: pendingDecision<number>(),
-    aiQuota: pendingDecision<number>(),
-    teamMembers: pendingDecision<number>(),
+    maxConcurrentAttendees: configuredDecision(input.maxConcurrentAttendees),
+    concurrentWebinars: configuredDecision(input.concurrentWebinars),
+    recordingRetentionDays: configuredDecision(input.recordingRetentionDays),
+    storageBytes: configuredDecision(input.storageBytes),
+    aiQuota: configuredDecision(input.aiQuota),
+    teamMembers: configuredDecision(input.teamMembers),
   });
 
-const pendingFeatures = (): PlanDefinition["features"] =>
+const configuredFeatures = (input: Record<FeatureKey, boolean>): PlanDefinition["features"] =>
   Object.freeze({
-    additionalRoomStyles: pendingDecision<boolean>(),
-    interfaceElementCustomization: pendingDecision<boolean>(),
-    customLogo: pendingDecision<boolean>(),
-    removeLaminariaBranding: pendingDecision<boolean>(),
-    advancedAnalytics: pendingDecision<boolean>(),
-    dataExport: pendingDecision<boolean>(),
+    webinarRecording: configuredDecision(input.webinarRecording),
+    polls: configuredDecision(input.polls),
+    advancedModeration: configuredDecision(input.advancedModeration),
+    additionalRoomStyles: configuredDecision(input.additionalRoomStyles),
+    interfaceElementCustomization: configuredDecision(input.interfaceElementCustomization),
+    customLogo: configuredDecision(input.customLogo),
+    removeLaminariaBranding: configuredDecision(input.removeLaminariaBranding),
+    advancedAnalytics: configuredDecision(input.advancedAnalytics),
+    dataExport: configuredDecision(input.dataExport),
   });
 
-const createPendingPlan = (id: PlanId, name: LocalizedPlanName): PlanDefinition =>
+const monthlyMoney = (amountMinorUnits: number): BusinessDecision<Money> =>
+  configuredDecision({
+    amountMinorUnits,
+    currency: "USD",
+    billingInterval: "month",
+  });
+
+const createPlan = (
+  id: PlanId,
+  name: LocalizedPlanName,
+  price: BusinessDecision<Money>,
+  limits: Record<LimitKey, number>,
+  features: Record<FeatureKey, boolean>,
+): PlanDefinition =>
   Object.freeze({
     id,
     name: Object.freeze(name),
-    price: pendingDecision<Money>(),
-    limits: pendingLimits(),
-    features: pendingFeatures(),
+    price,
+    limits: configuredLimits(limits),
+    features: configuredFeatures(features),
   });
 
 /**
- * Commercial values remain intentionally unresolved until the business owner
- * confirms them. Consumers must go through SubscriptionService, which treats
- * every pending decision as denied.
+ * Commercial MVP plan policy. Consumers must go through SubscriptionService,
+ * which still fails closed for unknown plans and unknown entitlement keys.
  *
  * Webinar duration is intentionally absent: plans must never limit it.
  */
 export const PLAN_CATALOG: PlanCatalog = Object.freeze({
-  free: createPendingPlan("free", { en: "Free", ru: "Бесплатный" }),
-  professional: createPendingPlan("professional", {
-    en: "Professional",
-    ru: "Профессиональный",
-  }),
-  business: createPendingPlan("business", {
-    en: "Business",
-    ru: "Бизнес",
-  }),
+  free: createPlan(
+    "free",
+    { en: "Free", ru: "Бесплатный" },
+    monthlyMoney(0),
+    {
+      maxConcurrentAttendees: 25,
+      concurrentWebinars: 1,
+      recordingRetentionDays: 0,
+      storageBytes: 0,
+      aiQuota: 0,
+      teamMembers: 1,
+    },
+    {
+      webinarRecording: false,
+      polls: false,
+      advancedModeration: false,
+      additionalRoomStyles: false,
+      interfaceElementCustomization: false,
+      customLogo: false,
+      removeLaminariaBranding: false,
+      advancedAnalytics: false,
+      dataExport: false,
+    },
+  ),
+  professional: createPlan(
+    "professional",
+    { en: "Pro", ru: "Pro" },
+    monthlyMoney(1_200),
+    {
+      maxConcurrentAttendees: 150,
+      concurrentWebinars: 2,
+      recordingRetentionDays: 30,
+      storageBytes: 10 * 1024 * 1024 * 1024,
+      aiQuota: 0,
+      teamMembers: 3,
+    },
+    {
+      webinarRecording: true,
+      polls: true,
+      advancedModeration: true,
+      additionalRoomStyles: true,
+      interfaceElementCustomization: true,
+      customLogo: true,
+      removeLaminariaBranding: false,
+      advancedAnalytics: true,
+      dataExport: true,
+    },
+  ),
+  business: createPlan(
+    "business",
+    { en: "Business", ru: "Business" },
+    monthlyMoney(2_900),
+    {
+      maxConcurrentAttendees: 1_000,
+      concurrentWebinars: 10,
+      recordingRetentionDays: 365,
+      storageBytes: 100 * 1024 * 1024 * 1024,
+      aiQuota: 0,
+      teamMembers: 25,
+    },
+    {
+      webinarRecording: true,
+      polls: true,
+      advancedModeration: true,
+      additionalRoomStyles: true,
+      interfaceElementCustomization: true,
+      customLogo: true,
+      removeLaminariaBranding: true,
+      advancedAnalytics: true,
+      dataExport: true,
+    },
+  ),
 });
 
 export function isPlanId(value: string): value is PlanId {

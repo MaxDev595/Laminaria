@@ -50,6 +50,7 @@ export interface OneTimeTokenRepository {
 
 export interface WorkspaceRepository {
   findMember(workspaceId: string, userId: string): Promise<WorkspaceMemberRecord | null>;
+  findActivePlanCode(workspaceId: string): Promise<string | null>;
   upsertMember(input: {
     workspaceId: string;
     userId: string;
@@ -98,6 +99,7 @@ export interface WebinarRepository {
         | "allowGuests"
         | "requireEmailRegistration"
         | "maxAttendees"
+        | "recordingEnabled"
       >
     >,
   ): Promise<WebinarRecord | null>;

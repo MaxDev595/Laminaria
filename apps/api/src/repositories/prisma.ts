@@ -277,6 +277,20 @@ export class PrismaUnitOfWork implements UnitOfWork {
 
   private createWorkspaceRepository(): WorkspaceRepository {
     return {
+      findActivePlanCode: async (workspaceId) => {
+        const subscription = await this.#client.subscription.findFirst({
+          where: {
+            workspaceId,
+            deletedAt: null,
+            status: { in: ["ACTIVE", "TRIALING"] },
+            plan: { active: true },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { plan: { select: { code: true } } },
+        });
+        return subscription?.plan.code ?? null;
+      },
+
       findMember: async (workspaceId, userId) => {
         const member = await this.#client.workspaceMember.findFirst({
           where: {
@@ -474,6 +488,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
             access: input.visibility,
             scheduledStartAt: input.scheduledStartAt,
             maxParticipants: input.maxAttendees,
+            recordingEnabled: input.recordingEnabled,
             requireEmailRegistration: input.requireEmailRegistration,
             allowGuestJoin: input.allowGuests,
             sessions: {
@@ -520,6 +535,9 @@ export class PrismaUnitOfWork implements UnitOfWork {
           }
           if (patch.maxAttendees !== undefined) {
             data.maxParticipants = patch.maxAttendees;
+          }
+          if (patch.recordingEnabled !== undefined) {
+            data.recordingEnabled = patch.recordingEnabled;
           }
 
           const result = await transaction.webinar.updateMany({
@@ -760,6 +778,7 @@ function mapWebinar(webinar: WebinarWithSession): WebinarRecord {
     allowGuests: webinar.allowGuestJoin,
     requireEmailRegistration: webinar.requireEmailRegistration,
     maxAttendees: webinar.maxParticipants,
+    recordingEnabled: webinar.recordingEnabled,
     livekitRoomName: session.livekitRoomName,
     createdById: webinar.createdById,
     version: webinar.version,

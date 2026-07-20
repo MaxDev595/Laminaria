@@ -28,6 +28,7 @@
     "db:push": "prisma db push",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
+    "plan:set": "node scripts/set-workspace-plan.mjs",
     "infra:up": "docker compose up -d postgres redis minio mailpit",
     "infra:down": "docker compose down",
     "clean": "pnpm -r --if-present clean"
