@@ -37,6 +37,8 @@ export class WebinarService {
       ...input,
       livekitRoomName: `webinar_${randomUUID()}`,
       status: "DRAFT",
+      startedAt: null,
+      endedAt: null,
     });
   }
 

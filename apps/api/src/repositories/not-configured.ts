@@ -49,6 +49,11 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       softDelete: unavailable,
       countActiveParticipants: unavailable,
     },
+    recordings: {
+      listByWebinar: unavailable,
+      ensureAutomaticForWebinar: unavailable,
+      softDelete: unavailable,
+    },
     registrations: {
       findById: unavailable,
       findByWebinarAndEmail: unavailable,

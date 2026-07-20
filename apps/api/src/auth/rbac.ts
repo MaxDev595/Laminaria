@@ -16,6 +16,7 @@ export type WebinarPermission =
   | "webinar:manage_stage"
   | "webinar:moderate"
   | "webinar:transition"
+  | "recording:manage"
   | "chat:write"
   | "qa:write"
   | "poll:vote"
@@ -49,6 +50,7 @@ const webinarPermissions: Readonly<Record<ParticipantRole, ReadonlySet<WebinarPe
     "webinar:manage_stage",
     "webinar:moderate",
     "webinar:transition",
+    "recording:manage",
     "chat:write",
     "qa:write",
     "poll:vote",
@@ -60,6 +62,7 @@ const webinarPermissions: Readonly<Record<ParticipantRole, ReadonlySet<WebinarPe
     "webinar:manage_stage",
     "webinar:moderate",
     "webinar:transition",
+    "recording:manage",
     "chat:write",
     "qa:write",
     "poll:vote",
@@ -71,6 +74,7 @@ const webinarPermissions: Readonly<Record<ParticipantRole, ReadonlySet<WebinarPe
     "webinar:manage_stage",
     "webinar:moderate",
     "webinar:transition",
+    "recording:manage",
     "chat:write",
     "qa:write",
     "poll:vote",

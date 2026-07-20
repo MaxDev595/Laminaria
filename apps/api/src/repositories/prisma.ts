@@ -14,6 +14,7 @@ import type {
   OneTimeTokenKind,
   OneTimeTokenRecord,
   ParticipantRole,
+  RecordingRecord,
   RegistrationRecord,
   SessionRecord,
   UserRecord,
@@ -23,6 +24,7 @@ import type {
 } from "../domain/models.js";
 import type {
   OneTimeTokenRepository,
+  RecordingRepository,
   RegistrationRepository,
   ModerationRestrictionRecord,
   ModerationRestrictionRepository,
@@ -60,6 +62,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
   public readonly tokens: OneTimeTokenRepository;
   public readonly workspaces: WorkspaceRepository;
   public readonly webinars: WebinarRepository;
+  public readonly recordings: RecordingRepository;
   public readonly registrations: RegistrationRepository;
   public readonly moderationRestrictions: ModerationRestrictionRepository;
 
@@ -72,6 +75,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.tokens = this.createOneTimeTokenRepository();
     this.workspaces = this.createWorkspaceRepository();
     this.webinars = this.createWebinarRepository();
+    this.recordings = this.createRecordingRepository();
     this.registrations = this.createRegistrationRepository();
     this.moderationRestrictions = this.createModerationRestrictionRepository();
   }
@@ -616,6 +620,75 @@ export class PrismaUnitOfWork implements UnitOfWork {
     };
   }
 
+  private createRecordingRepository(): RecordingRepository {
+    return {
+      listByWebinar: async (webinarId) => {
+        const recordings = await this.#client.recording.findMany({
+          where: {
+            deletedAt: null,
+            webinarSession: { webinarId, webinar: { deletedAt: null } },
+          },
+          orderBy: { createdAt: "desc" },
+        });
+        return recordings.map(mapRecording);
+      },
+
+      ensureAutomaticForWebinar: async (input) => {
+        const session = await this.#client.webinarSession.findFirst({
+          where: { webinarId: input.webinarId },
+          orderBy: { sequence: "desc" },
+          select: { id: true },
+        });
+        if (!session) throw missingWebinarSessionError(input.webinarId);
+
+        const existing = await this.#client.recording.findFirst({
+          where: {
+            webinarSessionId: session.id,
+            provider: input.provider,
+            externalId: null,
+            deletedAt: null,
+          },
+        });
+
+        const data = {
+          status: input.status,
+          startedAt: input.startedAt,
+          endedAt: input.endedAt,
+          ...(input.status === "FAILED"
+            ? {
+                failureCode: input.failureCode ?? "EGRESS_NOT_CONFIGURED",
+                failureMessage:
+                  input.failureMessage ??
+                  "LiveKit Egress/S3 is not configured yet. Recording was requested automatically but no video file was produced.",
+              }
+            : {}),
+        } as const;
+
+        const recording = existing
+          ? await this.#client.recording.update({ where: { id: existing.id }, data })
+          : await this.#client.recording.create({
+              data: {
+                webinarSessionId: session.id,
+                provider: input.provider,
+                externalId: null,
+                ...data,
+              },
+            });
+        return mapRecording(recording);
+      },
+
+      softDelete: async (id, at) => {
+        const recording = await this.#client.recording.updateMany({
+          where: { id, deletedAt: null },
+          data: { deletedAt: at, status: "DELETED" },
+        });
+        if (recording.count !== 1) return null;
+        const updated = await this.#client.recording.findFirst({ where: { id } });
+        return updated ? mapRecording(updated) : null;
+      },
+    };
+  }
+
   private createRegistrationRepository(): RegistrationRepository {
     return {
       findById: async (id) => {
@@ -781,6 +854,8 @@ function mapWebinar(webinar: WebinarWithSession): WebinarRecord {
     recordingEnabled: webinar.recordingEnabled,
     livekitRoomName: session.livekitRoomName,
     createdById: webinar.createdById,
+    startedAt: webinar.startedAt,
+    endedAt: webinar.endedAt,
     version: webinar.version,
     createdAt: webinar.createdAt,
     updatedAt: webinar.updatedAt,
@@ -800,6 +875,50 @@ function mapRegistration(registration: Registration): RegistrationRecord {
     status: toDomainRegistrationStatus(registration.status),
     createdAt: registration.createdAt,
     updatedAt: registration.updatedAt,
+  };
+}
+
+function mapRecording(recording: {
+  id: string;
+  webinarSessionId: string;
+  provider: string;
+  externalId: string | null;
+  status: RecordingRecord["status"];
+  storageKey: string | null;
+  playbackUrl: string | null;
+  mimeType: string | null;
+  sizeBytes: bigint | number | null;
+  durationSeconds: number | null;
+  retentionUntil: Date | null;
+  startedAt: Date | null;
+  endedAt: Date | null;
+  availableAt: Date | null;
+  failureCode: string | null;
+  failureMessage: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}): RecordingRecord {
+  return {
+    id: recording.id,
+    webinarSessionId: recording.webinarSessionId,
+    provider: recording.provider,
+    externalId: recording.externalId,
+    status: recording.status,
+    storageKey: recording.storageKey,
+    playbackUrl: recording.playbackUrl,
+    mimeType: recording.mimeType,
+    sizeBytes: recording.sizeBytes === null ? null : Number(recording.sizeBytes),
+    durationSeconds: recording.durationSeconds,
+    retentionUntil: recording.retentionUntil,
+    startedAt: recording.startedAt,
+    endedAt: recording.endedAt,
+    availableAt: recording.availableAt,
+    failureCode: recording.failureCode,
+    failureMessage: recording.failureMessage,
+    createdAt: recording.createdAt,
+    updatedAt: recording.updatedAt,
+    deletedAt: recording.deletedAt,
   };
 }
 

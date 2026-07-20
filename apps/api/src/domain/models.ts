@@ -82,7 +82,39 @@ export interface WebinarRecord {
   recordingEnabled: boolean;
   livekitRoomName: string;
   createdById: string;
+  startedAt: Date | null;
+  endedAt: Date | null;
   version: number;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+export type RecordingStatus =
+  | "PENDING"
+  | "RECORDING"
+  | "PROCESSING"
+  | "READY"
+  | "FAILED"
+  | "DELETED";
+
+export interface RecordingRecord {
+  id: string;
+  webinarSessionId: string;
+  provider: string;
+  externalId: string | null;
+  status: RecordingStatus;
+  storageKey: string | null;
+  playbackUrl: string | null;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  durationSeconds: number | null;
+  retentionUntil: Date | null;
+  startedAt: Date | null;
+  endedAt: Date | null;
+  availableAt: Date | null;
+  failureCode: string | null;
+  failureMessage: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

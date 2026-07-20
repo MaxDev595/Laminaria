@@ -241,9 +241,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   </Button>
                 </Link>
               ) : null}
-              <span className="user-avatar" title={me.data.user.name}>
-                {me.data.user.name.slice(0, 1).toUpperCase()}
-              </span>
+              <motion.span
+                key={`${pathname}-${me.data.user.id}`}
+                className="account-chip"
+                title={me.data.user.name}
+                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <span className="user-avatar">{me.data.user.name.slice(0, 1).toUpperCase()}</span>
+                <span>
+                  <strong>{me.data.user.name}</strong>
+                  <small>{workspace.role ?? "OWNER"}</small>
+                </span>
+              </motion.span>
             </div>
           </header>
           <main className="dashboard-content">{children}</main>

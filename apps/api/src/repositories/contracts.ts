@@ -1,6 +1,7 @@
 import type {
   OneTimeTokenKind,
   OneTimeTokenRecord,
+  RecordingRecord,
   RegistrationRecord,
   SessionRecord,
   UserRecord,
@@ -113,6 +114,20 @@ export interface WebinarRepository {
   countActiveParticipants(id: string): Promise<number>;
 }
 
+export interface RecordingRepository {
+  listByWebinar(webinarId: string): Promise<readonly RecordingRecord[]>;
+  ensureAutomaticForWebinar(input: {
+    webinarId: string;
+    provider: string;
+    status: "RECORDING" | "PROCESSING" | "FAILED";
+    startedAt: Date | null;
+    endedAt: Date;
+    failureCode?: string;
+    failureMessage?: string;
+  }): Promise<RecordingRecord>;
+  softDelete(id: string, at: Date): Promise<RecordingRecord | null>;
+}
+
 export interface RegistrationRepository {
   findById(id: string): Promise<RegistrationRecord | null>;
   findByWebinarAndEmail(webinarId: string, email: string): Promise<RegistrationRecord | null>;
@@ -153,6 +168,7 @@ export interface UnitOfWork {
   readonly tokens: OneTimeTokenRepository;
   readonly workspaces: WorkspaceRepository;
   readonly webinars: WebinarRepository;
+  readonly recordings: RecordingRepository;
   readonly registrations: RegistrationRepository;
   readonly moderationRestrictions?: ModerationRestrictionRepository;
   healthcheck(): Promise<void>;

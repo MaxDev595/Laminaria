@@ -4,12 +4,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpRight,
   CalendarPlus,
+  Clapperboard,
   CircleOff,
   Clock3,
+  Download,
   LoaderCircle,
   Play,
   Radio,
   Square,
+  Trash2,
   UserPlus,
   UsersRound,
   Video,
@@ -219,7 +222,9 @@ function WebinarCard({
   const { workspace } = useDashboard();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [busy, setBusy] = useState<"start" | "studio" | "end" | null>(null);
+  const [busy, setBusy] = useState<"start" | "studio" | "end" | "delete" | "recording" | null>(
+    null,
+  );
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"MODERATOR" | "SPEAKER" | "COHOST">("MODERATOR");
   const [inviteBusy, setInviteBusy] = useState(false);
@@ -239,6 +244,14 @@ function WebinarCard({
   const canStart = webinar.status === "SCHEDULED" && canManageLive;
   const canJoinStudio = webinar.status === "LIVE" && canJoinStudioRole(currentRole);
   const canEnd = webinar.status === "LIVE" && canManageLive;
+  const canDeletePast =
+    (webinar.status === "ENDED" || webinar.status === "ARCHIVED") && canManageLive;
+  const recordings = useQuery({
+    queryKey: ["recordings", workspace.id, webinar.id],
+    queryFn: () => api.listRecordings(workspace.id, webinar.id),
+    enabled: webinar.recordingEnabled && (webinar.status === "ENDED" || webinar.status === "ARCHIVED"),
+  });
+  const recording = recordings.data?.recordings[0] ?? null;
 
   async function refreshWebinars() {
     await queryClient.invalidateQueries({ queryKey: ["webinars", workspace.id] });
@@ -270,6 +283,43 @@ function WebinarCard({
       await api.transitionWebinar(workspace.id, webinar.id, "ENDED", webinar.version);
       sessionStorage.removeItem(`laminaria-room:${webinar.slug}`);
       await refreshWebinars();
+    } catch (reason) {
+      setError(friendlyError(reason, locale));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function deletePastWebinar() {
+    const confirmed = window.confirm(
+      locale === "ru"
+        ? "Удалить вебинар из списка? Аналитика и регистрации сохранятся."
+        : "Delete this webinar from the list? Analytics and registrations will be preserved.",
+    );
+    if (!confirmed) return;
+    setBusy("delete");
+    setError("");
+    try {
+      await api.deleteWebinar(workspace.id, webinar.id);
+      await refreshWebinars();
+    } catch (reason) {
+      setError(friendlyError(reason, locale));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function deleteRecording() {
+    if (!recording) return;
+    const confirmed = window.confirm(
+      locale === "ru" ? "Удалить запись вебинара?" : "Delete this webinar recording?",
+    );
+    if (!confirmed) return;
+    setBusy("recording");
+    setError("");
+    try {
+      await api.deleteRecording(workspace.id, webinar.id, recording.id);
+      await queryClient.invalidateQueries({ queryKey: ["recordings", workspace.id, webinar.id] });
     } catch (reason) {
       setError(friendlyError(reason, locale));
     } finally {
@@ -377,6 +427,16 @@ function WebinarCard({
                 ? "По приглашению"
                 : "Invite only"}
           </span>
+          <span>
+            <Clapperboard size={15} />
+            {webinar.recordingEnabled
+              ? locale === "ru"
+                ? "Запись включена"
+                : "Recording enabled"
+              : locale === "ru"
+                ? "Без записи"
+                : "No recording"}
+          </span>
         </div>
       </div>
       <div className="webinar-card__actions">
@@ -411,6 +471,51 @@ function WebinarCard({
           >
             <ArrowUpRight size={18} />
           </Link>
+        ) : null}
+        {webinar.recordingEnabled && (webinar.status === "ENDED" || webinar.status === "ARCHIVED") ? (
+          recording?.playbackUrl ? (
+            <a className="webinar-card__download" href={recording.playbackUrl} download>
+              <Download size={16} />
+              {locale === "ru" ? "Скачать" : "Download"}
+            </a>
+          ) : (
+            <Button size="sm" variant="secondary" disabled>
+              <Clapperboard size={16} />
+              {recordings.isLoading
+                ? locale === "ru"
+                  ? "Проверка"
+                  : "Checking"
+                : recording?.status === "FAILED"
+                  ? locale === "ru"
+                    ? "Нет файла"
+                    : "No file"
+                  : locale === "ru"
+                    ? "Готовится"
+                    : "Processing"}
+            </Button>
+          )
+        ) : null}
+        {recording ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void deleteRecording()}
+            disabled={busy !== null}
+          >
+            {busy === "recording" ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
+            {locale === "ru" ? "Запись" : "Recording"}
+          </Button>
+        ) : null}
+        {canDeletePast ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void deletePastWebinar()}
+            disabled={busy !== null}
+          >
+            {busy === "delete" ? <LoaderCircle className="spin" size={16} /> : <Trash2 size={16} />}
+            {locale === "ru" ? "Удалить" : "Delete"}
+          </Button>
         ) : null}
       </div>
       {canManageRoles ? (

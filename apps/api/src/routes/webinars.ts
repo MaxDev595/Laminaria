@@ -195,6 +195,7 @@ export async function registerWebinarRoutes(
         await roomAccess.livekit.closeRoom(existing.livekitRoomName);
       }
       const webinar = await service.transition(params.webinarId, body.status, body.version);
+      await syncAutomaticRecording(repositories, existing, webinar.status);
       if (isTerminalRoomStatus(webinar.status)) {
         roomAccess.realtime?.webinarEnded({
           webinarId: webinar.id,
@@ -266,6 +267,7 @@ export async function registerWebinarRoutes(
       }
       await roomAccess.livekit.closeRoom(access.webinar.livekitRoomName);
       const webinar = await service.transition(access.webinar.id, "ENDED", access.webinar.version);
+      await syncAutomaticRecording(repositories, access.webinar, "ENDED");
       roomAccess.realtime?.webinarEnded({ webinarId: webinar.id, status: "ENDED" });
       return { webinar };
     },
@@ -322,6 +324,38 @@ export async function registerWebinarRoutes(
     },
   );
 
+  app.get<{ Params: { workspaceId: string; webinarId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars/:webinarId/recordings",
+    { schema: { tags: ["Webinars"], summary: "List webinar recordings" } },
+    async (request) => {
+      const params = paramsSchema.parse(request.params);
+      await requireWebinarPermission(request, repositories, params.webinarId, "recording:manage");
+      const existing = await service.find(params.webinarId);
+      assertWorkspace(existing.workspaceId, params.workspaceId);
+      return { recordings: await repositories.recordings.listByWebinar(existing.id) };
+    },
+  );
+
+  app.delete<{ Params: { workspaceId: string; webinarId: string; recordingId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars/:webinarId/recordings/:recordingId",
+    { schema: { tags: ["Webinars"], summary: "Delete a webinar recording from the catalog" } },
+    async (request, reply) => {
+      const params = z
+        .object({
+          workspaceId: z.string().min(1),
+          webinarId: z.string().min(1),
+          recordingId: z.string().min(1),
+        })
+        .parse(request.params);
+      await requireWebinarPermission(request, repositories, params.webinarId, "recording:manage");
+      const existing = await service.find(params.webinarId);
+      assertWorkspace(existing.workspaceId, params.workspaceId);
+      const deleted = await repositories.recordings.softDelete(params.recordingId, new Date());
+      if (!deleted) throw new AppError(404, "NOT_FOUND", "Recording not found");
+      return reply.status(204).send();
+    },
+  );
+
   app.delete<{ Params: { workspaceId: string; webinarId: string } }>(
     "/v1/workspaces/:workspaceId/webinars/:webinarId",
     { schema: { tags: ["Webinars"], summary: "Soft-delete a webinar" } },
@@ -348,6 +382,37 @@ function shouldCloseLiveRoom(current: WebinarStatus, next: WebinarStatus): boole
 
 function isTerminalRoomStatus(status: WebinarStatus): status is "ENDED" | "CANCELLED" | "ARCHIVED" {
   return status === "ENDED" || status === "CANCELLED" || status === "ARCHIVED";
+}
+
+async function syncAutomaticRecording(
+  repositories: UnitOfWork,
+  webinar: { id: string; recordingEnabled: boolean; startedAt?: Date | null },
+  nextStatus: WebinarStatus,
+): Promise<void> {
+  if (!webinar.recordingEnabled) return;
+  const now = new Date();
+  if (nextStatus === "LIVE") {
+    await repositories.recordings.ensureAutomaticForWebinar({
+      webinarId: webinar.id,
+      provider: "livekit-egress",
+      status: "RECORDING",
+      startedAt: now,
+      endedAt: now,
+    });
+    return;
+  }
+  if (nextStatus === "ENDED") {
+    await repositories.recordings.ensureAutomaticForWebinar({
+      webinarId: webinar.id,
+      provider: "livekit-egress",
+      status: "FAILED",
+      startedAt: webinar.startedAt ?? null,
+      endedAt: now,
+      failureCode: "EGRESS_NOT_CONFIGURED",
+      failureMessage:
+        "Automatic recording is enabled for this plan, but LiveKit Egress/S3 is not configured yet.",
+    });
+  }
 }
 
 async function resolveWorkspacePlan(repositories: UnitOfWork, workspaceId: string): Promise<PlanId> {

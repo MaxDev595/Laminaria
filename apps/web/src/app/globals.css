@@ -3553,6 +3553,90 @@ select {
   border-radius: 50%;
 }
 
+.account-chip {
+  position: relative;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.75rem 0.35rem 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      color-mix(in srgb, var(--color-primary) 15%, transparent),
+      transparent 58%
+    ),
+    color-mix(in srgb, var(--color-surface-soft) 78%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--white) 5%, transparent) inset,
+    0 16px 36px color-mix(in srgb, var(--black) 18%, transparent);
+  transition:
+    transform 320ms var(--ease-out),
+    border-color 320ms var(--ease-out),
+    box-shadow 320ms var(--ease-out);
+}
+
+.account-chip::after {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--white) 12%, transparent),
+    transparent
+  );
+  transition: transform 620ms var(--ease-out);
+  content: "";
+}
+
+.account-chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent) inset,
+    0 20px 48px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.account-chip:hover::after {
+  transform: translateX(120%) skewX(-18deg);
+}
+
+.account-chip .user-avatar {
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.account-chip > span:last-child {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: grid;
+  line-height: 1.05;
+}
+
+.account-chip strong {
+  max-width: 8rem;
+  overflow: hidden;
+  color: var(--color-foreground);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-chip small {
+  margin-top: 0.18rem;
+  color: var(--color-primary);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .dashboard-content {
   width: min(100%, 88rem);
   margin-inline: auto;
@@ -3829,6 +3913,32 @@ select {
   min-height: 2.55rem;
   padding-inline: var(--space-3);
   white-space: nowrap;
+}
+
+.webinar-card__download {
+  min-height: 2.55rem;
+  padding: 0 var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-foreground);
+  font-size: var(--text-sm);
+  font-weight: 720;
+  white-space: nowrap;
+  transition:
+    transform 260ms var(--ease-out),
+    background 260ms var(--ease-out),
+    box-shadow 260ms var(--ease-out);
+}
+
+.webinar-card__download:hover {
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--color-primary) 16%, transparent);
 }
 
 .webinar-card__open {

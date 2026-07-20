@@ -184,6 +184,20 @@ export const api = {
     apiFetch<{ registrations: Registration[] }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/registrations`,
     ),
+  listRecordings: (workspaceId: string, webinarId: string) =>
+    apiFetch<{ recordings: Recording[] }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/recordings`,
+    ),
+  deleteRecording: (workspaceId: string, webinarId: string, recordingId: string) =>
+    apiFetch<void>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/recordings/${encodeURIComponent(recordingId)}`,
+      { method: "DELETE" },
+    ),
+  deleteWebinar: (workspaceId: string, webinarId: string) =>
+    apiFetch<void>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}`,
+      { method: "DELETE" },
+    ),
   publicWebinar: (slug: string, signal?: AbortSignal) =>
     apiFetch<{ webinar: PublicWebinar }>(`/v1/public/webinars/${encodeURIComponent(slug)}`, {
       signal,
@@ -266,8 +280,36 @@ export interface Webinar {
   requireEmailRegistration: boolean;
   maxAttendees: number | null;
   recordingEnabled: boolean;
+  startedAt: string | null;
+  endedAt: string | null;
   version: number;
   currentUserRole?: WebinarRole | null;
+}
+
+export type RecordingStatus =
+  | "PENDING"
+  | "RECORDING"
+  | "PROCESSING"
+  | "READY"
+  | "FAILED"
+  | "DELETED";
+
+export interface Recording {
+  id: string;
+  webinarSessionId: string;
+  provider: string;
+  externalId: string | null;
+  status: RecordingStatus;
+  playbackUrl: string | null;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  durationSeconds: number | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  availableAt: string | null;
+  failureCode: string | null;
+  failureMessage: string | null;
+  createdAt: string;
 }
 
 export type PublicWebinar = Pick<
