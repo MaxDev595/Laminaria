@@ -57,7 +57,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       { href: "/dashboard/upcoming", label: t("nav.upcoming"), icon: CalendarClock },
       { href: "/dashboard/past", label: t("nav.past"), icon: Video },
       { href: "/dashboard/drafts", label: t("nav.drafts"), icon: FilePenLine },
-      { href: "/dashboard/recordings", label: locale === "ru" ? "Р—Р°РїРёСЃРё" : "Recordings", icon: Clapperboard },
+      { href: "/dashboard/recordings", label: locale === "ru" ? "\u0417\u0430\u043f\u0438\u0441\u0438" : "Recordings", icon: Clapperboard },
       { href: "/dashboard/analytics", label: t("nav.analytics"), icon: BarChart3 },
       { href: "/dashboard/team", label: t("nav.team"), icon: UsersRound },
       { href: "/dashboard/settings", label: t("nav.settings"), icon: Settings },
@@ -77,16 +77,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           title={
             unauthorized
               ? locale === "ru"
-                ? "Р В Р’В Р РЋРЎС™Р В Р Р‹Р РЋРІР‚СљР В Р’В Р вЂ™Р’В¶Р В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦ Р В Р’В Р В РІР‚В Р В Р Р‹Р Р†Р вЂљР’В¦Р В Р’В Р РЋРІР‚СћР В Р’В Р СћРІР‚В"
+                ? "\u041d\u0443\u0436\u0435\u043d \u0432\u0445\u043e\u0434"
                 : "Sign in required"
               : locale === "ru"
-                ? "API Р В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’ВµР В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚СћР В Р Р‹Р В РЎвЂњР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р РЋРІР‚СљР В Р’В Р РЋРІР‚вЂќР В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦"
+                ? "API \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d"
                 : "API unavailable"
           }
           description={
             unauthorized
               ? locale === "ru"
-                ? "Р В Р’В Р Р†Р вЂљРІвЂћСћР В Р’В Р РЋРІР‚СћР В Р’В Р Р†РІР‚С›РІР‚вЂњР В Р’В Р СћРІР‚ВР В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р вЂ™Р’Вµ Р В Р’В Р В РІР‚В  Р В Р’В Р вЂ™Р’В·Р В Р’В Р вЂ™Р’В°Р В Р Р‹Р Р†Р вЂљР’В°Р В Р’В Р РЋРІР‚ВР В Р Р‹Р Р†Р вЂљР’В°Р В Р Р‹Р Р†Р вЂљР’ВР В Р’В Р В РІР‚В¦Р В Р’В Р В РІР‚В¦Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р’В Р Р†РІР‚С›РІР‚вЂњ Р В Р’В Р вЂ™Р’В°Р В Р’В Р РЋРІР‚СњР В Р’В Р РЋРІР‚СњР В Р’В Р вЂ™Р’В°Р В Р Р‹Р РЋРІР‚СљР В Р’В Р В РІР‚В¦Р В Р Р‹Р Р†Р вЂљРЎв„ў, Р В Р Р‹Р Р†Р вЂљР Р‹Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р РЋРІР‚СћР В Р’В Р вЂ™Р’В±Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“ Р В Р’В Р РЋРІР‚СћР В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р РЋРІР‚СњР В Р Р‹Р В РІР‚С™Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В Р вЂ° Р В Р’В Р РЋРІР‚СњР В Р’В Р вЂ™Р’В°Р В Р’В Р вЂ™Р’В±Р В Р’В Р РЋРІР‚ВР В Р’В Р В РІР‚В¦Р В Р’В Р вЂ™Р’ВµР В Р Р‹Р Р†Р вЂљРЎв„ў."
+                ? "\u0412\u043e\u0439\u0434\u0438\u0442\u0435 \u0432 \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0439 \u0430\u043a\u043a\u0430\u0443\u043d\u0442, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043a\u0430\u0431\u0438\u043d\u0435\u0442."
                 : "Sign in to your secure account to open the dashboard."
               : friendlyError(me.error ?? workspaces.error, locale)
           }
@@ -138,20 +138,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           type="button"
           className="sidebar-close"
           onClick={() => setMobileOpen(false)}
-          aria-label={locale === "ru" ? "Р В Р’В Р Р†Р вЂљРІР‚СњР В Р’В Р вЂ™Р’В°Р В Р’В Р РЋРІР‚СњР В Р Р‹Р В РІР‚С™Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В Р вЂ° Р В Р’В Р РЋР’ВР В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦Р В Р Р‹Р В РІР‚в„–" : "Close menu"}
+          aria-label={locale === "ru" ? "\u0417\u0430\u043a\u0440\u044b\u0442\u044c \u043c\u0435\u043d\u044e" : "Close menu"}
         >
           <X size={20} />
         </button>
       </div>
-      <motion.label
-        key={workspace.id}
-        className="workspace-chip"
-        initial={{ opacity: 0, y: 8, scale: 0.985 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.985 }}
-        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <label className="workspace-chip">
         <span>{workspace.name.slice(0, 1).toUpperCase()}</span>
         <div>
           <strong>{workspace.name}</strong>
@@ -159,7 +151,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
         <ChevronRight size={16} />
         <select
-          aria-label={locale === "ru" ? "Выбрать рабочее пространство" : "Select workspace"}
+          aria-label={locale === "ru" ? "\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0440\u0430\u0431\u043e\u0447\u0435\u0435 \u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u043e" : "Select workspace"}
           value={workspace.id}
           onChange={(event) => {
             const nextId = event.target.value;
@@ -170,11 +162,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         >
           {availableWorkspaces.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} · {item.role}
+              {item.name} \u00b7 {item.role}
             </option>
           ))}
         </select>
-      </motion.label>
+      </label>
       <nav className="dashboard-nav" aria-label={t("shell.mainNavigation")}>
         {nav.map((item) => {
           const active =
@@ -232,7 +224,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               type="button"
               className="topbar-menu"
               onClick={() => setMobileOpen(true)}
-              aria-label={locale === "ru" ? "Р В Р’В Р РЋРІР‚С”Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р’В Р РЋРІР‚СњР В Р Р‹Р В РІР‚С™Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“Р В Р Р‹Р Р†Р вЂљРЎв„ўР В Р Р‹Р В Р вЂ° Р В Р’В Р РЋР’ВР В Р’В Р вЂ™Р’ВµР В Р’В Р В РІР‚В¦Р В Р Р‹Р В РІР‚в„–" : "Open menu"}
+              aria-label={locale === "ru" ? "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u043c\u0435\u043d\u044e" : "Open menu"}
             >
               <Menu size={20} />
             </button>

@@ -126,16 +126,16 @@ export function CreateWebinarForm() {
         <h1>{t("webinar.draftCreated")}</h1>
         <p>{t("webinar.createdBody", { title: created.title })}</p>
         <div className="share-link-card">
-          <small>{locale === "ru" ? "РЎСЃС‹Р»РєР° РґР»СЏ СѓС‡Р°СЃС‚РЅРёРєРѕРІ" : "Participant link"}</small>
+          <small>{locale === "ru" ? "\u0421\u0441\u044b\u043b\u043a\u0430 \u0434\u043b\u044f \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u0432" : "Participant link"}</small>
           <code>{publicUrl}</code>
           <Button type="button" variant="secondary" onClick={() => void copyPublicUrl()}>
             <Copy size={17} />
             {copied
               ? locale === "ru"
-                ? "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ"
+                ? "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e"
                 : "Copied"
               : locale === "ru"
-                ? "РЎРєРѕРїРёСЂРѕРІР°С‚СЊ"
+                ? "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c"
                 : "Copy"}
           </Button>
         </div>
