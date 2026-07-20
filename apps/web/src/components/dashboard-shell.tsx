@@ -6,6 +6,7 @@ import {
   BarChart3,
   CalendarClock,
   ChevronRight,
+  Clapperboard,
   FilePenLine,
   Home,
   LogOut,
@@ -56,11 +57,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       { href: "/dashboard/upcoming", label: t("nav.upcoming"), icon: CalendarClock },
       { href: "/dashboard/past", label: t("nav.past"), icon: Video },
       { href: "/dashboard/drafts", label: t("nav.drafts"), icon: FilePenLine },
+      { href: "/dashboard/recordings", label: locale === "ru" ? "Записи" : "Recordings", icon: Clapperboard },
       { href: "/dashboard/analytics", label: t("nav.analytics"), icon: BarChart3 },
       { href: "/dashboard/team", label: t("nav.team"), icon: UsersRound },
       { href: "/dashboard/settings", label: t("nav.settings"), icon: Settings },
     ],
-    [t],
+    [locale, t],
   );
 
   if (me.isLoading || workspaces.isLoading) return <DashboardSkeleton />;
@@ -141,7 +143,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <X size={20} />
         </button>
       </div>
-      <label className="workspace-chip">
+      <motion.label
+        key={workspace.id}
+        className="workspace-chip"
+        initial={{ opacity: 0, y: 8, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.985 }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+      >
         <span>{workspace.name.slice(0, 1).toUpperCase()}</span>
         <div>
           <strong>{workspace.name}</strong>
@@ -164,7 +174,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </option>
           ))}
         </select>
-      </label>
+      </motion.label>
       <nav className="dashboard-nav" aria-label={t("shell.mainNavigation")}>
         {nav.map((item) => {
           const active =

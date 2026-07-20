@@ -17,7 +17,7 @@ import { api, friendlyError, type Registration, type ServiceStatus, type Webinar
 import type { DashboardSectionName } from "@/lib/dashboard-sections";
 import { Badge, Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
-import { DashboardOverview, PageHeading } from "./dashboard-overview";
+import { DashboardOverview, DashboardRecordings, PageHeading } from "./dashboard-overview";
 import { ServiceState } from "./ui";
 
 export function DashboardSection({ section }: { section: DashboardSectionName }) {
@@ -26,6 +26,7 @@ export function DashboardSection({ section }: { section: DashboardSectionName })
 
   if (section === "upcoming" || section === "past" || section === "drafts")
     return <DashboardOverview filter={section} />;
+  if (section === "recordings") return <DashboardRecordings />;
   if (section === "analytics") return <AnalyticsSection />;
 
   const copy = {

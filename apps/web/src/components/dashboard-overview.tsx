@@ -21,7 +21,7 @@ import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { api, friendlyError, type Webinar, type WebinarRole } from "@/lib/api";
+import { api, friendlyError, type Recording, type Webinar, type WebinarRole } from "@/lib/api";
 import { formatLocalDate } from "@/lib/text";
 import { Badge, Button, Skeleton } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
@@ -182,6 +182,170 @@ export function PageHeading({
       </div>
       {action}
     </header>
+  );
+}
+
+export function DashboardRecordings() {
+  const locale = useLocale();
+  const { workspace } = useDashboard();
+  const queryClient = useQueryClient();
+  const [busyRecordingId, setBusyRecordingId] = useState<string | null>(null);
+  const recordingsQuery = useQuery({
+    queryKey: ["recordings-page", workspace.id],
+    queryFn: async () => {
+      const { webinars } = await api.listWebinars(workspace.id);
+      const completed = webinars.filter(
+        (webinar) =>
+          webinar.recordingEnabled &&
+          (webinar.status === "ENDED" || webinar.status === "ARCHIVED"),
+      );
+      const rows = await Promise.all(
+        completed.map(async (webinar) => {
+          const { recordings } = await api.listRecordings(workspace.id, webinar.id).catch(() => ({
+            recordings: [] as Recording[],
+          }));
+          return { webinar, recordings };
+        }),
+      );
+      return rows;
+    },
+  });
+
+  async function deleteRecording(webinar: Webinar, recording: Recording) {
+    const confirmed = window.confirm(
+      locale === "ru" ? "Удалить запись вебинара?" : "Delete this webinar recording?",
+    );
+    if (!confirmed) return;
+    setBusyRecordingId(recording.id);
+    try {
+      await api.deleteRecording(workspace.id, webinar.id, recording.id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["recordings-page", workspace.id] }),
+        queryClient.invalidateQueries({ queryKey: ["recordings", workspace.id, webinar.id] }),
+      ]);
+    } finally {
+      setBusyRecordingId(null);
+    }
+  }
+
+  const rows = recordingsQuery.data ?? [];
+
+  return (
+    <div className="dashboard-page">
+      <PageHeading
+        eyebrow={workspace.name}
+        title={locale === "ru" ? "Записи вебинаров" : "Webinar recordings"}
+        body={
+          locale === "ru"
+            ? "Все записи проведённых вебинаров собраны отдельно: скачать, проверить статус или удалить."
+            : "All completed webinar recordings live here: download, check status, or delete."
+        }
+      />
+      {recordingsQuery.isLoading ? (
+        <div className="recordings-grid">
+          <Skeleton style={{ height: 190 }} />
+          <Skeleton style={{ height: 190 }} />
+        </div>
+      ) : recordingsQuery.isError ? (
+        <ServiceState
+          icon={<CircleOff size={20} />}
+          title={locale === "ru" ? "Записи не загрузились" : "Recordings could not be loaded"}
+          description={friendlyError(recordingsQuery.error, locale)}
+          action={
+            <Button variant="secondary" onClick={() => void recordingsQuery.refetch()}>
+              {locale === "ru" ? "Повторить" : "Retry"}
+            </Button>
+          }
+        />
+      ) : rows.length === 0 ? (
+        <ServiceState
+          icon={<Clapperboard size={20} />}
+          title={locale === "ru" ? "Записей пока нет" : "No recordings yet"}
+          description={
+            locale === "ru"
+              ? "После завершения вебинара запись появится здесь отдельной карточкой."
+              : "After a webinar ends, its recording will appear here as a separate card."
+          }
+        />
+      ) : (
+        <div className="recordings-grid">
+          {rows.map(({ webinar, recordings }) => {
+            const recording = recordings[0] ?? null;
+            const status = recording?.status ?? "PENDING";
+            return (
+              <motion.article
+                className="recording-card"
+                key={webinar.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -3 }}
+              >
+                <div className="recording-card__top">
+                  <span className={`recording-card__status is-${status.toLowerCase()}`}>
+                    <Clapperboard size={15} />
+                    {status}
+                  </span>
+                  <small>{webinar.status}</small>
+                </div>
+                <h3>{webinar.title}</h3>
+                <p>
+                  {webinar.endedAt
+                    ? formatLocalDate(webinar.endedAt, locale)
+                    : webinar.scheduledStartAt
+                      ? formatLocalDate(webinar.scheduledStartAt, locale)
+                      : locale === "ru"
+                        ? "Дата не указана"
+                        : "No date"}
+                </p>
+                <div className="recording-card__meta">
+                  <span>
+                    {locale === "ru" ? "Провайдер" : "Provider"}: {recording?.provider ?? "LiveKit"}
+                  </span>
+                  <span>
+                    {locale === "ru" ? "Файл" : "File"}:{" "}
+                    {recording?.playbackUrl
+                      ? locale === "ru"
+                        ? "готов"
+                        : "ready"
+                      : locale === "ru"
+                        ? "ожидается"
+                        : "pending"}
+                  </span>
+                </div>
+                <div className="recording-card__actions">
+                  {recording?.playbackUrl ? (
+                    <a className="webinar-card__download" href={recording.playbackUrl} download>
+                      <Download size={16} />
+                      {locale === "ru" ? "Скачать" : "Download"}
+                    </a>
+                  ) : (
+                    <Button size="sm" variant="secondary" disabled>
+                      <Clapperboard size={16} />
+                      {locale === "ru" ? "Файл готовится" : "Preparing"}
+                    </Button>
+                  )}
+                  {recording ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => void deleteRecording(webinar, recording)}
+                      disabled={busyRecordingId === recording.id}
+                    >
+                      {busyRecordingId === recording.id ? (
+                        <LoaderCircle className="spin" size={16} />
+                      ) : (
+                        <Trash2 size={16} />
+                      )}
+                      {locale === "ru" ? "Удалить" : "Delete"}
+                    </Button>
+                  ) : null}
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -390,12 +554,6 @@ function WebinarCard({
               : "Date"}
         </span>
       </div>
-      {webinar.coverImageUrl ? (
-        <div
-          className="webinar-card__banner"
-          style={{ backgroundImage: `url(${webinar.coverImageUrl})` }}
-        />
-      ) : null}
       <div className="webinar-card__main">
         <div>
           <Badge tone={tone as "neutral" | "primary" | "success" | "danger"}>

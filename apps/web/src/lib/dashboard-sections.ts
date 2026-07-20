@@ -2,6 +2,7 @@ export const dashboardSections = [
   "upcoming",
   "past",
   "drafts",
+  "recordings",
   "analytics",
   "team",
   "settings",

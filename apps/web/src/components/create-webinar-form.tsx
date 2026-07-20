@@ -33,7 +33,6 @@ const schema = z.object({
     .min(3)
     .max(100),
   description: z.string().max(10_000),
-  coverImageUrl: z.string().url().or(z.literal("")),
   scheduledStartAt: z.string(),
   language: z.enum(["en", "ru"]),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
@@ -57,7 +56,6 @@ export function CreateWebinarForm() {
       title: "",
       slug: "",
       description: "",
-      coverImageUrl: "",
       scheduledStartAt: "",
       language: locale,
       visibility: "PUBLIC",
@@ -87,7 +85,7 @@ export function CreateWebinarForm() {
     try {
       const result = await api.createWebinar(workspace.id, {
         ...values,
-        coverImageUrl: values.coverImageUrl.trim() || null,
+        coverImageUrl: null,
         scheduledStartAt: values.scheduledStartAt
           ? new Date(values.scheduledStartAt).toISOString()
           : null,
@@ -195,17 +193,6 @@ export function CreateWebinarForm() {
             </Field>
             <Field label={t("webinar.description")}>
               <Textarea {...form.register("description")} />
-            </Field>
-            <Field
-              label={locale === "ru" ? "Баннер / обложка вебинара" : "Webinar banner / cover"}
-              hint={
-                locale === "ru"
-                  ? "Вставьте ссылку на картинку 16:9 или 3:1"
-                  : "Paste an image URL, ideally 16:9 or 3:1"
-              }
-              error={form.formState.errors.coverImageUrl?.message}
-            >
-              <Input placeholder="https://..." {...form.register("coverImageUrl")} />
             </Field>
           </div>
         </section>
