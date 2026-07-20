@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   BarChart3,
   CalendarClock,
-  ChevronRight,
   Clapperboard,
   FilePenLine,
   Home,
@@ -291,7 +290,6 @@ function WorkspacePicker({
           <strong>{workspace.name}</strong>
           <small>{workspace.role ?? "OWNER"}</small>
         </div>
-        <ChevronRight size={16} />
       </button>
       <AnimatePresence>
         {open ? (
