@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   BarChart3,
   CalendarClock,
-  ChevronRight,
   Clapperboard,
   FilePenLine,
   Home,
@@ -35,6 +34,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(() =>
     typeof window === "undefined" ? null : window.localStorage.getItem("laminaria-workspace-id"),
   );
@@ -57,7 +57,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       { href: "/dashboard/upcoming", label: t("nav.upcoming"), icon: CalendarClock },
       { href: "/dashboard/past", label: t("nav.past"), icon: Video },
       { href: "/dashboard/drafts", label: t("nav.drafts"), icon: FilePenLine },
-      { href: "/dashboard/recordings", label: locale === "ru" ? "Р—Р°РїРёСЃРё" : "Recordings", icon: Clapperboard },
+      { href: "/dashboard/recordings", label: locale === "ru" ? "Р вЂ”Р В°Р С—Р С‘РЎРѓР С‘" : "Recordings", icon: Clapperboard },
       { href: "/dashboard/analytics", label: t("nav.analytics"), icon: BarChart3 },
       { href: "/dashboard/team", label: t("nav.team"), icon: UsersRound },
       { href: "/dashboard/settings", label: t("nav.settings"), icon: Settings },
@@ -77,16 +77,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           title={
             unauthorized
               ? locale === "ru"
-                ? "Р СњРЎС“Р В¶Р ВµР Р… Р Р†РЎвЂ¦Р С•Р Т‘"
+                ? "Р В РЎСљР РЋРЎвЂњР В Р’В¶Р В Р’ВµР В Р вЂ¦ Р В Р вЂ Р РЋРІР‚В¦Р В РЎвЂўР В РўвЂ"
                 : "Sign in required"
               : locale === "ru"
-                ? "API Р Р…Р ВµР Т‘Р С•РЎРѓРЎвЂљРЎС“Р С—Р ВµР Р…"
+                ? "API Р В Р вЂ¦Р В Р’ВµР В РўвЂР В РЎвЂўР РЋР С“Р РЋРІР‚С™Р РЋРЎвЂњР В РЎвЂ”Р В Р’ВµР В Р вЂ¦"
                 : "API unavailable"
           }
           description={
             unauthorized
               ? locale === "ru"
-                ? "Р вЂ™Р С•Р в„–Р Т‘Р С‘РЎвЂљР Вµ Р Р† Р В·Р В°РЎвЂ°Р С‘РЎвЂ°РЎвЂР Р…Р Р…РЎвЂ№Р в„– Р В°Р С”Р С”Р В°РЎС“Р Р…РЎвЂљ, РЎвЂЎРЎвЂљР С•Р В±РЎвЂ№ Р С•РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р С”Р В°Р В±Р С‘Р Р…Р ВµРЎвЂљ."
+                ? "Р В РІР‚в„ўР В РЎвЂўР В РІвЂћвЂ“Р В РўвЂР В РЎвЂР РЋРІР‚С™Р В Р’Вµ Р В Р вЂ  Р В Р’В·Р В Р’В°Р РЋРІР‚В°Р В РЎвЂР РЋРІР‚В°Р РЋРІР‚ВР В Р вЂ¦Р В Р вЂ¦Р РЋРІР‚в„–Р В РІвЂћвЂ“ Р В Р’В°Р В РЎвЂќР В РЎвЂќР В Р’В°Р РЋРЎвЂњР В Р вЂ¦Р РЋРІР‚С™, Р РЋРІР‚РЋР РЋРІР‚С™Р В РЎвЂўР В Р’В±Р РЋРІР‚в„– Р В РЎвЂўР РЋРІР‚С™Р В РЎвЂќР РЋР вЂљР РЋРІР‚в„–Р РЋРІР‚С™Р РЋР Р‰ Р В РЎвЂќР В Р’В°Р В Р’В±Р В РЎвЂР В Р вЂ¦Р В Р’ВµР РЋРІР‚С™."
                 : "Sign in to your secure account to open the dashboard."
               : friendlyError(me.error ?? workspaces.error, locale)
           }
@@ -138,43 +138,72 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           type="button"
           className="sidebar-close"
           onClick={() => setMobileOpen(false)}
-          aria-label={locale === "ru" ? "Р вЂ”Р В°Р С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р СР ВµР Р…РЎР‹" : "Close menu"}
+          aria-label={locale === "ru" ? "Р В РІР‚вЂќР В Р’В°Р В РЎвЂќР РЋР вЂљР РЋРІР‚в„–Р РЋРІР‚С™Р РЋР Р‰ Р В РЎВР В Р’ВµР В Р вЂ¦Р РЋР вЂ№" : "Close menu"}
         >
           <X size={20} />
         </button>
       </div>
-      <motion.label
+      <motion.div
         key={workspace.id}
-        className="workspace-chip"
+        className="workspace-chip workspace-chip--menu"
         initial={{ opacity: 0, y: 8, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         whileHover={{ y: -2 }}
         whileTap={{ scale: 0.985 }}
         transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setWorkspaceMenuOpen(false);
+        }}
       >
-        <span>{workspace.name.slice(0, 1).toUpperCase()}</span>
-        <div>
-          <strong>{workspace.name}</strong>
-          <small>{workspace.role ?? "OWNER"}</small>
-        </div>
-        <ChevronRight size={16} />
-        <select
-          aria-label={locale === "ru" ? "Р’С‹Р±СЂР°С‚СЊ СЂР°Р±РѕС‡РµРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ" : "Select workspace"}
-          value={workspace.id}
-          onChange={(event) => {
-            const nextId = event.target.value;
-            window.localStorage.setItem("laminaria-workspace-id", nextId);
-            setSelectedWorkspaceId(nextId);
-            setMobileOpen(false);
-          }}
+        <button
+          type="button"
+          className="workspace-chip__button"
+          aria-haspopup="listbox"
+          aria-expanded={workspaceMenuOpen}
+          aria-label={locale === "ru" ? "Выбрать рабочее пространство" : "Select workspace"}
+          onClick={() => setWorkspaceMenuOpen((current) => !current)}
         >
-          {availableWorkspaces.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name} В· {item.role}
-            </option>
-          ))}
-        </select>
-      </motion.label>
+          <span>{workspace.name.slice(0, 1).toUpperCase()}</span>
+          <div>
+            <strong>{workspace.name}</strong>
+            <small>{workspace.role ?? "OWNER"}</small>
+          </div>
+        </button>
+        <AnimatePresence>
+          {workspaceMenuOpen ? (
+            <motion.div
+              className="workspace-menu"
+              role="listbox"
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {availableWorkspaces.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="option"
+                  aria-selected={item.id === workspace.id}
+                  className={item.id === workspace.id ? "is-active" : ""}
+                  onClick={() => {
+                    window.localStorage.setItem("laminaria-workspace-id", item.id);
+                    setSelectedWorkspaceId(item.id);
+                    setWorkspaceMenuOpen(false);
+                    setMobileOpen(false);
+                  }}
+                >
+                  <span>{item.name.slice(0, 1).toUpperCase()}</span>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.role ?? "OWNER"}</small>
+                  </div>
+                </button>
+              ))}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </motion.div>
       <nav className="dashboard-nav" aria-label={t("shell.mainNavigation")}>
         {nav.map((item) => {
           const active =
@@ -232,7 +261,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               type="button"
               className="topbar-menu"
               onClick={() => setMobileOpen(true)}
-              aria-label={locale === "ru" ? "Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р СР ВµР Р…РЎР‹" : "Open menu"}
+              aria-label={locale === "ru" ? "Р В РЎвЂєР РЋРІР‚С™Р В РЎвЂќР РЋР вЂљР РЋРІР‚в„–Р РЋРІР‚С™Р РЋР Р‰ Р В РЎВР В Р’ВµР В Р вЂ¦Р РЋР вЂ№" : "Open menu"}
             >
               <Menu size={20} />
             </button>
