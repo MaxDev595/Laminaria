@@ -78,6 +78,17 @@ export async function registerWebinarRoutes(
 ): Promise<void> {
   const service = new WebinarService(repositories.webinars);
 
+  app.get<{ Params: { recordingId: string } }>(
+    "/v1/public/recordings/:recordingId",
+    { schema: { tags: ["Webinars"], summary: "Open a published webinar recording" } },
+    async (request) => {
+      const recordingId = z.string().uuid().parse(request.params.recordingId);
+      const playback = await repositories.recordings.findPublicById(recordingId);
+      if (!playback) throw new AppError(404, "NOT_FOUND", "Recording not found or not ready");
+      return playback;
+    },
+  );
+
   app.get<{ Params: { workspaceId: string } }>(
     "/v1/workspaces/:workspaceId/webinars",
     {
@@ -148,6 +159,28 @@ export async function registerWebinarRoutes(
       const webinar = await service.find(params.webinarId);
       assertWorkspace(webinar.workspaceId, params.workspaceId);
       return { webinar };
+    },
+  );
+
+  app.post<{ Params: { workspaceId: string; webinarId: string } }>(
+    "/v1/workspaces/:workspaceId/webinars/:webinarId/recordings/start",
+    { schema: { tags: ["Webinars"], summary: "Start or retry the live webinar recording" } },
+    async (request) => {
+      const params = paramsSchema.parse(request.params);
+      await requireWebinarPermission(request, repositories, params.webinarId, "recording:manage");
+      const webinar = await service.find(params.webinarId);
+      assertWorkspace(webinar.workspaceId, params.workspaceId);
+      if (!webinar.recordingEnabled) {
+        throw new AppError(402, "PLAN_LIMIT_EXCEEDED", "Recording requires Pro or Business");
+      }
+      if (webinar.status !== "LIVE") {
+        throw new AppError(409, "CONFLICT", "Recording can only start during a live webinar");
+      }
+      const active = (await repositories.recordings.listByWebinar(webinar.id)).find(
+        (recording) => recording.status === "RECORDING",
+      );
+      if (!active) await syncAutomaticRecording(repositories, webinar, "LIVE", roomAccess.recordings);
+      return { recordings: await repositories.recordings.listByWebinar(webinar.id) };
     },
   );
 
@@ -241,6 +274,7 @@ export async function registerWebinarRoutes(
       return {
         workspaceId: access.webinar.workspaceId,
         webinarId: access.webinar.id,
+        recordingEnabled: access.webinar.recordingEnabled,
         media,
         realtimeToken: roomAccess.participants.issue({
           subject,

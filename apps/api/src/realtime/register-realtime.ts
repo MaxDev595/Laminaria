@@ -125,7 +125,8 @@ interface MutationPayload {
 }
 
 function createDefaultId(kind: RealtimeEntityKind): string {
-  return `${kind}_${randomUUID()}`;
+  void kind;
+  return randomUUID();
 }
 
 function resolveDependencies(dependencies: RegisterRealtimeDependencies): ResolvedDependencies {

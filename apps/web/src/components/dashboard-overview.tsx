@@ -7,6 +7,7 @@ import {
   Clapperboard,
   CircleOff,
   Clock3,
+  Copy,
   Download,
   LoaderCircle,
   Play,
@@ -195,15 +196,15 @@ export function DashboardRecordings() {
     queryFn: async () => {
       const { webinars } = await api.listWebinars(workspace.id);
       const completed = webinars.filter(
-        (webinar) =>
-          webinar.recordingEnabled &&
-          (webinar.status === "ENDED" || webinar.status === "ARCHIVED"),
+        (webinar) => webinar.status === "ENDED" || webinar.status === "ARCHIVED",
       );
       const rows = await Promise.all(
         completed.map(async (webinar) => {
-          const { recordings } = await api.listRecordings(workspace.id, webinar.id).catch(() => ({
-            recordings: [] as Recording[],
-          }));
+          const { recordings } = webinar.recordingEnabled
+            ? await api.listRecordings(workspace.id, webinar.id).catch(() => ({
+                recordings: [] as Recording[],
+              }))
+            : { recordings: [] as Recording[] };
           return { webinar, recordings };
         }),
       );
@@ -271,7 +272,7 @@ export function DashboardRecordings() {
         <div className="recordings-grid">
           {rows.map(({ webinar, recordings }) => {
             const recording = recordings[0] ?? null;
-            const status = recording?.status ?? "PENDING";
+            const status = webinar.recordingEnabled ? (recording?.status ?? "PENDING") : "LOCKED";
             return (
               <motion.article
                 className="recording-card"
@@ -313,6 +314,26 @@ export function DashboardRecordings() {
                   </span>
                 </div>
                 <div className="recording-card__actions">
+                  {recording?.status === "READY" ? (
+                    <Link className="webinar-card__download" href={`/recordings/${recording.id}`}>
+                      <Play size={16} />
+                      {locale === "ru" ? "Смотреть" : "Watch"}
+                    </Link>
+                  ) : null}
+                  {recording?.status === "READY" ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        void navigator.clipboard.writeText(
+                          `${window.location.origin}/${locale}/recordings/${recording.id}`,
+                        )
+                      }
+                    >
+                      <Copy size={16} />
+                      {locale === "ru" ? "Ссылка" : "Copy link"}
+                    </Button>
+                  ) : null}
                   {recording?.playbackUrl ? (
                     <a className="webinar-card__download" href={recording.playbackUrl} download>
                       <Download size={16} />
@@ -321,7 +342,13 @@ export function DashboardRecordings() {
                   ) : (
                     <Button size="sm" variant="secondary" disabled>
                       <Clapperboard size={16} />
-                      {locale === "ru" ? "Файл готовится" : "Preparing"}
+                      {webinar.recordingEnabled
+                        ? locale === "ru"
+                          ? "Файл готовится"
+                          : "Preparing"
+                        : locale === "ru"
+                          ? "Доступно в Pro"
+                          : "Available on Pro"}
                     </Button>
                   )}
                   {recording ? (

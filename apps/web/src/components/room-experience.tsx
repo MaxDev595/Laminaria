@@ -10,16 +10,25 @@ import {
   useRoomContext,
   useTracks,
 } from "@livekit/components-react";
-import { ConnectionState, ParticipantEvent, Track, VideoQuality } from "livekit-client";
+import {
+  ConnectionState,
+  DefaultReconnectPolicy,
+  ParticipantEvent,
+  Track,
+  VideoPresets,
+  VideoQuality,
+} from "livekit-client";
 import {
   AlertTriangle,
   ArrowLeft,
   Ban,
   Camera,
   CameraOff,
+  Check,
   CheckCircle2,
   ChartNoAxesColumn,
   CircleDot,
+  ChevronDown,
   HelpCircle,
   Link2,
   LoaderCircle,
@@ -53,7 +62,7 @@ import {
 import { io, type Socket } from "socket.io-client";
 
 import { Link, useRouter } from "@/i18n/navigation";
-import { api, type PrejoinPayload } from "@/lib/api";
+import { api, type PrejoinPayload, type Recording } from "@/lib/api";
 import { orderBroadcastTracks } from "@/lib/stage-tracks";
 import { Badge, Button, Logo } from "@laminaria/ui";
 import { ServiceState } from "./ui";
@@ -117,6 +126,10 @@ type Ack<T> =
   | { ok: false; error: { code: string; message: string } };
 
 const QUALITY_PRESETS = ["144p", "240p", "480p", "720p", "1080p"] as const;
+const ROOM_RECONNECT_POLICY = new DefaultReconnectPolicy([
+  0, 300, 900, 1_800, 3_000, 5_000, 7_000, 7_000, 7_000, 7_000, 7_000, 7_000, 7_000,
+  7_000, 7_000, 7_000, 7_000, 7_000,
+]);
 const DEFAULT_STAGE_LAYOUT: StageLayout = {
   position: "bottom-right",
   sizePercent: 24,
@@ -193,12 +206,17 @@ export function RoomExperience({ slug }: { slug: string }) {
       options={{
         adaptiveStream: true,
         dynacast: true,
+        reconnectPolicy: ROOM_RECONNECT_POLICY,
         videoCaptureDefaults: {
-          resolution: { width: 1920, height: 1080 },
+          resolution: VideoPresets.h1080.resolution,
+          frameRate: 30,
         },
         publishDefaults: {
           simulcast: true,
-          videoEncoding: { maxBitrate: 4_500_000 },
+          videoEncoding: { maxBitrate: 3_500_000, maxFramerate: 30 },
+          videoSimulcastLayers: [VideoPresets.h216, VideoPresets.h540],
+          screenShareEncoding: { maxBitrate: 5_000_000, maxFramerate: 30 },
+          screenShareSimulcastLayers: [VideoPresets.h360, VideoPresets.h720],
         },
       }}
       data-lk-theme="default"
@@ -527,6 +545,167 @@ function StageVideoTile({
   );
 }
 
+function QualityMenu({
+  value,
+  onChange,
+  variant,
+}: {
+  value: QualityPreset;
+  onChange: (quality: QualityPreset) => void;
+  variant: "topbar" | "settings";
+}) {
+  const locale = useLocale();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className={`quality-menu quality-menu--${variant}`}>
+      <button
+        type="button"
+        className="quality-menu__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <SlidersHorizontal size={16} aria-hidden="true" />
+        <span>{locale === "ru" ? "Качество" : "Quality"}</span>
+        <strong>{value}</strong>
+        <ChevronDown size={15} className={open ? "is-open" : ""} aria-hidden="true" />
+      </button>
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            className="quality-menu__popover"
+            role="listbox"
+            aria-label={locale === "ru" ? "Качество видео" : "Video quality"}
+            initial={{ opacity: 0, y: -7, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -5, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {QUALITY_PRESETS.map((preset) => (
+              <button
+                type="button"
+                role="option"
+                aria-selected={preset === value}
+                className={preset === value ? "is-selected" : ""}
+                key={preset}
+                onClick={() => {
+                  onChange(preset);
+                  setOpen(false);
+                }}
+              >
+                <span>
+                  <strong>{preset}</strong>
+                  <small>{qualityHint(preset, locale)}</small>
+                </span>
+                {preset === value ? <Check size={16} aria-hidden="true" /> : null}
+              </button>
+            ))}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function RecordingIndicator({ session }: { session: StoredRoom }) {
+  const locale = useLocale();
+  const [recording, setRecording] = useState<Recording | null>(null);
+  const [retrying, setRetrying] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!session.workspaceId) return;
+    try {
+      const result = await api.listRecordings(session.workspaceId, session.webinarId);
+      setRecording(result.recordings[0] ?? null);
+    } catch {
+      // The room must stay usable even when the catalog API is temporarily unavailable.
+    }
+  }, [session.webinarId, session.workspaceId]);
+
+  useEffect(() => {
+    const initial = window.setTimeout(() => void refresh(), 0);
+    const timer = window.setInterval(() => void refresh(), 6_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, [refresh]);
+
+  async function retry() {
+    if (!session.workspaceId || retrying) return;
+    setRetrying(true);
+    try {
+      const result = await api.startRecording(session.workspaceId, session.webinarId);
+      setRecording(result.recordings[0] ?? null);
+    } finally {
+      setRetrying(false);
+    }
+  }
+
+  const active = recording?.status === "RECORDING";
+  const failed = recording?.status === "FAILED";
+  if (session.recordingEnabled === false) {
+    return (
+      <span className="recording-indicator is-locked" title={locale === "ru" ? "Запись доступна в Pro и Business" : "Recording is available on Pro and Business"}>
+        <span className="recording-indicator__dot" />
+        {locale === "ru" ? "REC · PRO" : "REC · PRO"}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className={`recording-indicator ${active ? "is-active" : ""} ${failed ? "is-failed" : ""}`}
+      onClick={failed ? () => void retry() : undefined}
+      disabled={!failed || retrying}
+      title={
+        failed
+          ? recording.failureMessage ?? (locale === "ru" ? "Повторить запуск записи" : "Retry recording")
+          : active
+            ? locale === "ru"
+              ? "Запись эфира идёт"
+              : "Webinar is being recorded"
+            : locale === "ru"
+              ? "Запись запускается"
+              : "Recording is starting"
+      }
+    >
+      <span className="recording-indicator__dot" />
+      {retrying
+        ? locale === "ru"
+          ? "Запуск..."
+          : "Starting..."
+        : failed
+          ? locale === "ru"
+            ? "Запись: повторить"
+            : "Recording: retry"
+          : active
+            ? "REC"
+            : locale === "ru"
+              ? "Запись..."
+              : "Recording..."}
+    </button>
+  );
+}
+
 function RoomTopbar({
   slug,
   session,
@@ -618,24 +797,10 @@ function RoomTopbar({
       </div>
       <div className="room-topbar__actions">
         {isViewerRole(role) ? (
-          <label
-            className="quality-select quality-select--topbar"
-            title={locale === "ru" ? "\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0432\u0438\u0434\u0435\u043e" : "Video quality"}
-          >
-            <SlidersHorizontal size={16} aria-hidden="true" />
-            <span>{locale === "ru" ? "\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e" : "Quality"}</span>
-            <select
-              value={quality}
-              aria-label={locale === "ru" ? "\u041a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0432\u0438\u0434\u0435\u043e" : "Video quality"}
-              onChange={(event) => onQualityChange(event.target.value as QualityPreset)}
-            >
-              {QUALITY_PRESETS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </label>
+          <QualityMenu value={quality} onChange={onQualityChange} variant="topbar" />
+        ) : null}
+        {canManageStage(role) && session.workspaceId ? (
+          <RecordingIndicator session={session} />
         ) : null}
         <RoleBadge role={role} />
         <button type="button" className="room-chat-toggle" onClick={onToggleChat}>
@@ -1228,19 +1393,7 @@ function RealtimePanel({
             <Settings size={16} />
             <strong>{locale === "ru" ? "Качество просмотра" : "Viewing quality"}</strong>
           </header>
-          <label className="quality-select quality-select--settings">
-            <span>{locale === "ru" ? "Качество" : "Quality"}</span>
-            <select
-              value={quality}
-              onChange={(event) => onQualityChange(event.target.value as QualityPreset)}
-            >
-              {QUALITY_PRESETS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </label>
+          <QualityMenu value={quality} onChange={onQualityChange} variant="settings" />
         </section>
       ) : null}
 
@@ -1877,6 +2030,17 @@ function qualityToLiveKitPreference(quality: QualityPreset): VideoQuality {
   if (quality === "144p" || quality === "240p") return VideoQuality.LOW;
   if (quality === "480p") return VideoQuality.MEDIUM;
   return VideoQuality.HIGH;
+}
+
+function qualityHint(quality: QualityPreset, locale: string): string {
+  const hints: Record<QualityPreset, readonly [string, string]> = {
+    "144p": ["Экономия трафика", "Data saver"],
+    "240p": ["Слабая сеть", "Slow network"],
+    "480p": ["Сбалансировано", "Balanced"],
+    "720p": ["Высокое качество", "High quality"],
+    "1080p": ["Максимум", "Maximum"],
+  };
+  return hints[quality][locale === "ru" ? 0 : 1];
 }
 
 function qualityToDimensions(quality: QualityPreset): { width: number; height: number } {

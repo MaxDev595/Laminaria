@@ -54,6 +54,7 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
     },
     recordings: {
       listByWebinar: unavailable,
+      findPublicById: unavailable,
       ensureAutomaticForWebinar: unavailable,
       softDelete: unavailable,
     },

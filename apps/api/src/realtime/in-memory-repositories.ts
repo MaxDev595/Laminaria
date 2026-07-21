@@ -27,6 +27,12 @@ export class InMemoryChatRepository implements ChatRepository {
     return clone(message);
   }
 
+  async listByWebinar(webinarId: string): Promise<readonly ChatMessage[]> {
+    return this.all()
+      .filter((message) => message.webinarId === webinarId)
+      .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  }
+
   async markDeleted(input: {
     webinarId: string;
     messageId: string;

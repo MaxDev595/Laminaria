@@ -214,6 +214,13 @@ export const api = {
     apiFetch<{ recordings: Recording[] }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/recordings`,
     ),
+  startRecording: (workspaceId: string, webinarId: string) =>
+    apiFetch<{ recordings: Recording[] }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/recordings/start`,
+      { method: "POST" },
+    ),
+  publicRecording: (recordingId: string) =>
+    apiFetch<PublicRecording>(`/v1/public/recordings/${encodeURIComponent(recordingId)}`),
   deleteRecording: (workspaceId: string, webinarId: string, recordingId: string) =>
     apiFetch<void>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/webinars/${encodeURIComponent(webinarId)}/recordings/${encodeURIComponent(recordingId)}`,
@@ -347,6 +354,22 @@ export interface Recording {
   createdAt: string;
 }
 
+export interface PublicRecording {
+  recording: Recording;
+  webinar: { id: string; slug: string; title: string };
+  chat: Array<{
+    id: string;
+    author: {
+      id: string;
+      displayName: string;
+      role: "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
+    };
+    body: string;
+    status: "visible" | "pending_review" | "deleted";
+    createdAt: string;
+  }>;
+}
+
 export type PublicWebinar = Pick<
   Webinar,
   | "slug"
@@ -379,6 +402,7 @@ export interface CreateWebinarInput {
 export interface PrejoinPayload {
   workspaceId?: string;
   webinarId: string;
+  recordingEnabled?: boolean;
   media: {
     roomName: string;
     url: string;

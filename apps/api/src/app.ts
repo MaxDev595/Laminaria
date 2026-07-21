@@ -148,10 +148,16 @@ export async function buildApplication(
   );
 
   registerErrorHandler(app);
+  const volatileRealtime = new InMemoryRealtimeRepositories();
   registerRealtime(io, {
     auth: createRealtimeAuthResolver(participants),
     access: createWebinarAccessResolver(participants, repositories),
-    repositories: new InMemoryRealtimeRepositories(),
+    repositories: {
+      chat: repositories.realtimeChat ?? volatileRealtime.chat,
+      questions: volatileRealtime.questions,
+      polls: volatileRealtime.polls,
+      moderation: volatileRealtime.moderation,
+    },
     idempotency: new InMemoryIdempotencyExecutor(),
     async removeBannedParticipant(webinarId, subject) {
       const webinar = await repositories.webinars.findById(webinarId);

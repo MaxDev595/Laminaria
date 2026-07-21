@@ -22,6 +22,7 @@ import type {
   WebinarStatus,
   WorkspaceMemberRecord,
 } from "../domain/models.js";
+import type { ChatMessage, ChatRepository } from "../realtime/types.js";
 import type {
   OneTimeTokenRepository,
   RecordingRepository,
@@ -63,6 +64,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
   public readonly workspaces: WorkspaceRepository;
   public readonly webinars: WebinarRepository;
   public readonly recordings: RecordingRepository;
+  public readonly realtimeChat: ChatRepository;
   public readonly registrations: RegistrationRepository;
   public readonly moderationRestrictions: ModerationRestrictionRepository;
 
@@ -76,6 +78,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.workspaces = this.createWorkspaceRepository();
     this.webinars = this.createWebinarRepository();
     this.recordings = this.createRecordingRepository();
+    this.realtimeChat = this.createRealtimeChatRepository();
     this.registrations = this.createRegistrationRepository();
     this.moderationRestrictions = this.createModerationRestrictionRepository();
   }
@@ -667,6 +670,38 @@ export class PrismaUnitOfWork implements UnitOfWork {
         return recordings.map(mapRecording);
       },
 
+      findPublicById: async (recordingId) => {
+        const result = await this.#client.recording.findFirst({
+          where: {
+            id: recordingId,
+            status: "READY",
+            playbackUrl: { not: null },
+            deletedAt: null,
+            webinarSession: { webinar: { deletedAt: null } },
+          },
+          include: {
+            webinarSession: {
+              include: {
+                webinar: true,
+                chatMessages: { orderBy: { createdAt: "asc" } },
+              },
+            },
+          },
+        });
+        if (!result) return null;
+        return {
+          recording: mapRecording(result),
+          webinar: {
+            id: result.webinarSession.webinar.id,
+            slug: result.webinarSession.webinar.slug,
+            title: result.webinarSession.webinar.title,
+          },
+          chat: result.webinarSession.chatMessages.map((message) =>
+            mapStoredChatMessage(result.webinarSession.webinar.id, message),
+          ),
+        };
+      },
+
       ensureAutomaticForWebinar: async (input) => {
         const session = await this.#client.webinarSession.findFirst({
           where: { webinarId: input.webinarId },
@@ -728,6 +763,57 @@ export class PrismaUnitOfWork implements UnitOfWork {
         if (recording.count !== 1) return null;
         const updated = await this.#client.recording.findFirst({ where: { id } });
         return updated ? mapRecording(updated) : null;
+      },
+    };
+  }
+
+  private createRealtimeChatRepository(): ChatRepository {
+    return {
+      create: async (message) => {
+        const session = await this.#client.webinarSession.findFirst({
+          where: { webinarId: message.webinarId },
+          orderBy: { sequence: "desc" },
+          select: { id: true },
+        });
+        if (!session) throw missingWebinarSessionError(message.webinarId);
+        const stored = await this.#client.chatMessage.create({
+          data: {
+            id: message.id,
+            webinarSessionId: session.id,
+            authorId: message.author.id,
+            authorDisplayName: message.author.displayName,
+            authorRole: message.author.role === "OWNER" ? "HOST" : message.author.role,
+            body: message.body,
+            status: message.status === "visible" ? "PUBLISHED" : "FLAGGED",
+            idempotencyKey: message.id,
+            publishedAt: message.status === "visible" ? new Date(message.createdAt) : null,
+            createdAt: new Date(message.createdAt),
+            ...(message.replyToId ? { replyToId: message.replyToId } : {}),
+          },
+        });
+        return mapStoredChatMessage(message.webinarId, stored);
+      },
+      listByWebinar: async (webinarId) => {
+        const messages = await this.#client.chatMessage.findMany({
+          where: { webinarSession: { webinarId } },
+          orderBy: { createdAt: "asc" },
+        });
+        return messages.map((message) => mapStoredChatMessage(webinarId, message));
+      },
+      markDeleted: async (input) => {
+        const current = await this.#client.chatMessage.findFirst({
+          where: { id: input.messageId, webinarSession: { webinarId: input.webinarId } },
+        });
+        if (!current) return null;
+        const stored = await this.#client.chatMessage.update({
+          where: { id: current.id },
+          data: { status: "DELETED", deletedAt: new Date(input.deletedAt) },
+        });
+        return {
+          ...mapStoredChatMessage(input.webinarId, stored),
+          deletedById: input.deletedById,
+          ...(input.reason ? { deletionReason: input.reason } : {}),
+        };
       },
     };
   }
@@ -918,6 +1004,41 @@ function mapRegistration(registration: Registration): RegistrationRecord {
     status: toDomainRegistrationStatus(registration.status),
     createdAt: registration.createdAt,
     updatedAt: registration.updatedAt,
+  };
+}
+
+function mapStoredChatMessage(
+  webinarId: string,
+  message: {
+    id: string;
+    authorId: string;
+    authorDisplayName: string;
+    authorRole: ParticipantRole;
+    body: string;
+    status: "PENDING" | "PUBLISHED" | "FLAGGED" | "BLOCKED" | "DELETED";
+    replyToId: string | null;
+    createdAt: Date;
+    deletedAt: Date | null;
+  },
+): ChatMessage {
+  return {
+    id: message.id,
+    webinarId,
+    author: {
+      id: message.authorId,
+      displayName: message.authorDisplayName,
+      role: message.authorRole,
+    },
+    body: message.body,
+    status:
+      message.status === "DELETED"
+        ? "deleted"
+        : message.status === "PUBLISHED"
+          ? "visible"
+          : "pending_review",
+    createdAt: message.createdAt.toISOString(),
+    ...(message.replyToId ? { replyToId: message.replyToId } : {}),
+    ...(message.deletedAt ? { deletedAt: message.deletedAt.toISOString() } : {}),
   };
 }
 

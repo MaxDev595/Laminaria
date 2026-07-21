@@ -106,6 +106,7 @@ export interface ModerationRecord {
 
 export interface ChatRepository {
   create(message: ChatMessage): Promise<ChatMessage>;
+  listByWebinar(webinarId: string): Promise<readonly ChatMessage[]>;
   markDeleted(input: {
     webinarId: string;
     messageId: string;

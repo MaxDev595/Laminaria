@@ -10,6 +10,13 @@ import type {
   WorkspaceMemberRecord,
   WorkspaceRole,
 } from "../domain/models.js";
+import type { ChatMessage, ChatRepository } from "../realtime/types.js";
+
+export interface PublicRecordingRecord {
+  recording: RecordingRecord;
+  webinar: { id: string; slug: string; title: string };
+  chat: readonly ChatMessage[];
+}
 
 export interface UserRepository {
   findById(id: string): Promise<UserRecord | null>;
@@ -132,6 +139,7 @@ export interface WebinarRepository {
 
 export interface RecordingRepository {
   listByWebinar(webinarId: string): Promise<readonly RecordingRecord[]>;
+  findPublicById(recordingId: string): Promise<PublicRecordingRecord | null>;
   ensureAutomaticForWebinar(input: {
     webinarId: string;
     provider: string;
@@ -192,6 +200,7 @@ export interface UnitOfWork {
   readonly workspaces: WorkspaceRepository;
   readonly webinars: WebinarRepository;
   readonly recordings: RecordingRepository;
+  readonly realtimeChat?: ChatRepository;
   readonly registrations: RegistrationRepository;
   readonly moderationRestrictions?: ModerationRestrictionRepository;
   healthcheck(): Promise<void>;
