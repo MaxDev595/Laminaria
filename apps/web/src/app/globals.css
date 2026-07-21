@@ -8008,8 +8008,19 @@ select {
 .laminaria-calendar__time { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .65rem; padding: .7rem; border: 1px solid var(--color-border); border-radius: .85rem; background: color-mix(in srgb, var(--color-background) 45%, transparent); }
 .laminaria-calendar__time > span { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-muted-foreground); font-size: .72rem; font-weight: 700; }
 .laminaria-calendar__time > span svg { color: var(--color-primary); }
-.laminaria-calendar__time > div { display: grid; grid-template-columns: 4.25rem auto 4.25rem; align-items: center; gap: .3rem; }
+.laminaria-calendar__time > div { display: grid; grid-template-columns: 4.5rem auto 4.5rem; align-items: center; gap: .35rem; }
 .laminaria-calendar__time i { color: var(--color-muted-foreground); font-style: normal; font-weight: 800; }
+.laminaria-time-wheels { isolation: isolate; }
+.time-wheel { position: relative; width: 4.5rem; height: 7.125rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--color-border)); border-radius: .8rem; background: #0b1422; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .025), 0 .45rem 1.2rem rgb(0 0 0 / .22); }
+.time-wheel::before, .time-wheel::after { content: ""; position: absolute; z-index: 3; right: 0; left: 0; height: 2.375rem; pointer-events: none; }
+.time-wheel::before { top: 0; background: linear-gradient(#0b1422 25%, rgb(11 20 34 / .82)); }
+.time-wheel::after { bottom: 0; background: linear-gradient(rgb(11 20 34 / .82), #0b1422 75%); }
+.time-wheel__viewport { position: absolute; z-index: 1; inset: 0; padding-block: 2.375rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; scroll-snap-type: y mandatory; scrollbar-width: none; touch-action: pan-y; outline: none; background: #0b1422; }
+.time-wheel__viewport::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.time-wheel__viewport button { display: grid; place-items: center; width: 100%; height: 2.375rem; padding: 0; border: 0; scroll-snap-align: center; scroll-snap-stop: always; color: #69798d; background: #0b1422; font: inherit; font-family: var(--font-mono); font-size: .78rem; font-weight: 650; cursor: pointer; transition: color .14s ease, font-size .14s ease, background .14s ease; }
+.time-wheel__viewport button:hover { color: #c8d5e5; background: #101d2e; }
+.time-wheel__viewport button.is-selected { color: #fff; background: #172541; font-size: .92rem; font-weight: 800; }
+.time-wheel__focus { position: absolute; z-index: 2; top: 50%; right: .22rem; left: .22rem; height: 2.375rem; border: 1px solid color-mix(in srgb, var(--color-primary) 42%, transparent); border-radius: .58rem; box-shadow: 0 0 1rem color-mix(in srgb, var(--color-primary) 10%, transparent); transform: translateY(-50%); pointer-events: none; }
 .laminaria-calendar__popover > footer { display: flex; align-items: center; justify-content: flex-end; gap: .4rem; padding-top: .7rem; }
 .laminaria-calendar__popover > footer button { min-height: 2.25rem; padding: .45rem .65rem; border: 1px solid transparent; border-radius: .65rem; color: var(--color-muted-foreground); background: transparent; font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
 .laminaria-calendar__popover > footer button:hover { color: var(--color-foreground); background: color-mix(in srgb, var(--color-primary) 9%, transparent); }
@@ -8036,7 +8047,8 @@ select {
   .session-list > div { grid-template-columns: 2.4rem minmax(0, 1fr); }
   .session-current { grid-column: 2; justify-self: start; }
   .styled-select__menu { position: fixed; z-index: 220; top: auto; right: .75rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); left: .75rem; max-height: min(22rem, 55svh); }
-  .laminaria-calendar__popover { position: fixed; z-index: 230; top: auto; right: .65rem; bottom: calc(.65rem + env(safe-area-inset-bottom)); left: .65rem; width: auto; max-height: calc(100svh - 1.3rem); overflow-y: auto; transform-origin: bottom center; }
+  .laminaria-calendar__popover { position: fixed; z-index: 230; top: auto; right: .65rem; bottom: calc(.65rem + env(safe-area-inset-bottom)); left: .65rem; width: auto; max-height: calc(100svh - 1.3rem); overflow-y: auto; scrollbar-width: none; transform-origin: bottom center; }
+  .laminaria-calendar__popover::-webkit-scrollbar { display: none; }
   .laminaria-calendar__popover > footer { flex-wrap: wrap; }
 }
 

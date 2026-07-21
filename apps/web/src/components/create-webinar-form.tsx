@@ -29,7 +29,6 @@ import { localTimezone, slugify } from "@/lib/text";
 import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { Field, Input, Textarea } from "./ui";
-import { StyledSelect } from "./styled-select";
 
 const schema = z.object({
   title: z.string().trim().min(3).max(180),
@@ -393,10 +392,10 @@ function DateTimePicker({
             </div>
             <div className="laminaria-calendar__time">
               <span><Clock3 size={16} />{locale === "ru" ? "Время" : "Time"}</span>
-              <div>
-                <StyledSelect className="styled-select--compact styled-select--up" value={hours} ariaLabel={locale === "ru" ? "Часы" : "Hours"} options={Array.from({ length: 24 }, (_, index) => { const item = String(index).padStart(2, "0"); return { value: item, label: item }; })} onChange={(next) => updateTime(next, minutes)} />
+              <div className="laminaria-time-wheels">
+                <TimeWheel value={hours} ariaLabel={locale === "ru" ? "Часы" : "Hours"} options={HOUR_OPTIONS} onChange={(next) => updateTime(next, minutes)} />
                 <i>:</i>
-                <StyledSelect className="styled-select--compact styled-select--up" value={minutes} ariaLabel={locale === "ru" ? "Минуты" : "Minutes"} options={Array.from({ length: 12 }, (_, index) => { const item = String(index * 5).padStart(2, "0"); return { value: item, label: item }; })} onChange={(next) => updateTime(hours, next)} />
+                <TimeWheel value={minutes} ariaLabel={locale === "ru" ? "Минуты" : "Minutes"} options={MINUTE_OPTIONS} onChange={(next) => updateTime(hours, next)} />
               </div>
             </div>
             <footer>
@@ -415,6 +414,70 @@ function parseLocalDateTime(value: string): Date | null {
   if (!value) return null;
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+const MINUTE_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
+
+function TimeWheel({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  options: readonly string[];
+  onChange: (value: string) => void;
+  ariaLabel: string;
+}) {
+  const viewport = useRef<HTMLDivElement>(null);
+  const itemHeight = 38;
+
+  useEffect(() => {
+    const index = Math.max(0, options.indexOf(value));
+    viewport.current?.scrollTo({ top: index * itemHeight, behavior: "smooth" });
+  }, [options, value]);
+
+  function selectFromScroll() {
+    const element = viewport.current;
+    if (!element) return;
+    const index = Math.max(0, Math.min(options.length - 1, Math.round(element.scrollTop / itemHeight)));
+    const next = options[index];
+    if (next && next !== value) onChange(next);
+  }
+
+  return (
+    <div className="time-wheel" role="listbox" aria-label={ariaLabel}>
+      <div
+        ref={viewport}
+        className="time-wheel__viewport"
+        tabIndex={0}
+        onScroll={selectFromScroll}
+        onKeyDown={(event) => {
+          const current = Math.max(0, options.indexOf(value));
+          if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+          event.preventDefault();
+          const nextIndex = Math.max(0, Math.min(options.length - 1, current + (event.key === "ArrowDown" ? 1 : -1)));
+          const next = options[nextIndex];
+          if (next) onChange(next);
+        }}
+      >
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            role="option"
+            aria-selected={option === value}
+            className={option === value ? "is-selected" : ""}
+            onClick={() => onChange(option)}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      <span className="time-wheel__focus" aria-hidden="true" />
+    </div>
+  );
 }
 
 function formatLocalDateTime(date: Date, hours: number, minutes: number): string {
