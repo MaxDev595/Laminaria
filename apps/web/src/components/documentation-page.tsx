@@ -78,7 +78,7 @@ const commercialMvpCardsEn: DocCard[] = [
     body: "The public registration flow collects the data needed for sales and marketing without making viewers create a full host account.",
     items: [
       "Name, email, phone",
-      "One registration per email/phone pair",
+      "Repeat registrations are accepted for viewer testing",
       "Registration status in analytics",
     ],
   },
@@ -133,7 +133,7 @@ const commercialMvpCardsRu: DocCard[] = [
     body: "Публичная регистрация собирает данные для продаж и рекламы, не заставляя зрителя создавать полноценный аккаунт ведущего.",
     items: [
       "Имя, email, телефон",
-      "Одна регистрация на связку email/телефон",
+      "Повторная регистрация зрителей разрешена для тестирования",
       "Статус регистрации в аналитике",
     ],
   },

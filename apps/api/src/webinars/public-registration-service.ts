@@ -54,29 +54,18 @@ export class PublicRegistrationService {
       throw new ServiceNotConfiguredError("Mail");
     }
     const normalizedEmail = input.email.trim().toLocaleLowerCase("en-US");
-    if (await this.repositories.registrations.findByWebinarAndEmail(webinar.id, normalizedEmail)) {
-      throw new AppError(409, "CONFLICT", "This email is already registered");
-    }
     const accessToken = createOpaqueToken();
     const status = confirmationRequired ? "PENDING" : "CONFIRMED";
-    let registration: RegistrationRecord;
-    try {
-      registration = await this.repositories.registrations.create({
-        webinarId: webinar.id,
-        ...(input.userId ? { userId: input.userId } : {}),
-        email: normalizedEmail,
-        phone: input.phone.trim(),
-        name: input.name.trim(),
-        locale: input.locale,
-        status,
-        tokenHash: hashOpaqueToken(accessToken, this.tokenPepper),
-      });
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        throw new AppError(409, "CONFLICT", "This email is already registered");
-      }
-      throw error;
-    }
+    const registration = await this.repositories.registrations.create({
+      webinarId: webinar.id,
+      ...(input.userId ? { userId: input.userId } : {}),
+      email: normalizedEmail,
+      phone: input.phone.trim(),
+      name: input.name.trim(),
+      locale: input.locale,
+      status,
+      tokenHash: hashOpaqueToken(accessToken, this.tokenPepper),
+    });
     if (confirmationRequired) {
       await this.mail.sendWebinarRegistration({
         to: registration.email,
@@ -172,13 +161,4 @@ export class PublicRegistrationService {
       participant: { identity, displayName, role },
     };
   }
-}
-
-function isUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: unknown }).code === "P2002"
-  );
 }

@@ -8691,8 +8691,14 @@ select {
   .room-end {
     width: 2.5rem;
     padding: 0;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     font-size: 0;
+  }
+
+  .room-end svg {
+    display: block;
+    margin: auto;
   }
 
   .room-end-error {
@@ -8805,8 +8811,16 @@ select {
   }
 
   .broadcast-stage-layout.has-screen-share .presenter-stack {
-    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
+  }
+
+  .broadcast-stage-layout.has-screen-share.presenter-count-2 .presenter-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .broadcast-stage-layout.has-screen-share.presenter-count-3 .presenter-stack {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .broadcast-stage-layout.has-screen-share .presenter-video-tile {

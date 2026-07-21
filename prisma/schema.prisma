@@ -455,7 +455,7 @@ model Registration {
   user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   participantRuns ParticipantSession[]
 
-  @@unique([webinarId, normalizedEmail])
+  @@index([webinarId, normalizedEmail])
   @@index([webinarId, status, createdAt])
   @@index([userId])
   @@index([deletedAt])
