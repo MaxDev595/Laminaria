@@ -25,6 +25,9 @@ enum AuthTokenKind {
 enum WorkspaceRole {
   OWNER
   ADMIN
+  HOST
+  MODERATOR
+  ANALYST
   MEMBER
 }
 

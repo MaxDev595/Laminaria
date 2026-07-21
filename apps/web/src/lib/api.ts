@@ -182,7 +182,7 @@ export const api = {
     ),
   addWorkspaceMember: (
     workspaceId: string,
-    input: { email: string; role: "ADMIN" | "MEMBER" },
+    input: { email: string; role: Exclude<WorkspaceRole, "OWNER"> },
   ) =>
     apiFetch<{ member: Pick<WorkspaceMember, "userId" | "role"> }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,
@@ -191,7 +191,7 @@ export const api = {
   updateWorkspaceMember: (
     workspaceId: string,
     userId: string,
-    role: "ADMIN" | "MEMBER",
+    role: Exclude<WorkspaceRole, "OWNER">,
   ) =>
     apiFetch<{ member: Pick<WorkspaceMember, "userId" | "role"> }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userId)}`,
@@ -327,11 +327,13 @@ export interface ServiceStatusPayload {
   services: ServiceStatus[];
 }
 
+export type WorkspaceRole = "OWNER" | "ADMIN" | "HOST" | "MODERATOR" | "ANALYST" | "MEMBER";
+
 export interface Workspace {
   id: string;
   name: string;
   slug: string;
-  role?: "OWNER" | "ADMIN" | "MEMBER";
+  role?: WorkspaceRole;
   logoUrl?: string | null;
   timezone?: string;
 }
@@ -396,7 +398,7 @@ export interface WorkspaceSettings {
 
 export interface WorkspaceSettingsPayload {
   workspace: WorkspaceSettings;
-  role: "OWNER" | "ADMIN" | "MEMBER";
+  role: WorkspaceRole;
   planCode: string;
   usage: { members: number; webinars: number; recordings: number; storageBytes: number };
 }
@@ -424,7 +426,7 @@ export interface AccountSession {
 
 export interface WorkspaceMember {
   userId: string;
-  role: "OWNER" | "ADMIN" | "MEMBER";
+  role: WorkspaceRole;
   joinedAt: string;
   name: string | null;
   email: string;

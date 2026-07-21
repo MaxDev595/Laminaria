@@ -127,7 +127,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const workspace =
     availableWorkspaces.find((item) => item.id === selectedWorkspaceId) ?? availableWorkspaces[0];
   if (!me.data || !workspace) return <DashboardSkeleton />;
-  const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN";
+  const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN" || workspace.role === "HOST";
 
   async function signOut() {
     try {

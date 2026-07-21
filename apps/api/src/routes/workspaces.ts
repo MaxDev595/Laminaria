@@ -16,9 +16,11 @@ const createWorkspaceSchema = z.object({
 });
 const memberSchema = z.object({
   email: z.email().max(320),
-  role: z.enum(["ADMIN", "MEMBER"]).default("MEMBER"),
+  role: z.enum(["ADMIN", "HOST", "MODERATOR", "ANALYST", "MEMBER"]).default("MEMBER"),
 });
-const memberRoleSchema = z.object({ role: z.enum(["ADMIN", "MEMBER"]) });
+const memberRoleSchema = z.object({
+  role: z.enum(["ADMIN", "HOST", "MODERATOR", "ANALYST", "MEMBER"]),
+});
 const webinarDefaultsSchema = z.object({
   language: z.enum(["en", "ru"]),
   timezone: z.string().trim().min(1).max(100),

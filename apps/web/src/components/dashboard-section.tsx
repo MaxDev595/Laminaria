@@ -12,7 +12,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { api, friendlyError, type Registration, type Webinar } from "@/lib/api";
+import { api, friendlyError, type Registration, type Webinar, type WorkspaceRole } from "@/lib/api";
 import type { DashboardSectionName } from "@/lib/dashboard-sections";
 import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
@@ -36,7 +36,7 @@ function TeamSection() {
   const { workspace } = useDashboard();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
+  const [role, setRole] = useState<Exclude<WorkspaceRole, "OWNER">>("HOST");
   const [message, setMessage] = useState("");
   const membersQuery = useQuery({
     queryKey: ["workspace-members", workspace.id],
@@ -54,7 +54,7 @@ function TeamSection() {
     onError: (error) => setMessage(friendlyError(error, locale)),
   });
 
-  async function changeRole(userId: string, nextRole: "ADMIN" | "MEMBER") {
+  async function changeRole(userId: string, nextRole: Exclude<WorkspaceRole, "OWNER">) {
     setMessage("");
     try {
       await api.updateWorkspaceMember(workspace.id, userId, nextRole);
@@ -76,6 +76,10 @@ function TeamSection() {
   }
 
   const members = membersQuery.data?.members ?? [];
+  const canManageTeam = workspace.role === "OWNER" || workspace.role === "ADMIN";
+  const roleOptions = teamRoleOptions(locale).filter(
+    (option) => workspace.role === "OWNER" || option.value !== "ADMIN",
+  );
   return (
     <div className="dashboard-page">
       <PageHeading
@@ -83,10 +87,23 @@ function TeamSection() {
         title={locale === "ru" ? "Команда" : "Team"}
         body={
           locale === "ru"
-            ? "Добавляйте зарегистрированных пользователей и управляйте доступом к пространству."
-            : "Add registered users and manage workspace access."
+            ? "Соберите команду и выдайте каждому только необходимые права."
+            : "Build a team and give everyone only the access they need."
         }
       />
+      <div className="team-role-guide">
+        <article>
+          <strong>{locale === "ru" ? "Владелец" : "Owner"}</strong>
+          <p>{locale === "ru" ? "Полный доступ, тариф и удаление Workspace." : "Full access, billing and workspace deletion."}</p>
+        </article>
+        {teamRoleOptions(locale).filter((option) => option.value !== "MEMBER").map((option) => (
+          <article key={option.value}>
+            <strong>{option.label}</strong>
+            <p>{option.description}</p>
+          </article>
+        ))}
+      </div>
+      {canManageTeam ? (
       <form
         className="team-invite-card"
         onSubmit={(event) => {
@@ -101,14 +118,15 @@ function TeamSection() {
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder={locale === "ru" ? "Email пользователя" : "User email"}
+          placeholder={locale === "ru" ? "Email зарегистрированного пользователя" : "Registered user email"}
         />
-        <StyledSelect className="styled-select--compact" value={role} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MEMBER", label: locale === "ru" ? "Участник" : "Member" }, { value: "ADMIN", label: locale === "ru" ? "Администратор" : "Admin" }]} onChange={setRole} />
+        <StyledSelect className="styled-select--compact" value={role} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={roleOptions} onChange={setRole} />
         <Button type="submit" disabled={addMember.isPending}>
           {addMember.isPending ? <LoaderCircle className="spin" size={16} /> : <UserPlus size={16} />}
-          {locale === "ru" ? "Добавить" : "Add"}
+          {locale === "ru" ? "Добавить в команду" : "Add to team"}
         </Button>
       </form>
+      ) : null}
       {message ? <p className="team-feedback" role="status">{message}</p> : null}
       {membersQuery.isLoading ? (
         <div className="recordings-grid"><ServiceState icon={<UsersRound size={20} />} title={locale === "ru" ? "Загрузка команды" : "Loading team"} description="Laminaria" /></div>
@@ -124,8 +142,8 @@ function TeamSection() {
                 <span className="team-owner-badge">OWNER</span>
               ) : (
                 <>
-                  <StyledSelect className="styled-select--compact" value={member.role as "ADMIN" | "MEMBER"} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MEMBER", label: locale === "ru" ? "Участник" : "Member" }, { value: "ADMIN", label: locale === "ru" ? "Администратор" : "Admin" }]} onChange={(next) => void changeRole(member.userId, next)} />
-                  <button type="button" className="team-remove" onClick={() => void removeMember(member.userId)} aria-label={locale === "ru" ? "Удалить" : "Remove"}><Trash2 size={17} /></button>
+                  {canManageTeam ? <StyledSelect className="styled-select--compact" value={member.role as Exclude<WorkspaceRole, "OWNER">} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={roleOptions} onChange={(next) => void changeRole(member.userId, next)} /> : <span className="team-owner-badge">{member.role}</span>}
+                  {canManageTeam ? <button type="button" className="team-remove" onClick={() => void removeMember(member.userId)} aria-label={locale === "ru" ? "Удалить" : "Remove"}><Trash2 size={17} /></button> : null}
                 </>
               )}
             </article>
@@ -134,6 +152,21 @@ function TeamSection() {
       )}
     </div>
   );
+}
+
+function teamRoleOptions(locale: string): Array<{
+  value: Exclude<WorkspaceRole, "OWNER">;
+  label: string;
+  description: string;
+}> {
+  const ru = locale === "ru";
+  return [
+    { value: "ADMIN", label: ru ? "Администратор" : "Admin", description: ru ? "Команда, вебинары, записи, аналитика и бренд." : "Team, webinars, recordings, analytics and brand." },
+    { value: "HOST", label: ru ? "Ведущий" : "Host", description: ru ? "Создаёт, запускает и ведёт вебинары." : "Creates, starts and runs webinars." },
+    { value: "MODERATOR", label: ru ? "Модератор" : "Moderator", description: ru ? "Чат, блокировки и подготовленные опросы." : "Chat, restrictions and prepared polls." },
+    { value: "ANALYST", label: ru ? "Аналитик" : "Analyst", description: ru ? "Только статистика, участники и результаты." : "Read-only statistics, attendees and results." },
+    { value: "MEMBER", label: ru ? "Участник" : "Member", description: ru ? "Базовый доступ к назначенным вебинарам." : "Basic access to assigned webinars." },
+  ];
 }
 
 function AnalyticsSection() {

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   BarChart3,
+  Braces,
   Camera,
   Check,
   ChevronRight,
@@ -14,6 +15,7 @@ import {
   Globe2,
   KeyRound,
   LoaderCircle,
+  LockKeyhole,
   LogOut,
   Mic,
   MonitorSpeaker,
@@ -51,6 +53,7 @@ type SettingsTab =
   | "webinars"
   | "polls"
   | "branding"
+  | "integrations"
   | "notifications"
   | "devices"
   | "billing"
@@ -166,6 +169,7 @@ export function SettingsCenter() {
       { id: "webinars" as const, icon: Video, label: ru ? "Вебинары" : "Webinars" },
       { id: "polls" as const, icon: BarChart3, label: ru ? "Опросы" : "Polls" },
       { id: "branding" as const, icon: Palette, label: ru ? "Брендинг" : "Branding" },
+      { id: "integrations" as const, icon: Braces, label: "API & Webhooks" },
       { id: "notifications" as const, icon: Bell, label: ru ? "Уведомления" : "Notifications" },
       { id: "devices" as const, icon: Camera, label: ru ? "Камера и звук" : "Camera & audio" },
       { id: "billing" as const, icon: CreditCard, label: ru ? "Тариф и оплата" : "Plan & billing" },
@@ -317,6 +321,7 @@ export function SettingsCenter() {
           {tab === "webinars" ? <WebinarSettings ru={ru} value={webinar} setValue={setWebinar} saving={saveWebinar.isPending} onSave={() => saveWebinar.mutate()} /> : null}
           {tab === "polls" ? <PollSettings ru={ru} value={polls} setValue={setPolls} saving={savePolls.isPending} onSave={() => savePolls.mutate()} /> : null}
           {tab === "branding" ? <BrandingSettingsView ru={ru} workspace={workspaceForm} setWorkspace={setWorkspaceForm} value={branding} setValue={setBranding} saving={saveBranding.isPending} onSave={() => saveBranding.mutate()} setNotice={setNotice} /> : null}
+          {tab === "integrations" ? <ApiComingSoon ru={ru} /> : null}
           {tab === "notifications" ? <NotificationSettings ru={ru} value={notifications} setValue={setNotifications} onSave={() => void savePreferences({ notifications })} /> : null}
           {tab === "devices" ? <DeviceSettings ru={ru} value={devices} setValue={setDevices} onSave={() => void savePreferences({ devices })} setNotice={setNotice} /> : null}
           {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} /> : null}
@@ -537,7 +542,47 @@ function BrandingSettingsView({
           <SaveButton ru={ru} loading={saving} onClick={onSave} />
         </div>
       </div>
+      <ComingSoonCard
+        ru={ru}
+        title="White Label"
+        body={ru ? "Собственный домен, скрытие Laminaria и фирменные email-письма появятся в Business." : "Custom domains, hidden Laminaria branding and branded email will arrive in Business."}
+        items={ru ? ["Собственный домен", "Без Powered by Laminaria", "Оформление писем", "Фавикон"] : ["Custom domain", "No Powered by Laminaria", "Branded email", "Favicon"]}
+      />
     </section>
+  );
+}
+
+function ApiComingSoon({ ru }: { ru: boolean }) {
+  return (
+    <section className="settings-stack">
+      <SettingsHeader
+        icon={<Braces />}
+        title="API & Webhooks"
+        body={ru ? "Интеграция Laminaria с сайтом, CRM или LMS." : "Connect Laminaria to your website, CRM or LMS."}
+      />
+      <ComingSoonCard
+        ru={ru}
+        title={ru ? "Публичный API — скоро" : "Public API — coming soon"}
+        body={ru ? "Запланирован для Business после запуска MVP. Сейчас раздел ничего не имитирует и не создаёт небезопасные ключи." : "Planned for Business after the MVP launch. This section does not create fake or insecure keys."}
+        items={["webinar.started", "webinar.ended", "participant.registered", "recording.ready", "poll.completed"]}
+      />
+    </section>
+  );
+}
+
+function ComingSoonCard({ ru, title, body, items }: { ru: boolean; title: string; body: string; items: string[] }) {
+  return (
+    <div className="settings-card business-coming-soon">
+      <div className="business-coming-soon__icon"><LockKeyhole size={22} /></div>
+      <div>
+        <span>BUSINESS · {ru ? "СКОРО" : "COMING SOON"}</span>
+        <h3>{title}</h3>
+        <p>{body}</p>
+        <div className="business-coming-soon__items">
+          {items.map((item) => <code key={item}>{item}</code>)}
+        </div>
+      </div>
+    </div>
   );
 }
 

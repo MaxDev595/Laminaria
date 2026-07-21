@@ -1,4 +1,4 @@
-export const WORKSPACE_ROLES = ["OWNER", "ADMIN", "MEMBER"] as const;
+export const WORKSPACE_ROLES = ["OWNER", "ADMIN", "HOST", "MODERATOR", "ANALYST", "MEMBER"] as const;
 export type WorkspaceRole = (typeof WORKSPACE_ROLES)[number];
 
 export const PARTICIPANT_ROLES = [

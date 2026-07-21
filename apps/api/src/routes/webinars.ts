@@ -110,8 +110,7 @@ export async function registerWebinarRoutes(
             webinar.id,
             actor.user.id,
           );
-          const currentUserRole =
-            membership.role === "OWNER" || membership.role === "ADMIN" ? "OWNER" : explicitRole;
+          const currentUserRole = workspaceParticipantRole(membership.role, explicitRole);
           return {
             ...webinar,
             recordingEnabled: planAllows(planId, "webinarRecording"),
@@ -120,10 +119,9 @@ export async function registerWebinarRoutes(
         }),
       );
       return {
-        webinars:
-          membership.role === "OWNER" || membership.role === "ADMIN"
-            ? withRoles
-            : withRoles.filter((webinar) => webinar.currentUserRole),
+        webinars: membership.role === "MEMBER"
+          ? withRoles.filter((webinar) => webinar.currentUserRole)
+          : withRoles,
       };
     },
   );
@@ -433,6 +431,16 @@ function pollSettings(value: unknown) {
     anonymousVoting: settings["anonymousVoting"] === true,
     resultsVisibility: settings["resultsVisibility"] === "AFTER_CLOSE" ? "AFTER_CLOSE" as const : "LIVE" as const,
   };
+}
+
+function workspaceParticipantRole(
+  workspaceRole: import("../domain/models.js").WorkspaceRole,
+  explicitRole: import("../domain/models.js").ParticipantRole | null,
+) {
+  if (workspaceRole === "OWNER" || workspaceRole === "ADMIN") return "OWNER" as const;
+  if (workspaceRole === "HOST") return "HOST" as const;
+  if (workspaceRole === "MODERATOR") return "MODERATOR" as const;
+  return explicitRole;
 }
 
 function assertWorkspace(actual: string, expected: string): void {

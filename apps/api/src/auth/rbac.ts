@@ -40,6 +40,14 @@ const workspacePermissions: Readonly<Record<WorkspaceRole, ReadonlySet<Workspace
     "webinar:update",
     "webinar:delete",
   ]),
+  HOST: new Set([
+    "workspace:read",
+    "webinar:create",
+    "webinar:read",
+    "webinar:update",
+  ]),
+  MODERATOR: new Set(["workspace:read", "webinar:read"]),
+  ANALYST: new Set(["workspace:read", "webinar:read"]),
   MEMBER: new Set(["workspace:read", "webinar:read"]),
 };
 

@@ -35,7 +35,40 @@ const ALL_PERMISSIONS = new Set<Permission>(PERMISSIONS);
 const workspacePermissions: Record<WorkspaceRole, ReadonlySet<Permission>> = {
   OWNER: ALL_PERMISSIONS,
   ADMIN: new Set(PERMISSIONS.filter((permission) => permission !== "workspace.billing.manage")),
-  MEMBER: new Set(["workspace.read", "webinar.create", "webinar.read"]),
+  HOST: new Set([
+    "workspace.read",
+    "webinar.create",
+    "webinar.read",
+    "webinar.update",
+    "webinar.start",
+    "webinar.end",
+    "participant.promote",
+    "media.subscribe",
+    "media.publish.audio",
+    "media.publish.video",
+    "media.publish.screen",
+    "chat.send",
+    "poll.manage",
+    "poll.vote",
+    "analytics.read",
+  ]),
+  MODERATOR: new Set([
+    "workspace.read",
+    "webinar.read",
+    "media.subscribe",
+    "chat.send",
+    "chat.moderate",
+    "question.manage",
+    "poll.manage",
+    "poll.vote",
+  ]),
+  ANALYST: new Set([
+    "workspace.read",
+    "webinar.read",
+    "media.subscribe",
+    "analytics.read",
+  ]),
+  MEMBER: new Set(["workspace.read", "webinar.read"]),
 };
 
 const webinarPermissions: Record<WebinarRole, ReadonlySet<Permission>> = {

@@ -8,7 +8,7 @@ import {
   timezoneSchema,
 } from "./common.js";
 
-export const workspaceRoleSchema = z.enum(["OWNER", "ADMIN", "MEMBER"]);
+export const workspaceRoleSchema = z.enum(["OWNER", "ADMIN", "HOST", "MODERATOR", "ANALYST", "MEMBER"]);
 
 export const createWorkspaceRequestSchema = z.object({
   name: z.string().trim().min(1).max(160),

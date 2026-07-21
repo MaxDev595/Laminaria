@@ -62,7 +62,7 @@ export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" }) 
   }
 
   const all = query.data!.webinars;
-  const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN";
+  const canCreateWebinars = workspace.role === "OWNER" || workspace.role === "ADMIN" || workspace.role === "HOST";
   const now = query.dataUpdatedAt;
   const visible =
     filter === "upcoming"
