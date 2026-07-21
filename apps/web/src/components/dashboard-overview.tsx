@@ -705,7 +705,7 @@ function WebinarCard({
           <input
             value={inviteEmail}
             onChange={(event) => setInviteEmail(event.target.value)}
-            placeholder={locale === "ru" ? "email модератора" : "moderator email"}
+            placeholder={roleEmailPlaceholder(inviteRole, locale)}
             type="email"
           />
           <StyledSelect className="styled-select--up" value={inviteRole} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MODERATOR", label: locale === "ru" ? "Модератор" : "Moderator" }, { value: "SPEAKER", label: locale === "ru" ? "Спикер" : "Speaker" }, { value: "COHOST", label: locale === "ru" ? "Соведущий" : "Co-host" }]} onChange={setInviteRole} />
@@ -734,6 +734,21 @@ function canJoinStudioRole(role: WebinarRole | null): boolean {
     role === "MODERATOR" ||
     role === "SPEAKER"
   );
+}
+
+function roleEmailPlaceholder(
+  role: "MODERATOR" | "SPEAKER" | "COHOST",
+  locale: string,
+): string {
+  if (locale === "ru") {
+    if (role === "SPEAKER") return "email спикера";
+    if (role === "COHOST") return "email соведущего";
+    return "email модератора";
+  }
+
+  if (role === "SPEAKER") return "speaker email";
+  if (role === "COHOST") return "co-host email";
+  return "moderator email";
 }
 
 function canModerateWebinar(role: WebinarRole | null): boolean {

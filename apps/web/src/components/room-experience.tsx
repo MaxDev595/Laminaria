@@ -1165,7 +1165,7 @@ function LiveInviteDialog({ session, onClose }: { session: StoredRoom; onClose: 
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="name@example.com"
+            placeholder={liveRoleEmailPlaceholder(role, locale)}
           />
         </label>
         <label>
@@ -2067,6 +2067,21 @@ function canEndWebinar(role: Role): boolean {
 
 function canManageStage(role: Role): boolean {
   return role === "OWNER" || role === "HOST" || role === "COHOST";
+}
+
+function liveRoleEmailPlaceholder(
+  role: "COHOST" | "SPEAKER" | "MODERATOR",
+  locale: string,
+): string {
+  if (locale === "ru") {
+    if (role === "SPEAKER") return "email спикера";
+    if (role === "COHOST") return "email соведущего";
+    return "email модератора";
+  }
+
+  if (role === "SPEAKER") return "speaker email";
+  if (role === "COHOST") return "co-host email";
+  return "moderator email";
 }
 
 function canInviteOnStage(role: Role): boolean {
