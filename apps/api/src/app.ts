@@ -133,7 +133,7 @@ export async function buildApplication(
       },
     },
   });
-  await registerPublicRoutes(app, publicRegistration);
+  await registerPublicRoutes(app, publicRegistration, repositories);
 
   app.get(
     "/health/live",

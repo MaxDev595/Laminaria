@@ -7,7 +7,7 @@ import type { AppConfig } from "../config.js";
 import { AppError, ServiceNotConfiguredError } from "../errors.js";
 
 const uploadSchema = z.object({
-  kind: z.enum(["avatar", "workspace-logo"]),
+  kind: z.enum(["avatar", "workspace-logo", "webinar-cover"]),
   dataUrl: z.string().max(3_000_000),
 });
 
@@ -25,7 +25,7 @@ export async function registerUploadRoutes(
     "/v1/uploads/images",
     {
       config: { rateLimit: { max: 30, timeWindow: "1 hour" } },
-      schema: { tags: ["Uploads"], summary: "Upload a profile or workspace image" },
+      schema: { tags: ["Uploads"], summary: "Upload a profile, workspace or webinar image" },
     },
     async (request, reply) => {
       const actor = requireUser(request);

@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
+  BarChart3,
   Camera,
   Check,
   ChevronRight,
@@ -16,6 +17,7 @@ import {
   LogOut,
   Mic,
   MonitorSpeaker,
+  Palette,
   Save,
   ShieldCheck,
   Trash2,
@@ -33,6 +35,8 @@ import {
   api,
   friendlyError,
   type UpdateProfileInput,
+  type BrandingSettings,
+  type PollDefaults,
   type UserPreferences,
   type WebinarDefaults,
 } from "@/lib/api";
@@ -45,6 +49,8 @@ type SettingsTab =
   | "profile"
   | "workspace"
   | "webinars"
+  | "polls"
+  | "branding"
   | "notifications"
   | "devices"
   | "billing"
@@ -73,6 +79,17 @@ const DEFAULT_WEBINAR: WebinarDefaults = {
   requireRegistration: true,
   autoRecording: false,
   viewerChat: true,
+};
+
+const DEFAULT_POLLS: PollDefaults = {
+  enabled: true,
+  anonymousVoting: false,
+  resultsVisibility: "LIVE",
+};
+
+const DEFAULT_BRANDING: BrandingSettings = {
+  accentColor: "#7457ff",
+  coverImageUrl: null,
 };
 
 const DEFAULT_NOTIFICATIONS = {
@@ -104,6 +121,8 @@ export function SettingsCenter() {
     language: locale,
     timezone: workspace.timezone ?? profile.timezone,
   });
+  const [polls, setPolls] = useState<PollDefaults>(DEFAULT_POLLS);
+  const [branding, setBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
   const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
   const [devices, setDevices] = useState<NonNullable<UserPreferences["devices"]>>(DEFAULT_DEVICES);
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
@@ -131,6 +150,8 @@ export function SettingsCenter() {
       timezone: payload.workspace.timezone,
       ...payload.workspace.settings.webinarDefaults,
     });
+    setPolls({ ...DEFAULT_POLLS, ...payload.workspace.settings.polls });
+    setBranding({ ...DEFAULT_BRANDING, ...payload.workspace.settings.branding });
   }, [settingsQuery.data]);
 
   useEffect(() => {
@@ -143,6 +164,8 @@ export function SettingsCenter() {
       { id: "profile" as const, icon: UserRound, label: ru ? "Профиль" : "Profile" },
       { id: "workspace" as const, icon: UsersRound, label: ru ? "Рабочее пространство" : "Workspace" },
       { id: "webinars" as const, icon: Video, label: ru ? "Вебинары" : "Webinars" },
+      { id: "polls" as const, icon: BarChart3, label: ru ? "Опросы" : "Polls" },
+      { id: "branding" as const, icon: Palette, label: ru ? "Брендинг" : "Branding" },
       { id: "notifications" as const, icon: Bell, label: ru ? "Уведомления" : "Notifications" },
       { id: "devices" as const, icon: Camera, label: ru ? "Камера и звук" : "Camera & audio" },
       { id: "billing" as const, icon: CreditCard, label: ru ? "Тариф и оплата" : "Plan & billing" },
@@ -185,6 +208,29 @@ export function SettingsCenter() {
         settings: { webinarDefaults: webinar },
       }),
     onSuccess: () => setNotice(ru ? "Настройки вебинаров сохранены" : "Webinar defaults saved"),
+    onError: (error) => setNotice(friendlyError(error, locale)),
+  });
+  const savePolls = useMutation({
+    mutationFn: () => api.updateWorkspaceSettings(workspace.id, { settings: { polls } }),
+    onSuccess: async () => {
+      setNotice(ru ? "Настройки опросов сохранены" : "Poll settings saved");
+      await settingsQuery.refetch();
+    },
+    onError: (error) => setNotice(friendlyError(error, locale)),
+  });
+  const saveBranding = useMutation({
+    mutationFn: () =>
+      api.updateWorkspaceSettings(workspace.id, {
+        logoUrl: workspaceForm.logoUrl.trim() || null,
+        settings: { branding },
+      }),
+    onSuccess: async () => {
+      setNotice(ru ? "Брендинг сохранён" : "Branding saved");
+      await Promise.all([
+        settingsQuery.refetch(),
+        queryClient.invalidateQueries({ queryKey: ["workspaces"] }),
+      ]);
+    },
     onError: (error) => setNotice(friendlyError(error, locale)),
   });
 
@@ -269,6 +315,8 @@ export function SettingsCenter() {
             />
           ) : null}
           {tab === "webinars" ? <WebinarSettings ru={ru} value={webinar} setValue={setWebinar} saving={saveWebinar.isPending} onSave={() => saveWebinar.mutate()} /> : null}
+          {tab === "polls" ? <PollSettings ru={ru} value={polls} setValue={setPolls} saving={savePolls.isPending} onSave={() => savePolls.mutate()} /> : null}
+          {tab === "branding" ? <BrandingSettingsView ru={ru} workspace={workspaceForm} setWorkspace={setWorkspaceForm} value={branding} setValue={setBranding} saving={saveBranding.isPending} onSave={() => saveBranding.mutate()} setNotice={setNotice} /> : null}
           {tab === "notifications" ? <NotificationSettings ru={ru} value={notifications} setValue={setNotifications} onSave={() => void savePreferences({ notifications })} /> : null}
           {tab === "devices" ? <DeviceSettings ru={ru} value={devices} setValue={setDevices} onSave={() => void savePreferences({ devices })} setNotice={setNotice} /> : null}
           {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} /> : null}
@@ -356,6 +404,141 @@ function WebinarSettings({ ru, value, setValue, saving, onSave }: any) {
       <Toggle label={ru ? "Разрешать чат зрителям" : "Allow attendee chat"} checked={value.viewerChat} onChange={(checked) => setValue({ ...value, viewerChat: checked })} />
     </div><div className="settings-actions"><SaveButton ru={ru} loading={saving} onClick={onSave} /></div></div>
   </section>;
+}
+
+function PollSettings({ ru, value, setValue, saving, onSave }: any) {
+  return (
+    <section className="settings-stack">
+      <SettingsHeader
+        icon={<BarChart3 />}
+        title={ru ? "Опросы" : "Polls"}
+        body={
+          ru
+            ? "Управляйте голосованием зрителей и моментом показа результатов."
+            : "Control attendee voting and when results become visible."
+        }
+      />
+      <div className="settings-card">
+        <div className="settings-toggle-list">
+          <Toggle
+            label={ru ? "Включить опросы" : "Enable polls"}
+            checked={value.enabled}
+            onChange={(enabled) => setValue({ ...value, enabled })}
+          />
+          <Toggle
+            label={ru ? "Анонимное голосование" : "Anonymous voting"}
+            checked={value.anonymousVoting}
+            onChange={(anonymousVoting) => setValue({ ...value, anonymousVoting })}
+          />
+        </div>
+        <div className="settings-form-grid settings-poll-result-mode">
+          <Field label={ru ? "Показывать результаты" : "Show results"}>
+            <StyledSelect
+              value={value.resultsVisibility}
+              ariaLabel={ru ? "Показывать результаты" : "Show results"}
+              options={[
+                { value: "LIVE", label: ru ? "Сразу во время голосования" : "Live while voting" },
+                { value: "AFTER_CLOSE", label: ru ? "После закрытия опроса" : "After the poll closes" },
+              ]}
+              onChange={(resultsVisibility) => setValue({ ...value, resultsVisibility })}
+            />
+          </Field>
+        </div>
+        <div className="settings-actions">
+          <SaveButton ru={ru} loading={saving} onClick={onSave} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BrandingSettingsView({
+  ru,
+  workspace,
+  setWorkspace,
+  value,
+  setValue,
+  saving,
+  onSave,
+  setNotice,
+}: any) {
+  const colors = ["#7457ff", "#4dd0e1", "#3ec6b8", "#ff6b8a", "#f2a93b"];
+  return (
+    <section className="settings-stack">
+      <SettingsHeader
+        icon={<Palette />}
+        title={ru ? "Брендинг" : "Branding"}
+        body={
+          ru
+            ? "Оформление страницы регистрации и ожидания в стиле вашей команды."
+            : "Style registration and waiting pages for your team."
+        }
+      />
+      <div className="settings-card branding-settings-grid">
+        <Field label={ru ? "Логотип Workspace" : "Workspace logo"}>
+          <ImageUpload
+            kind="workspace-logo"
+            value={workspace.logoUrl}
+            label={ru ? "Загрузить логотип" : "Upload logo"}
+            ru={ru}
+            setNotice={setNotice}
+            onChange={(logoUrl: string) => setWorkspace({ ...workspace, logoUrl })}
+          />
+        </Field>
+        <Field label={ru ? "Обложка вебинара" : "Webinar cover"}>
+          <ImageUpload
+            kind="webinar-cover"
+            value={value.coverImageUrl ?? ""}
+            label={ru ? "Загрузить обложку" : "Upload cover"}
+            ru={ru}
+            setNotice={setNotice}
+            onChange={(coverImageUrl: string) => setValue({ ...value, coverImageUrl })}
+          />
+        </Field>
+        <Field label={ru ? "Акцентный цвет" : "Accent color"}>
+          <div className="brand-color-control">
+            <input
+              type="color"
+              value={value.accentColor}
+              onChange={(event) => setValue({ ...value, accentColor: event.target.value })}
+              aria-label={ru ? "Акцентный цвет" : "Accent color"}
+            />
+            <code>{value.accentColor.toUpperCase()}</code>
+            <div className="brand-color-presets">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={value.accentColor.toLowerCase() === color ? "is-active" : ""}
+                  style={{ background: color }}
+                  onClick={() => setValue({ ...value, accentColor: color })}
+                  aria-label={color}
+                />
+              ))}
+            </div>
+          </div>
+        </Field>
+        <div className="branding-preview" style={{ "--preview-accent": value.accentColor } as React.CSSProperties}>
+          {value.coverImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value.coverImageUrl} alt="" />
+          ) : <span className="branding-preview__art" />}
+          <div>
+            {workspace.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={workspace.logoUrl} alt="" />
+            ) : null}
+            <small>{workspace.name}</small>
+            <strong>{ru ? "Добро пожаловать на вебинар" : "Welcome to the webinar"}</strong>
+            <button type="button">{ru ? "Зарегистрироваться" : "Register"}</button>
+          </div>
+        </div>
+        <div className="settings-actions branding-settings-actions">
+          <SaveButton ru={ru} loading={saving} onClick={onSave} />
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function NotificationSettings({ ru, value, setValue, onSave }: any) {

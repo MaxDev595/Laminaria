@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, CalendarPlus, CheckCircle2, Clock3, Radio } from "lucide-react";
 import { motion } from "motion/react";
 import { useLocale } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 import { Link } from "@/i18n/navigation";
 import { api, friendlyError } from "@/lib/api";
@@ -68,10 +68,24 @@ export function WebinarWaitingRoom({ slug }: { slug: string }) {
   }
 
   return (
-    <main className="waiting-room">
+    <main
+      className="waiting-room"
+      style={{
+        "--color-primary": webinar.branding.accentColor,
+        "--waiting-cover": webinar.branding.coverImageUrl
+          ? `url(${webinar.branding.coverImageUrl})`
+          : "none",
+      } as CSSProperties}
+    >
       <header className="public-event-nav">
         <Link href="/">
-          <Logo />
+          {webinar.branding.logoUrl ? (
+            <span className="public-event-brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={webinar.branding.logoUrl} alt="" />
+              <strong>{webinar.branding.companyName}</strong>
+            </span>
+          ) : <Logo />}
         </Link>
         <div>
           <LanguageSwitcher />

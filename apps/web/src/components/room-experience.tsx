@@ -32,6 +32,7 @@ import {
   ChevronDown,
   HelpCircle,
   Link2,
+  ListChecks,
   LoaderCircle,
   MessageCircleMore,
   Mic,
@@ -106,12 +107,29 @@ interface Restriction {
   reason?: string;
 }
 
+interface LivePollOption {
+  id: string;
+  label: string;
+  voteCount: number;
+}
+
+interface LivePoll {
+  id: string;
+  webinarId: string;
+  question: string;
+  options: LivePollOption[];
+  allowMultiple: boolean;
+  status: "draft" | "open" | "closed";
+  createdAt: string;
+  updatedAt: string;
+}
+
 type Role = "OWNER" | "HOST" | "COHOST" | "MODERATOR" | "SPEAKER" | "ATTENDEE" | "GUEST";
 type EndedStatus = "ENDED" | "CANCELLED" | "ARCHIVED";
 type QualityPreset = "144p" | "240p" | "480p" | "720p" | "1080p";
 type StageOverlayPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 type StageTrackReference = NonNullable<ComponentProps<typeof VideoTrack>["trackRef"]>;
-type RoomPanel = "stage" | "chat" | "participants" | "stats" | "settings";
+type RoomPanel = "stage" | "chat" | "polls" | "participants" | "stats" | "settings";
 
 interface StageLayout {
   position: StageOverlayPosition;
@@ -236,7 +254,7 @@ export function RoomExperience({ slug }: { slug: string }) {
         onQualityChange={setQuality}
       />
       <div className={`webinar-room__body ${chatCollapsed ? "is-chat-collapsed" : ""}`}>
-        {viewerRoom ? null : <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} />}
+        {viewerRoom ? null : <RoomRail activePanel={activePanel} onPanelChange={setActivePanel} pollsEnabled={session.polls?.enabled ?? true} />}
         <section className="live-stage">
           <RoomConnectionGuard session={session} />
           <BroadcastStage
@@ -269,27 +287,28 @@ export function RoomExperience({ slug }: { slug: string }) {
 function RoomRail({
   activePanel,
   onPanelChange,
+  pollsEnabled,
 }: {
   activePanel: RoomPanel;
   onPanelChange: (panel: RoomPanel) => void;
+  pollsEnabled: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const items = [
-    { label: locale === "ru" ? "Сцена" : "Stage", icon: Tv, active: true },
-    { label: t("room.chat"), icon: MessageCircleMore },
-    { label: locale === "ru" ? "Участники" : "Participants", icon: UsersRound },
-    { label: locale === "ru" ? "Статистика" : "Stats", icon: ChartNoAxesColumn },
-    { label: locale === "ru" ? "Настройки" : "Settings", icon: Settings },
+  const items: { panel: RoomPanel; label: string; icon: typeof Tv }[] = [
+    { panel: "stage", label: locale === "ru" ? "Сцена" : "Stage", icon: Tv },
+    { panel: "chat", label: t("room.chat"), icon: MessageCircleMore },
+    ...(pollsEnabled ? [{ panel: "polls" as const, label: locale === "ru" ? "Опросы" : "Polls", icon: ListChecks }] : []),
+    { panel: "participants", label: locale === "ru" ? "Участники" : "Participants", icon: UsersRound },
+    { panel: "stats", label: locale === "ru" ? "Статистика" : "Stats", icon: ChartNoAxesColumn },
+    { panel: "settings", label: locale === "ru" ? "Настройки" : "Settings", icon: Settings },
   ];
-
-  const panelIds: RoomPanel[] = ["stage", "chat", "participants", "stats", "settings"];
 
   return (
     <nav className="room-rail" aria-label={locale === "ru" ? "Навигация эфира" : "Room navigation"}>
-      {items.map((item, index) => {
+      {items.map((item) => {
         const Icon = item.icon;
-        const panel = panelIds[index] ?? "chat";
+        const panel = item.panel;
         const active = activePanel === panel;
         return (
           <button
@@ -1219,6 +1238,7 @@ function RealtimePanel({
   const room = useRoomContext();
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [polls, setPolls] = useState<LivePoll[]>([]);
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [text, setText] = useState("");
   const [connected, setConnected] = useState(false);
@@ -1294,6 +1314,12 @@ function RealtimePanel({
     );
     socket.on("chat:deleted", (payload: { messageId: string }) =>
       setMessages((current) => current.filter((item) => item.id !== payload.messageId)),
+    );
+    socket.on("poll:created", (poll: LivePoll) =>
+      setPolls((current) => upsertPoll(current, poll)),
+    );
+    socket.on("poll:updated", (poll: LivePoll) =>
+      setPolls((current) => upsertPoll(current, poll)),
     );
     return () => {
       socket.emit("webinar:leave", { webinarId: session.webinarId });
@@ -1381,6 +1407,48 @@ function RealtimePanel({
         }
         setAnswerText("");
         setAnsweringQuestionId(null);
+      },
+    );
+  }
+
+  function createPoll(question: string, options: string[], allowMultiple: boolean) {
+    const socket = socketRef.current;
+    if (!socket?.connected || !canModerateChat) return;
+    socket.emit(
+      "poll:create",
+      {
+        webinarId: session.webinarId,
+        idempotencyKey: crypto.randomUUID(),
+        question,
+        options,
+        allowMultiple,
+      },
+      (ack: Ack<LivePoll>) => {
+        if (!ack.ok) setError(ack.error.message);
+      },
+    );
+  }
+
+  function changePollState(pollId: string, action: "open" | "close") {
+    const socket = socketRef.current;
+    if (!socket?.connected || !canModerateChat) return;
+    socket.emit(
+      `poll:${action}`,
+      { webinarId: session.webinarId, idempotencyKey: crypto.randomUUID(), pollId },
+      (ack: Ack<LivePoll>) => {
+        if (!ack.ok) setError(ack.error.message);
+      },
+    );
+  }
+
+  function votePoll(pollId: string, optionIds: string[]) {
+    const socket = socketRef.current;
+    if (!socket?.connected || optionIds.length === 0) return;
+    socket.emit(
+      "poll:vote",
+      { webinarId: session.webinarId, idempotencyKey: crypto.randomUUID(), pollId, optionIds },
+      (ack: Ack<LivePoll>) => {
+        if (!ack.ok) setError(ack.error.message);
       },
     );
   }
@@ -1478,6 +1546,36 @@ function RealtimePanel({
 
       {activePanel === "participants" ? (
         <RoomParticipantsPanel participants={participants} locale={locale} />
+      ) : null}
+
+      {activePanel === "polls" ? (
+        <RoomPollsPanel
+          locale={locale}
+          polls={polls}
+          canManage={canModerateChat}
+          connected={connected}
+          anonymousVoting={session.polls?.anonymousVoting ?? false}
+          resultsVisibility={session.polls?.resultsVisibility ?? "LIVE"}
+          onCreate={createPoll}
+          onStateChange={changePollState}
+          onVote={votePoll}
+        />
+      ) : null}
+
+
+      {viewer && activePanel === "chat" && polls.some((poll) => poll.status === "open") ? (
+        <RoomPollsPanel
+          locale={locale}
+          polls={polls.filter((poll) => poll.status === "open")}
+          canManage={false}
+          connected={connected}
+          anonymousVoting={session.polls?.anonymousVoting ?? false}
+          resultsVisibility={session.polls?.resultsVisibility ?? "LIVE"}
+          onCreate={createPoll}
+          onStateChange={changePollState}
+          onVote={votePoll}
+          compact
+        />
       ) : null}
 
       {activePanel === "stats" ? (
@@ -1741,6 +1839,176 @@ function RealtimePanel({
   );
 }
 
+function RoomPollsPanel({
+  locale,
+  polls,
+  canManage,
+  connected,
+  anonymousVoting,
+  resultsVisibility,
+  onCreate,
+  onStateChange,
+  onVote,
+  compact = false,
+}: {
+  locale: string;
+  polls: LivePoll[];
+  canManage: boolean;
+  connected: boolean;
+  anonymousVoting: boolean;
+  resultsVisibility: "LIVE" | "AFTER_CLOSE";
+  onCreate: (question: string, options: string[], allowMultiple: boolean) => void;
+  onStateChange: (pollId: string, action: "open" | "close") => void;
+  onVote: (pollId: string, optionIds: string[]) => void;
+  compact?: boolean;
+}) {
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", ""]);
+  const [allowMultiple, setAllowMultiple] = useState(false);
+  const [selections, setSelections] = useState<Record<string, string[]>>({});
+  const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
+  const visiblePolls = canManage ? polls : polls.filter((poll) => poll.status !== "draft");
+
+  function submitCreate(event: React.FormEvent) {
+    event.preventDefault();
+    const cleanQuestion = question.trim();
+    const cleanOptions = options.map((option) => option.trim()).filter(Boolean);
+    if (!cleanQuestion || cleanOptions.length < 2) return;
+    onCreate(cleanQuestion, cleanOptions, allowMultiple);
+    setQuestion("");
+    setOptions(["", ""]);
+    setAllowMultiple(false);
+  }
+
+  function toggleOption(poll: LivePoll, optionId: string) {
+    if (submitted[poll.id] || poll.status !== "open") return;
+    const current = selections[poll.id] ?? [];
+    const next = poll.allowMultiple
+      ? current.includes(optionId)
+        ? current.filter((id) => id !== optionId)
+        : [...current, optionId]
+      : [optionId];
+    setSelections((all) => ({ ...all, [poll.id]: next }));
+  }
+
+  return (
+    <section className={`room-polls ${compact ? "room-polls--compact" : ""}`}>
+      <header className="room-polls__header">
+        <div>
+          <ListChecks size={18} />
+          <strong>{locale === "ru" ? "Опросы" : "Polls"}</strong>
+        </div>
+        {anonymousVoting ? (
+          <span>{locale === "ru" ? "Анонимно" : "Anonymous"}</span>
+        ) : null}
+      </header>
+
+      {canManage && !compact ? (
+        <form className="poll-create" onSubmit={submitCreate}>
+          <input
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            placeholder={locale === "ru" ? "Вопрос опроса" : "Poll question"}
+            maxLength={500}
+          />
+          <div className="poll-create__options">
+            {options.map((option, index) => (
+              <div key={index}>
+                <span>{index + 1}</span>
+                <input
+                  value={option}
+                  onChange={(event) =>
+                    setOptions((current) =>
+                      current.map((item, itemIndex) => itemIndex === index ? event.target.value : item),
+                    )
+                  }
+                  placeholder={locale === "ru" ? `Вариант ${index + 1}` : `Option ${index + 1}`}
+                  maxLength={240}
+                />
+                {options.length > 2 ? (
+                  <button type="button" onClick={() => setOptions((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+                    <X size={14} />
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <div className="poll-create__footer">
+            <button type="button" onClick={() => setOptions((current) => current.length < 6 ? [...current, ""] : current)} disabled={options.length >= 6}>
+              {locale === "ru" ? "+ Вариант" : "+ Option"}
+            </button>
+            <label>
+              <input type="checkbox" checked={allowMultiple} onChange={(event) => setAllowMultiple(event.target.checked)} />
+              {locale === "ru" ? "Несколько ответов" : "Multiple answers"}
+            </label>
+            <button type="submit" disabled={!connected || !question.trim() || options.filter((option) => option.trim()).length < 2}>
+              {locale === "ru" ? "Создать" : "Create"}
+            </button>
+          </div>
+        </form>
+      ) : null}
+
+      <div className="poll-list">
+        {visiblePolls.length === 0 ? (
+          <div className="poll-empty">
+            <ListChecks size={22} />
+            <p>{locale === "ru" ? "Активных опросов пока нет" : "No active polls yet"}</p>
+          </div>
+        ) : visiblePolls.map((poll) => {
+          const total = poll.options.reduce((sum, option) => sum + option.voteCount, 0);
+          const selected = selections[poll.id] ?? [];
+          const showResults = canManage || resultsVisibility === "LIVE" || poll.status === "closed";
+          return (
+            <article className={`poll-card poll-card--${poll.status}`} key={poll.id}>
+              <header>
+                <strong>{poll.question}</strong>
+                <span>{poll.status === "open" ? (locale === "ru" ? "Идёт" : "Live") : poll.status === "closed" ? (locale === "ru" ? "Завершён" : "Closed") : (locale === "ru" ? "Черновик" : "Draft")}</span>
+              </header>
+              <div className="poll-options">
+                {poll.options.map((option) => {
+                  const percent = total > 0 ? Math.round((option.voteCount / total) * 100) : 0;
+                  return (
+                    <button
+                      type="button"
+                      key={option.id}
+                      className={selected.includes(option.id) ? "is-selected" : ""}
+                      onClick={() => toggleOption(poll, option.id)}
+                      disabled={poll.status !== "open" || submitted[poll.id]}
+                    >
+                      {showResults ? <i style={{ width: `${percent}%` }} /> : null}
+                      <span>{option.label}</span>
+                      {showResults ? <b>{percent}%</b> : null}
+                    </button>
+                  );
+                })}
+              </div>
+              <footer>
+                {showResults ? <small>{total} {locale === "ru" ? "голосов" : "votes"}</small> : <small>{locale === "ru" ? "Результаты после закрытия" : "Results after closing"}</small>}
+                {canManage ? (
+                  poll.status === "draft" ? <button type="button" onClick={() => onStateChange(poll.id, "open")}>{locale === "ru" ? "Запустить" : "Open"}</button>
+                    : poll.status === "open" ? <button type="button" onClick={() => onStateChange(poll.id, "close")}>{locale === "ru" ? "Завершить" : "Close"}</button>
+                      : null
+                ) : poll.status === "open" && !submitted[poll.id] ? (
+                  <button
+                    type="button"
+                    disabled={!connected || selected.length === 0}
+                    onClick={() => {
+                      onVote(poll.id, selected);
+                      setSubmitted((current) => ({ ...current, [poll.id]: true }));
+                    }}
+                  >
+                    {locale === "ru" ? "Проголосовать" : "Vote"}
+                  </button>
+                ) : submitted[poll.id] ? <span><Check size={14} />{locale === "ru" ? "Голос учтён" : "Vote received"}</span> : null}
+              </footer>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function RoomStagePanel({
   locale,
   viewerCount,
@@ -1841,6 +2109,7 @@ function RoomStatsPanel({
 
 function roomPanelTitle(panel: RoomPanel, locale: string): string {
   if (panel === "stage") return locale === "ru" ? "Сцена" : "Stage";
+  if (panel === "polls") return locale === "ru" ? "Опросы" : "Polls";
   if (panel === "participants") return locale === "ru" ? "Участники" : "Participants";
   if (panel === "stats") return locale === "ru" ? "Статистика" : "Stats";
   if (panel === "settings") return locale === "ru" ? "Настройки" : "Settings";
@@ -1849,6 +2118,7 @@ function roomPanelTitle(panel: RoomPanel, locale: string): string {
 
 function roomPanelSubtitle(panel: RoomPanel, locale: string, messageCount: number, participantCount: number): string {
   if (panel === "chat") return locale === "ru" ? `${messageCount} сообщений` : `${messageCount} messages`;
+  if (panel === "polls") return locale === "ru" ? "Голосование в реальном времени" : "Live voting";
   if (panel === "participants") return locale === "ru" ? `${participantCount} онлайн` : `${participantCount} online`;
   if (panel === "settings") return locale === "ru" ? "Качество и сцена" : "Quality and stage";
   if (panel === "stats") return locale === "ru" ? "Живые показатели" : "Live metrics";
@@ -2042,6 +2312,12 @@ function upsertRestriction(current: Restriction[], next: Restriction): Restricti
   );
   if (!next.active) return without;
   return [...without, next];
+}
+
+function upsertPoll(current: LivePoll[], next: LivePoll): LivePoll[] {
+  const index = current.findIndex((poll) => poll.id === next.id);
+  if (index < 0) return [...current, next];
+  return current.map((poll) => poll.id === next.id ? next : poll);
 }
 
 function formatRestrictionUntil(value: string, locale: string): string {

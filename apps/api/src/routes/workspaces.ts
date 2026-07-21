@@ -28,12 +28,27 @@ const webinarDefaultsSchema = z.object({
   autoRecording: z.boolean(),
   viewerChat: z.boolean(),
 });
+const pollDefaultsSchema = z.object({
+  enabled: z.boolean(),
+  anonymousVoting: z.boolean(),
+  resultsVisibility: z.enum(["LIVE", "AFTER_CLOSE"]),
+});
+const brandingSchema = z.object({
+  accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  coverImageUrl: z.url().max(2048).nullable(),
+});
 const updateWorkspaceSchema = z.object({
   name: z.string().trim().min(1).max(160).optional(),
   logoUrl: z.url().max(2048).nullable().optional(),
   locale: z.enum(["en", "ru"]).optional(),
   timezone: z.string().trim().min(1).max(100).optional(),
-  settings: z.object({ webinarDefaults: webinarDefaultsSchema }).optional(),
+  settings: z
+    .object({
+      webinarDefaults: webinarDefaultsSchema.optional(),
+      polls: pollDefaultsSchema.optional(),
+      branding: brandingSchema.optional(),
+    })
+    .optional(),
 });
 
 export async function registerWorkspaceRoutes(
@@ -129,12 +144,24 @@ export async function registerWorkspaceRoutes(
         "workspace:manage",
       );
       const parsed = updateWorkspaceSchema.parse(request.body);
+      const current = await repositories.workspaces.getSettings(request.params.workspaceId);
+      if (!current) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+      const mergedSettings = parsed.settings
+        ? {
+            ...current.settings,
+            ...(parsed.settings.webinarDefaults
+              ? { webinarDefaults: parsed.settings.webinarDefaults }
+              : {}),
+            ...(parsed.settings.polls ? { polls: parsed.settings.polls } : {}),
+            ...(parsed.settings.branding ? { branding: parsed.settings.branding } : {}),
+          }
+        : undefined;
       await repositories.workspaces.updateSettings(request.params.workspaceId, {
         ...(parsed.name !== undefined ? { name: parsed.name } : {}),
         ...(parsed.logoUrl !== undefined ? { logoUrl: parsed.logoUrl } : {}),
         ...(parsed.locale !== undefined ? { locale: parsed.locale } : {}),
         ...(parsed.timezone !== undefined ? { timezone: parsed.timezone } : {}),
-        ...(parsed.settings !== undefined ? { settings: parsed.settings } : {}),
+        ...(mergedSettings !== undefined ? { settings: mergedSettings } : {}),
       });
       const workspace = await repositories.workspaces.getSettings(request.params.workspaceId);
       if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");

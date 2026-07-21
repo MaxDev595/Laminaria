@@ -139,7 +139,7 @@ export const api = {
       method: "DELETE",
       body: JSON.stringify({ confirmation: "DELETE" }),
     }),
-  uploadImage: (kind: "avatar" | "workspace-logo", dataUrl: string) =>
+  uploadImage: (kind: "avatar" | "workspace-logo" | "webinar-cover", dataUrl: string) =>
     apiFetch<{ url: string }>("/v1/uploads/images", {
       method: "POST",
       body: JSON.stringify({ kind, dataUrl }),
@@ -369,6 +369,17 @@ export interface WebinarDefaults {
   viewerChat: boolean;
 }
 
+export interface PollDefaults {
+  enabled: boolean;
+  anonymousVoting: boolean;
+  resultsVisibility: "LIVE" | "AFTER_CLOSE";
+}
+
+export interface BrandingSettings {
+  accentColor: string;
+  coverImageUrl: string | null;
+}
+
 export interface WorkspaceSettings {
   id: string;
   name: string;
@@ -376,7 +387,11 @@ export interface WorkspaceSettings {
   logoUrl: string | null;
   locale: "en" | "ru";
   timezone: string;
-  settings: { webinarDefaults?: WebinarDefaults };
+  settings: {
+    webinarDefaults?: WebinarDefaults;
+    polls?: PollDefaults;
+    branding?: BrandingSettings;
+  };
 }
 
 export interface WorkspaceSettingsPayload {
@@ -391,7 +406,11 @@ export interface UpdateWorkspaceInput {
   logoUrl?: string | null;
   locale?: "en" | "ru";
   timezone?: string;
-  settings?: { webinarDefaults: WebinarDefaults };
+  settings?: {
+    webinarDefaults?: WebinarDefaults;
+    polls?: PollDefaults;
+    branding?: BrandingSettings;
+  };
 }
 
 export interface AccountSession {
@@ -493,7 +512,14 @@ export type PublicWebinar = Pick<
   | "visibility"
   | "allowGuests"
   | "requireEmailRegistration"
->;
+> & {
+  branding: {
+    companyName: string | null;
+    logoUrl: string | null;
+    accentColor: string;
+    coverImageUrl: string | null;
+  };
+};
 
 export interface CreateWebinarInput {
   slug: string;
@@ -513,6 +539,7 @@ export interface PrejoinPayload {
   workspaceId?: string;
   webinarId: string;
   recordingEnabled?: boolean;
+  polls?: PollDefaults;
   media: {
     roomName: string;
     url: string;

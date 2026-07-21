@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { normalizePlainText } from "../security/text.js";
 import { PublicRegistrationService } from "../webinars/public-registration-service.js";
+import type { UnitOfWork } from "../repositories/contracts.js";
 
 const slugParams = z.object({ slug: z.string().min(1).max(100) });
 const registerSchema = z.object({
@@ -23,6 +24,7 @@ const prejoinSchema = z.object({
 export async function registerPublicRoutes(
   app: FastifyInstance,
   service: PublicRegistrationService,
+  repositories: UnitOfWork,
 ): Promise<void> {
   app.get<{ Params: { slug: string } }>(
     "/v1/public/webinars/:slug",
@@ -32,7 +34,9 @@ export async function registerPublicRoutes(
     async (request) => {
       const { slug } = slugParams.parse(request.params);
       const webinar = await service.publicWebinar(slug);
-      return { webinar: publicProjection(webinar) };
+      const workspace = await repositories.workspaces.getSettings(webinar.workspaceId);
+      const branding = workspaceBranding(workspace);
+      return { webinar: { ...publicProjection(webinar), branding } };
     },
   );
 
@@ -77,6 +81,24 @@ export async function registerPublicRoutes(
       });
     },
   );
+}
+
+function workspaceBranding(
+  workspace: Awaited<ReturnType<UnitOfWork["workspaces"]["getSettings"]>>,
+) {
+  const raw = workspace?.settings["branding"];
+  const branding = raw && typeof raw === "object" && !Array.isArray(raw)
+    ? (raw as Record<string, unknown>)
+    : {};
+  return {
+    companyName: workspace?.name ?? null,
+    logoUrl: workspace?.logoUrl ?? null,
+    accentColor:
+      typeof branding["accentColor"] === "string" && /^#[0-9a-fA-F]{6}$/.test(branding["accentColor"])
+        ? branding["accentColor"]
+        : "#7457ff",
+    coverImageUrl: typeof branding["coverImageUrl"] === "string" ? branding["coverImageUrl"] : null,
+  };
 }
 
 function publicProjection(

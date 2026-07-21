@@ -149,8 +149,10 @@ export class PublicRegistrationService {
       role,
       metadata: { subject },
     });
+    const workspaceSettings = await this.repositories.workspaces.getSettings(webinar.workspaceId);
     return {
       webinarId: webinar.id,
+      polls: publicPollSettings(workspaceSettings?.settings["polls"]),
       media,
       realtimeToken: this.participants.issue({
         subject,
@@ -161,4 +163,15 @@ export class PublicRegistrationService {
       participant: { identity, displayName, role },
     };
   }
+}
+
+function publicPollSettings(value: unknown) {
+  const settings = value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+  return {
+    enabled: settings["enabled"] !== false,
+    anonymousVoting: settings["anonymousVoting"] === true,
+    resultsVisibility: settings["resultsVisibility"] === "AFTER_CLOSE" ? "AFTER_CLOSE" as const : "LIVE" as const,
+  };
 }

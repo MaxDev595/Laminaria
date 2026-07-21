@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -83,6 +83,7 @@ export function PublicWebinar({ slug }: { slug: string }) {
   }
 
   const webinar = query.data!.webinar;
+  const coverImageUrl = webinar.coverImageUrl ?? webinar.branding.coverImageUrl;
   const registrationClosed = !["SCHEDULED", "LIVE"].includes(webinar.status);
 
   function addCalendar() {
@@ -117,10 +118,19 @@ export function PublicWebinar({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="public-event-shell">
+    <div
+      className="public-event-shell"
+      style={{ "--event-accent": webinar.branding.accentColor } as CSSProperties}
+    >
       <header className="public-event-nav">
         <Link href="/">
-          <Logo />
+          {webinar.branding.logoUrl ? (
+            <span className="public-event-brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={webinar.branding.logoUrl} alt="" />
+              <strong>{webinar.branding.companyName}</strong>
+            </span>
+          ) : <Logo />}
         </Link>
         <div>
           <LanguageSwitcher />
@@ -143,10 +153,10 @@ export function PublicWebinar({ slug }: { slug: string }) {
               {webinar.visibility === "PUBLIC" ? t("webinar.public") : t("webinar.private")}
             </span>
           </div>
-          {webinar.coverImageUrl ? (
+          {coverImageUrl ? (
             <div
               className="event-banner"
-              style={{ backgroundImage: `url(${webinar.coverImageUrl})` }}
+              style={{ backgroundImage: `url(${coverImageUrl})` }}
             >
               <span>{webinar.status === "LIVE" ? "LIVE" : "WEBINAR"}</span>
             </div>

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { type CSSProperties, useCallback, useState, useSyncExternalStore } from "react";
 
 import { Link, useRouter } from "@/i18n/navigation";
 import { api, friendlyError } from "@/lib/api";
@@ -93,13 +93,22 @@ export function PrejoinExperience({ slug }: { slug: string }) {
     live && (Boolean(accessToken) || (webinar.allowGuests && name.trim().length > 0));
 
   return (
-    <main className="prejoin-shell">
+    <main
+      className="prejoin-shell"
+      style={{ "--color-primary": webinar.branding.accentColor } as CSSProperties}
+    >
       <header className="prejoin-header">
         <Link href={`/w/${slug}`} className="auth-back">
           <ArrowLeft size={16} />
           {t("common.back")}
         </Link>
-        <Logo />
+        {webinar.branding.logoUrl ? (
+          <span className="public-event-brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={webinar.branding.logoUrl} alt="" />
+            <strong>{webinar.branding.companyName}</strong>
+          </span>
+        ) : <Logo />}
         <LanguageSwitcher />
       </header>
 

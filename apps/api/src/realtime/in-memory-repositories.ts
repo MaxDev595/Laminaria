@@ -177,6 +177,12 @@ export class InMemoryPollRepository implements PollRepository {
     return clone(poll);
   }
 
+  async listByWebinar(webinarId: string): Promise<readonly Poll[]> {
+    return [...this.#polls.values()]
+      .filter((poll) => poll.webinarId === webinarId)
+      .map(clone);
+  }
+
   async setStatus(input: {
     webinarId: string;
     pollId: string;

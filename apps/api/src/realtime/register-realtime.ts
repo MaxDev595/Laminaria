@@ -478,6 +478,8 @@ function registerJoinHandlers(socket: RealtimeSocket, dependencies: ResolvedDepe
             heightPercent: 24,
           },
         );
+        const polls = await dependencies.repositories.polls.listByWebinar(webinarId);
+        for (const poll of polls) socket.emit("poll:created", poll);
         return { data: participant, replayed: false };
       },
     );

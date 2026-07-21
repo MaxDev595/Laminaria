@@ -277,6 +277,9 @@ export async function registerWebinarRoutes(
         role: access.role,
         metadata: { subject },
       });
+      const workspaceSettings = await repositories.workspaces.getSettings(
+        access.webinar.workspaceId,
+      );
       return {
         workspaceId: access.webinar.workspaceId,
         webinarId: access.webinar.id,
@@ -284,6 +287,7 @@ export async function registerWebinarRoutes(
           await resolveWorkspacePlan(repositories, access.webinar.workspaceId),
           "webinarRecording",
         ),
+        polls: pollSettings(workspaceSettings?.settings["polls"]),
         media,
         realtimeToken: roomAccess.participants.issue({
           subject,
@@ -418,6 +422,17 @@ export async function registerWebinarRoutes(
       return reply.status(204).send();
     },
   );
+}
+
+function pollSettings(value: unknown) {
+  const settings = value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+  return {
+    enabled: settings["enabled"] !== false,
+    anonymousVoting: settings["anonymousVoting"] === true,
+    resultsVisibility: settings["resultsVisibility"] === "AFTER_CLOSE" ? "AFTER_CLOSE" as const : "LIVE" as const,
+  };
 }
 
 function assertWorkspace(actual: string, expected: string): void {

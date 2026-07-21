@@ -141,6 +141,7 @@ export interface QuestionRepository {
 
 export interface PollRepository {
   create(poll: Poll): Promise<Poll>;
+  listByWebinar(webinarId: string): Promise<readonly Poll[]>;
   setStatus(input: {
     webinarId: string;
     pollId: string;
