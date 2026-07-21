@@ -103,6 +103,7 @@ export async function registerWebinarRoutes(
         "webinar:read",
       );
       const webinars = await repositories.webinars.listByWorkspace(request.params.workspaceId);
+      const planId = await resolveWorkspacePlan(repositories, request.params.workspaceId);
       const withRoles = await Promise.all(
         webinars.map(async (webinar) => {
           const explicitRole = await repositories.webinars.findParticipantRole(
@@ -111,7 +112,11 @@ export async function registerWebinarRoutes(
           );
           const currentUserRole =
             membership.role === "OWNER" || membership.role === "ADMIN" ? "OWNER" : explicitRole;
-          return { ...webinar, currentUserRole };
+          return {
+            ...webinar,
+            recordingEnabled: planAllows(planId, "webinarRecording"),
+            currentUserRole,
+          };
         }),
       );
       return {
@@ -170,7 +175,8 @@ export async function registerWebinarRoutes(
       await requireWebinarPermission(request, repositories, params.webinarId, "recording:manage");
       const webinar = await service.find(params.webinarId);
       assertWorkspace(webinar.workspaceId, params.workspaceId);
-      if (!webinar.recordingEnabled) {
+      const planId = await resolveWorkspacePlan(repositories, params.workspaceId);
+      if (!planAllows(planId, "webinarRecording")) {
         throw new AppError(402, "PLAN_LIMIT_EXCEEDED", "Recording requires Pro or Business");
       }
       if (webinar.status !== "LIVE") {
@@ -274,7 +280,10 @@ export async function registerWebinarRoutes(
       return {
         workspaceId: access.webinar.workspaceId,
         webinarId: access.webinar.id,
-        recordingEnabled: access.webinar.recordingEnabled,
+        recordingEnabled: planAllows(
+          await resolveWorkspacePlan(repositories, access.webinar.workspaceId),
+          "webinarRecording",
+        ),
         media,
         realtimeToken: roomAccess.participants.issue({
           subject,
@@ -427,6 +436,7 @@ async function syncAutomaticRecording(
   repositories: UnitOfWork,
   webinar: {
     id: string;
+    workspaceId?: string;
     livekitRoomName: string;
     recordingEnabled: boolean;
     startedAt?: Date | null;
@@ -434,7 +444,12 @@ async function syncAutomaticRecording(
   nextStatus: WebinarStatus,
   recordingService: LiveKitRecordingService,
 ): Promise<void> {
-  if (!webinar.recordingEnabled) return;
+  if (!webinar.recordingEnabled) {
+    const workspaceId = webinar.workspaceId ?? null;
+    if (!workspaceId) return;
+    const planId = await resolveWorkspacePlan(repositories, workspaceId);
+    if (!planAllows(planId, "webinarRecording")) return;
+  }
   const now = new Date();
   if (nextStatus === "LIVE") {
     if (!recordingService.configured) {

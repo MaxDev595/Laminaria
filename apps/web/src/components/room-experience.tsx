@@ -1195,11 +1195,18 @@ function RealtimePanel({
   const [moderationTarget, setModerationTarget] = useState<Actor | null>(null);
   const [answeringQuestionId, setAnsweringQuestionId] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState("");
+  const [restrictionClock, setRestrictionClock] = useState(() => Date.now());
   const socketRef = useRef<Socket | null>(null);
   const viewer = isViewerRole(session.participant.role);
   const canModerateChat = canModerate(session.participant.role);
   const chatLocked = viewer && !viewerChatEnabled;
   const participants = useParticipants();
+
+  useEffect(() => {
+    if (!restrictions.some((restriction) => restriction.active && restriction.until)) return;
+    const timer = window.setInterval(() => setRestrictionClock(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [restrictions]);
 
   useEffect(() => {
     const socket = io(api.realtimeOrigin, {
@@ -1347,7 +1354,11 @@ function RealtimePanel({
 
   const tab = "chat" as const;
   const items = messages;
-  const activeRestrictions = restrictions.filter((restriction) => restriction.active);
+  const activeRestrictions = restrictions.filter(
+    (restriction) =>
+      restriction.active &&
+      (!restriction.until || new Date(restriction.until).getTime() > restrictionClock),
+  );
   const viewerCount = participants.filter((participant) =>
     isViewerRole(roleFromMetadata(participant.metadata)),
   ).length;
@@ -1576,10 +1587,10 @@ function RealtimePanel({
         </AnimatePresence>
       </div>
 
-      {activePanel === "settings" && canModerateChat && restrictions.length > 0 ? (
+      {activePanel === "settings" && canModerateChat && activeRestrictions.length > 0 ? (
         <div className="restriction-list">
           <strong>{locale === "ru" ? "Ограничения эфира" : "Live restrictions"}</strong>
-          {restrictions.map((restriction) => (
+          {activeRestrictions.map((restriction) => (
             <div key={`${restriction.targetId}:${restriction.action}`}>
               <span>
                 {restriction.targetName} · {restriction.action}
@@ -1599,7 +1610,7 @@ function RealtimePanel({
                     )
                   }
                 >
-                  unmute
+                  {locale === "ru" ? "Снять мьют" : "Unmute"}
                 </button>
               ) : null}
               {restriction.action === "ban" ? (
@@ -1616,7 +1627,7 @@ function RealtimePanel({
                     )
                   }
                 >
-                  unban
+                  {locale === "ru" ? "Разбанить" : "Unban"}
                 </button>
               ) : null}
             </div>
@@ -1629,6 +1640,9 @@ function RealtimePanel({
           <ModerationDialog
             actor={moderationTarget}
             locale={locale}
+            restrictions={activeRestrictions.filter(
+              (restriction) => restriction.targetId === moderationTarget.id,
+            )}
             onClose={() => setModerationTarget(null)}
             onRestrict={(action, duration) => restrict(moderationTarget, action, duration)}
           />
@@ -1657,6 +1671,16 @@ function RealtimePanel({
           id="realtime-message"
           value={text}
           onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter" &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing
+            ) {
+              event.preventDefault();
+              void send();
+            }
+          }}
           placeholder={tab === "chat" ? t("room.sendMessage") : t("room.askQuestion")}
           maxLength={2000}
           rows={2}
@@ -1801,14 +1825,18 @@ function roomPanelSubtitle(panel: RoomPanel, locale: string, messageCount: numbe
 function ModerationDialog({
   actor,
   locale,
+  restrictions,
   onClose,
   onRestrict,
 }: {
   actor: Actor;
   locale: string;
+  restrictions: Restriction[];
   onClose: () => void;
-  onRestrict: (action: "mute" | "ban", durationMinutes: number | null) => void;
+  onRestrict: (action: Restriction["action"], durationMinutes?: number | null) => void;
 }) {
+  const muted = restrictions.some((restriction) => restriction.action === "mute");
+  const banned = restrictions.some((restriction) => restriction.action === "ban");
   const muteDurations = [
     { label: "10m", value: 10 },
     { label: "30m", value: 30 },
@@ -1867,6 +1895,11 @@ function ModerationDialog({
               : "Mute: viewer cannot write in chat"}
           </h3>
           <div>
+            {muted ? (
+              <button type="button" className="is-release" onClick={() => onRestrict("unmute")}>
+                {locale === "ru" ? "Снять мьют" : "Unmute"}
+              </button>
+            ) : null}
             {muteDurations.map((duration) => (
               <button
                 key={`mute-${duration.label}`}
@@ -1886,6 +1919,11 @@ function ModerationDialog({
               : "Ban: viewer cannot enter the webinar"}
           </h3>
           <div>
+            {banned ? (
+              <button type="button" className="is-release" onClick={() => onRestrict("unban")}>
+                {locale === "ru" ? "Разбанить" : "Unban"}
+              </button>
+            ) : null}
             {banDurations.map((duration) => (
               <button
                 key={`ban-${duration.label}`}

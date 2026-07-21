@@ -15,14 +15,15 @@ export interface PlanPolicy {
 
 export const PLAN_POLICY: Readonly<Record<PlanId, PlanPolicy>> = Object.freeze({
   free: Object.freeze({
-    maxConcurrentAttendees: 25,
-    webinarRecording: false,
-    polls: false,
-    advancedModeration: false,
-    advancedAnalytics: false,
-    customLogo: false,
-    removeLaminariaBranding: false,
-    dataExport: false,
+    // Temporary MVP testing mode: every feature is unlocked on Free.
+    maxConcurrentAttendees: 1_000,
+    webinarRecording: true,
+    polls: true,
+    advancedModeration: true,
+    advancedAnalytics: true,
+    customLogo: true,
+    removeLaminariaBranding: true,
+    dataExport: true,
   }),
   professional: Object.freeze({
     maxConcurrentAttendees: 150,

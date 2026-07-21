@@ -5787,6 +5787,9 @@ select {
 }
 
 .room-topbar {
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
   min-width: 0;
   padding: 0 var(--space-3);
   display: grid;
@@ -7772,7 +7775,7 @@ select {
 
 .quality-menu {
   position: relative;
-  z-index: 40;
+  z-index: 1100;
 }
 
 .quality-menu__trigger {
@@ -7816,6 +7819,13 @@ select {
   background: color-mix(in srgb, var(--color-surface) 94%, #07131f 6%);
   box-shadow: 0 20px 60px rgb(0 0 0 / 42%), var(--highlight-inset);
   backdrop-filter: blur(20px);
+  z-index: 1200;
+}
+
+.moderation-modal__panel section button.is-release {
+  border-color: color-mix(in srgb, var(--color-success) 58%, var(--color-border));
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
 }
 
 .quality-menu__popover button {

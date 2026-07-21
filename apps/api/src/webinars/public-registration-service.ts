@@ -142,6 +142,16 @@ export class PublicRegistrationService {
       displayName = guestName;
       role = "GUEST";
     }
+    const restriction = await this.repositories.moderationRestrictions?.find(webinar.id, subject);
+    if (
+      restriction &&
+      (restriction.bannedUntil === null ||
+        (typeof restriction.bannedUntil === "number" && restriction.bannedUntil > Date.now()))
+    ) {
+      throw new AppError(403, "FORBIDDEN", "You are banned from this webinar", {
+        bannedUntil: restriction.bannedUntil,
+      });
+    }
     const identity = `${subject}:${randomUUID()}`;
     const media = await this.livekit.issue({
       webinar,
