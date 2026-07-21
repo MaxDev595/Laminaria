@@ -39,6 +39,7 @@ import {
 import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { PageHeading } from "./dashboard-overview";
+import { StyledSelect } from "./styled-select";
 
 type SettingsTab =
   | "profile"
@@ -247,6 +248,7 @@ export function SettingsCenter() {
                   setNotice(ru ? "Пароль изменён" : "Password changed");
                 } catch (error) { setNotice(friendlyError(error, locale)); }
               }}
+              setNotice={setNotice}
             />
           ) : null}
           {tab === "workspace" ? (
@@ -263,6 +265,7 @@ export function SettingsCenter() {
                 try { await api.deleteWorkspace(workspace.id); window.location.href = `/${locale}/onboarding`; }
                 catch (error) { setNotice(friendlyError(error, locale)); }
               }}
+              setNotice={setNotice}
             />
           ) : null}
           {tab === "webinars" ? <WebinarSettings ru={ru} value={webinar} setValue={setWebinar} saving={saveWebinar.isPending} onSave={() => saveWebinar.mutate()} /> : null}
@@ -307,18 +310,17 @@ function SaveButton({ ru, loading, onClick }: { ru: boolean; loading?: boolean; 
   return <Button onClick={onClick} disabled={loading}>{loading ? <LoaderCircle className="spin" size={17} /> : <Save size={17} />}{ru ? "Сохранить изменения" : "Save changes"}</Button>;
 }
 
-function ProfileSettings({ ru, email, value, setValue, passwords, setPasswords, saving, onSave, onPassword }: any) {
+function ProfileSettings({ ru, email, value, setValue, passwords, setPasswords, saving, onSave, onPassword, setNotice }: any) {
   const zones = timezones();
   return <section className="settings-stack">
     <SettingsHeader icon={<UserRound />} title={ru ? "Профиль" : "Profile"} body={ru ? "Как вас видят участники и команда." : "How your team and attendees see you."} />
     <div className="settings-card settings-profile-card">
-      <div className="settings-avatar" style={value.avatarUrl ? { backgroundImage: `url(${value.avatarUrl})` } : undefined}>{!value.avatarUrl ? value.name.slice(0, 1).toUpperCase() : null}</div>
+      <ImageUpload kind="avatar" value={value.avatarUrl} label={ru ? "Загрузить аватар" : "Upload avatar"} ru={ru} setNotice={setNotice} onChange={(avatarUrl: string) => setValue({ ...value, avatarUrl })} />
       <div className="settings-form-grid">
         <Field label={ru ? "Имя и фамилия" : "Full name"}><input value={value.name} onChange={(e) => setValue({ ...value, name: e.target.value })} /></Field>
         <Field label="Email" hint={ru ? "Email аккаунта нельзя изменить здесь." : "Your account email cannot be changed here."}><input value={email} disabled /></Field>
-        <Field label={ru ? "Аватар" : "Avatar"} hint={ru ? "Вставьте HTTPS-ссылку на изображение." : "Paste an HTTPS image URL."}><div className="settings-input-icon"><Upload size={16} /><input type="url" value={value.avatarUrl} placeholder="https://…" onChange={(e) => setValue({ ...value, avatarUrl: e.target.value })} /></div></Field>
-        <Field label={ru ? "Язык интерфейса" : "Interface language"}><select value={value.locale} onChange={(e) => setValue({ ...value, locale: e.target.value })}><option value="ru">Русский</option><option value="en">English</option></select></Field>
-        <Field label={ru ? "Часовой пояс" : "Time zone"}><select value={value.timezone} onChange={(e) => setValue({ ...value, timezone: e.target.value })}>{zones.map((zone) => <option key={zone}>{zone}</option>)}</select></Field>
+        <Field label={ru ? "Язык интерфейса" : "Interface language"}><StyledSelect value={value.locale} ariaLabel={ru ? "Язык интерфейса" : "Interface language"} options={[{ value: "ru", label: "Русский" }, { value: "en", label: "English" }]} onChange={(next) => setValue({ ...value, locale: next })} /></Field>
+        <Field label={ru ? "Часовой пояс" : "Time zone"}><StyledSelect value={value.timezone} ariaLabel={ru ? "Часовой пояс" : "Time zone"} options={zones.map((zone: string) => ({ value: zone, label: zone }))} onChange={(next) => setValue({ ...value, timezone: next })} /></Field>
       </div>
       <div className="settings-actions"><SaveButton ru={ru} loading={saving} onClick={onSave} /></div>
     </div>
@@ -330,12 +332,12 @@ function ProfileSettings({ ru, email, value, setValue, passwords, setPasswords, 
   </section>;
 }
 
-function WorkspaceSettingsView({ ru, role, value, setValue, saving, onSave, onTeam, onDelete }: any) {
+function WorkspaceSettingsView({ ru, role, value, setValue, saving, onSave, onTeam, onDelete, setNotice }: any) {
   const canManage = role === "OWNER" || role === "ADMIN";
   return <section className="settings-stack"><SettingsHeader icon={<UsersRound />} title={ru ? "Рабочее пространство" : "Workspace"} body={ru ? "Бренд и доступ вашей команды." : "Your team identity and access."} />
     <div className="settings-card"><div className="settings-form-grid">
       <Field label={ru ? "Название Workspace" : "Workspace name"}><input value={value.name} disabled={!canManage} onChange={(e) => setValue({ ...value, name: e.target.value })} /></Field>
-      <Field label={ru ? "Логотип" : "Logo"} hint={ru ? "HTTPS-ссылка на квадратное изображение." : "HTTPS URL to a square image."}><input type="url" value={value.logoUrl} disabled={!canManage} placeholder="https://…" onChange={(e) => setValue({ ...value, logoUrl: e.target.value })} /></Field>
+      <Field label={ru ? "Логотип" : "Logo"}><ImageUpload kind="workspace-logo" value={value.logoUrl} label={ru ? "Загрузить логотип" : "Upload logo"} ru={ru} disabled={!canManage} setNotice={setNotice} onChange={(logoUrl: string) => setValue({ ...value, logoUrl })} /></Field>
     </div><div className="settings-actions"><Button variant="secondary" onClick={onTeam}><UsersRound size={17} />{ru ? "Участники и роли" : "Members and roles"}</Button>{canManage ? <SaveButton ru={ru} loading={saving} onClick={onSave} /> : null}</div></div>
     {role === "OWNER" ? <DangerCard title={ru ? "Удаление Workspace" : "Delete workspace"} body={ru ? "Вебинары и настройки пространства будут недоступны. Действие необратимо." : "Webinars and workspace settings will become unavailable. This cannot be undone."} action={ru ? "Удалить Workspace" : "Delete workspace"} onClick={onDelete} /> : null}
   </section>;
@@ -344,9 +346,9 @@ function WorkspaceSettingsView({ ru, role, value, setValue, saving, onSave, onTe
 function WebinarSettings({ ru, value, setValue, saving, onSave }: any) {
   return <section className="settings-stack"><SettingsHeader icon={<Video />} title={ru ? "Вебинары по умолчанию" : "Webinar defaults"} body={ru ? "Эти значения подставляются при создании нового вебинара." : "These values prefill every new webinar."} />
     <div className="settings-card"><div className="settings-form-grid">
-      <Field label={ru ? "Язык вебинара" : "Webinar language"}><select value={value.language} onChange={(e) => setValue({ ...value, language: e.target.value })}><option value="ru">Русский</option><option value="en">English</option></select></Field>
-      <Field label={ru ? "Часовой пояс" : "Time zone"}><select value={value.timezone} onChange={(e) => setValue({ ...value, timezone: e.target.value })}>{timezones().map((zone) => <option key={zone}>{zone}</option>)}</select></Field>
-      <Field label={ru ? "Доступ" : "Access"}><select value={value.access} onChange={(e) => setValue({ ...value, access: e.target.value })}><option value="PUBLIC">{ru ? "Публичный" : "Public"}</option><option value="PRIVATE">{ru ? "Приватный" : "Private"}</option></select></Field>
+      <Field label={ru ? "Язык вебинара" : "Webinar language"}><StyledSelect value={value.language} ariaLabel={ru ? "Язык вебинара" : "Webinar language"} options={[{ value: "ru", label: "Русский" }, { value: "en", label: "English" }]} onChange={(next) => setValue({ ...value, language: next })} /></Field>
+      <Field label={ru ? "Часовой пояс" : "Time zone"}><StyledSelect value={value.timezone} ariaLabel={ru ? "Часовой пояс" : "Time zone"} options={timezones().map((zone) => ({ value: zone, label: zone }))} onChange={(next) => setValue({ ...value, timezone: next })} /></Field>
+      <Field label={ru ? "Доступ" : "Access"}><StyledSelect value={value.access} ariaLabel={ru ? "Доступ" : "Access"} options={[{ value: "PUBLIC", label: ru ? "Публичный" : "Public" }, { value: "PRIVATE", label: ru ? "Приватный" : "Private" }]} onChange={(next) => setValue({ ...value, access: next })} /></Field>
     </div><div className="settings-toggle-list">
       <Toggle label={ru ? "Разрешать гостевой вход" : "Allow guest entry"} checked={value.allowGuests} onChange={(checked) => setValue({ ...value, allowGuests: checked })} />
       <Toggle label={ru ? "Требовать регистрацию" : "Require registration"} checked={value.requireRegistration} onChange={(checked) => setValue({ ...value, requireRegistration: checked })} />
@@ -373,11 +375,11 @@ function DeviceSettings({ ru, value, setValue, onSave, setNotice }: any) {
     <DeviceSelect icon={<Camera />} label={ru ? "Камера по умолчанию" : "Default camera"} value={value.cameraId ?? ""} items={available.cameras} fallback={ru ? "Системная камера" : "System default camera"} onChange={(cameraId: string) => setValue({ ...value, cameraId })} />
     <DeviceSelect icon={<Mic />} label={ru ? "Микрофон по умолчанию" : "Default microphone"} value={value.microphoneId ?? ""} items={available.microphones} fallback={ru ? "Системный микрофон" : "System default microphone"} onChange={(microphoneId: string) => setValue({ ...value, microphoneId })} />
     <DeviceSelect icon={<MonitorSpeaker />} label={ru ? "Динамики" : "Speakers"} value={value.speakerId ?? ""} items={available.speakers} fallback={ru ? "Системные динамики" : "System default speakers"} onChange={(speakerId: string) => setValue({ ...value, speakerId })} />
-    <Field label={ru ? "Качество видео" : "Video quality"}><select value={value.videoQuality ?? "auto"} onChange={(e) => setValue({ ...value, videoQuality: e.target.value })}><option value="auto">Auto</option><option value="360p">360p</option><option value="480p">480p</option><option value="720p">720p HD</option><option value="1080p">1080p Full HD</option></select></Field>
+    <Field label={ru ? "Качество видео" : "Video quality"}><StyledSelect value={value.videoQuality ?? "auto"} ariaLabel={ru ? "Качество видео" : "Video quality"} options={["auto", "360p", "480p", "720p", "1080p"].map((quality) => ({ value: quality, label: quality === "720p" ? "720p HD" : quality === "1080p" ? "1080p Full HD" : quality }))} onChange={(videoQuality) => setValue({ ...value, videoQuality })} /></Field>
   </div>{testing ? <div className="device-preview"><video ref={videoRef} muted playsInline /><span><span className="device-preview__live" />{ru ? "Устройства работают" : "Devices are working"}</span></div> : null}<div className="settings-actions"><Button variant="secondary" onClick={testing ? stop : test}><Camera size={17} />{testing ? (ru ? "Завершить тест" : "Stop test") : (ru ? "Тест устройств" : "Test devices")}</Button><SaveButton ru={ru} onClick={onSave} /></div></div></section>;
 }
 
-function DeviceSelect({ icon, label, value, items, fallback, onChange }: any) { return <Field label={label}><div className="settings-input-icon">{icon}<select value={value} onChange={(e) => onChange(e.target.value)}><option value="">{fallback}</option>{items.map((item: MediaDeviceInfo, index: number) => <option key={item.deviceId} value={item.deviceId}>{item.label || `${label} ${index + 1}`}</option>)}</select></div></Field>; }
+function DeviceSelect({ icon, label, value, items, fallback, onChange }: any) { return <Field label={label}><div className="settings-input-icon">{icon}<StyledSelect value={value} ariaLabel={label} options={[{ value: "", label: fallback }, ...items.map((item: MediaDeviceInfo, index: number) => ({ value: item.deviceId, label: item.label || `${label} ${index + 1}` }))]} onChange={onChange} /></div></Field>; }
 
 function BillingSettings({ ru, payload }: any) {
   const usage = payload?.usage ?? { members: 0, webinars: 0, recordings: 0, storageBytes: 0 };
@@ -387,6 +389,28 @@ function BillingSettings({ ru, payload }: any) {
 
 function SecuritySettings({ ru, sessions, loading, onLogoutAll, onExport, onDelete }: any) { return <section className="settings-stack"><SettingsHeader icon={<ShieldCheck />} title={ru ? "Безопасность" : "Security"} body={ru ? "Сессии, экспорт и контроль аккаунта." : "Sessions, exports and account control."} /><div className="settings-card"><h3>{ru ? "Активные сессии" : "Active sessions"}</h3>{loading ? <SettingsLoading /> : <div className="session-list">{sessions.map((session: any) => <div key={session.id}><span className="session-device"><Globe2 size={17} /></span><div><strong>{session.current ? (ru ? "Это устройство" : "This device") : browserName(session.userAgent)}</strong><small>{session.ipAddress ?? (ru ? "IP не определён" : "IP unavailable")} · {new Date(session.lastSeenAt).toLocaleString()}</small></div>{session.current ? <span className="session-current">{ru ? "Текущая" : "Current"}</span> : null}</div>)}</div>}<div className="settings-actions"><Button variant="secondary" onClick={onLogoutAll}><LogOut size={17} />{ru ? "Выйти со всех устройств" : "Sign out everywhere"}</Button></div></div><div className="settings-card"><h3>{ru ? "Ваши данные" : "Your data"}</h3><p className="settings-card__body">{ru ? "Скачайте копию данных аккаунта в формате JSON." : "Download a JSON copy of your account data."}</p><div className="settings-actions settings-actions--left"><Button variant="secondary" onClick={onExport}><Download size={17} />{ru ? "Экспортировать данные" : "Export data"}</Button></div></div><DangerCard title={ru ? "Удалить аккаунт" : "Delete account"} body={ru ? "Профиль будет удалён, а все активные сессии завершены. Действие необратимо." : "Your profile will be deleted and every session revoked. This cannot be undone."} action={ru ? "Удалить аккаунт" : "Delete account"} onClick={onDelete} /></section>; }
 
+function ImageUpload({ kind, value, label, onChange, ru, disabled = false, setNotice }: any) {
+  const [uploading, setUploading] = useState(false);
+  async function selectFile(file: File | undefined) {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
+      setNotice(ru ? "Выберите PNG, JPEG или WebP размером до 2 МБ" : "Choose a PNG, JPEG or WebP image up to 2 MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const result = await api.uploadImage(kind, await fileToDataUrl(file));
+      onChange(result.url);
+      setNotice(ru ? "Изображение загружено. Сохраните изменения." : "Image uploaded. Save your changes.");
+    } catch (error) {
+      setNotice(friendlyError(error, ru ? "ru" : "en"));
+    } finally {
+      setUploading(false);
+    }
+  }
+  return <div className="image-upload"><span className="image-upload__preview" style={value ? { backgroundImage: `url(${value})` } : undefined}>{!value ? <Upload size={20} /> : null}</span><div className="image-upload__actions"><label className="image-upload__button">{uploading ? <LoaderCircle className="spin" size={16} /> : <Upload size={16} />}{uploading ? (ru ? "Загрузка…" : "Uploading…") : label}<input type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled || uploading} onChange={(event) => { void selectFile(event.target.files?.[0]); event.currentTarget.value = ""; }} /></label>{value && !disabled ? <button type="button" className="image-upload__remove" onClick={() => onChange("")} aria-label={ru ? "Удалить изображение" : "Remove image"}><Trash2 size={16} /></button> : null}</div></div>;
+}
+
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) { return <label className="settings-toggle"><span>{label}</span><input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} /><i aria-hidden="true" /></label>; }
 function DangerCard({ title, body, action, onClick }: { title: string; body: string; action: string; onClick: () => void }) { return <div className="settings-card settings-danger"><div><h3><Trash2 size={18} />{title}</h3><p>{body}</p></div><Button variant="secondary" onClick={onClick}><Trash2 size={17} />{action}</Button></div>; }
 function Usage({ value, label }: { value: string | number; label: string }) { return <div><strong>{value}</strong><span>{label}</span></div>; }
@@ -394,3 +418,4 @@ function timezones() { try { return (Intl as typeof Intl & { supportedValuesOf?:
 function formatBytes(value: number) { if (value < 1024) return `${value} B`; if (value < 1024 ** 2) return `${(value / 1024).toFixed(1)} KB`; if (value < 1024 ** 3) return `${(value / 1024 ** 2).toFixed(1)} MB`; return `${(value / 1024 ** 3).toFixed(1)} GB`; }
 function browserName(userAgent: string | null) { if (!userAgent) return "Browser session"; if (userAgent.includes("Edg/")) return "Microsoft Edge"; if (userAgent.includes("Chrome/")) return "Google Chrome"; if (userAgent.includes("Firefox/")) return "Mozilla Firefox"; if (userAgent.includes("Safari/")) return "Safari"; return "Browser session"; }
 function downloadJson(data: unknown, name: string) { const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const anchor = document.createElement("a"); anchor.href = url; anchor.download = name; anchor.click(); URL.revokeObjectURL(url); }
+function fileToDataUrl(file: File): Promise<string> { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(reader.error ?? new Error("File read failed")); reader.readAsDataURL(file); }); }

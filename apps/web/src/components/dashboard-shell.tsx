@@ -26,6 +26,7 @@ import { Button, Logo, Skeleton } from "@laminaria/ui";
 import { DashboardContextProvider } from "./dashboard-context";
 import { LanguageSwitcher } from "./language-switcher";
 import { ServiceState } from "./ui";
+import { StyledSelect } from "./styled-select";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations();
@@ -153,30 +154,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <X size={20} />
         </button>
       </div>
-      <label className="workspace-chip">
+      <div className="workspace-chip">
         <span>{workspace.name.slice(0, 1).toUpperCase()}</span>
         <div>
           <strong>{workspace.name}</strong>
           <small>{workspace.role ?? "OWNER"}</small>
         </div>
         <ChevronRight size={16} />
-        <select
-          aria-label={locale === "ru" ? "\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0440\u0430\u0431\u043e\u0447\u0435\u0435 \u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u043e" : "Select workspace"}
+        <StyledSelect
+          className="workspace-chip__select"
+          ariaLabel={locale === "ru" ? "\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0440\u0430\u0431\u043e\u0447\u0435\u0435 \u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u043e" : "Select workspace"}
           value={workspace.id}
-          onChange={(event) => {
-            const nextId = event.target.value;
+          options={availableWorkspaces.map((item) => ({ value: item.id, label: `${item.name} · ${item.role}` }))}
+          onChange={(nextId) => {
             window.localStorage.setItem("laminaria-workspace-id", nextId);
             setSelectedWorkspaceId(nextId);
             setMobileOpen(false);
           }}
-        >
-          {availableWorkspaces.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name} {" · "} {item.role}
-            </option>
-          ))}
-        </select>
-      </label>
+        />
+      </div>
       <nav className="dashboard-nav" aria-label={t("shell.mainNavigation")}>
         {nav.map((item) => {
           const active =

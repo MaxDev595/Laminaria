@@ -67,6 +67,7 @@ import { api, type PrejoinPayload, type Recording } from "@/lib/api";
 import { orderBroadcastTracks } from "@/lib/stage-tracks";
 import { Badge, Button, Logo } from "@laminaria/ui";
 import { ServiceState } from "./ui";
+import { StyledSelect } from "./styled-select";
 
 interface StoredRoom extends PrejoinPayload {
   preferences?: { cameraOn: boolean; micOn: boolean };
@@ -1026,14 +1027,23 @@ function HostMediaControls({
   async function toggleScreen() {
     if (!connected || screenBlockedByOther) return;
     const next = !screenOn;
+    if (next && !navigator.mediaDevices?.getDisplayMedia) {
+      setMediaError(
+        locale === "ru"
+          ? "Этот мобильный браузер не разрешает сайтам захватывать экран. Откройте эфир в Android Chrome/Edge с поддержкой демонстрации или используйте компьютер."
+          : "This mobile browser does not allow websites to capture the screen. Use a supported Android Chrome/Edge version or a computer.",
+      );
+      return;
+    }
     try {
+      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       await room.localParticipant.setScreenShareEnabled(
         next,
         next
           ? {
-              audio: true,
+              audio: !mobile,
               resolution: ScreenSharePresets.original.resolution,
-              selfBrowserSurface: "exclude",
+              ...(mobile ? {} : { selfBrowserSurface: "exclude" as const }),
             }
           : undefined,
         next
@@ -1160,11 +1170,7 @@ function LiveInviteDialog({ session, onClose }: { session: StoredRoom; onClose: 
         </label>
         <label>
           <span>{locale === "ru" ? "Роль" : "Role"}</span>
-          <select value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
-            <option value="SPEAKER">{locale === "ru" ? "Спикер" : "Speaker"}</option>
-            <option value="COHOST">{locale === "ru" ? "Соведущий" : "Co-host"}</option>
-            <option value="MODERATOR">{locale === "ru" ? "Модератор" : "Moderator"}</option>
-          </select>
+          <StyledSelect value={role} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "SPEAKER", label: locale === "ru" ? "Спикер" : "Speaker" }, { value: "COHOST", label: locale === "ru" ? "Соведущий" : "Co-host" }, { value: "MODERATOR", label: locale === "ru" ? "Модератор" : "Moderator" }]} onChange={setRole} />
         </label>
         <button type="button" className="live-invite-modal__submit" onClick={() => void submit()} disabled={!canAssign || !email.trim() || busy}>
           {busy ? <LoaderCircle className="spin" size={17} /> : <UsersRound size={17} />}

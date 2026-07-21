@@ -19,6 +19,7 @@ import { useDashboard } from "./dashboard-context";
 import { DashboardOverview, DashboardRecordings, PageHeading } from "./dashboard-overview";
 import { ServiceState } from "./ui";
 import { SettingsCenter } from "./settings-center";
+import { StyledSelect } from "./styled-select";
 
 export function DashboardSection({ section }: { section: DashboardSectionName }) {
   if (section === "upcoming" || section === "past")
@@ -102,10 +103,7 @@ function TeamSection() {
           onChange={(event) => setEmail(event.target.value)}
           placeholder={locale === "ru" ? "Email пользователя" : "User email"}
         />
-        <select value={role} onChange={(event) => setRole(event.target.value as "ADMIN" | "MEMBER") }>
-          <option value="MEMBER">{locale === "ru" ? "Участник" : "Member"}</option>
-          <option value="ADMIN">{locale === "ru" ? "Администратор" : "Admin"}</option>
-        </select>
+        <StyledSelect className="styled-select--compact" value={role} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MEMBER", label: locale === "ru" ? "Участник" : "Member" }, { value: "ADMIN", label: locale === "ru" ? "Администратор" : "Admin" }]} onChange={setRole} />
         <Button type="submit" disabled={addMember.isPending}>
           {addMember.isPending ? <LoaderCircle className="spin" size={16} /> : <UserPlus size={16} />}
           {locale === "ru" ? "Добавить" : "Add"}
@@ -126,10 +124,7 @@ function TeamSection() {
                 <span className="team-owner-badge">OWNER</span>
               ) : (
                 <>
-                  <select value={member.role} onChange={(event) => void changeRole(member.userId, event.target.value as "ADMIN" | "MEMBER") }>
-                    <option value="MEMBER">{locale === "ru" ? "Участник" : "Member"}</option>
-                    <option value="ADMIN">{locale === "ru" ? "Администратор" : "Admin"}</option>
-                  </select>
+                  <StyledSelect className="styled-select--compact" value={member.role as "ADMIN" | "MEMBER"} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MEMBER", label: locale === "ru" ? "Участник" : "Member" }, { value: "ADMIN", label: locale === "ru" ? "Администратор" : "Admin" }]} onChange={(next) => void changeRole(member.userId, next)} />
                   <button type="button" className="team-remove" onClick={() => void removeMember(member.userId)} aria-label={locale === "ru" ? "Удалить" : "Remove"}><Trash2 size={17} /></button>
                 </>
               )}

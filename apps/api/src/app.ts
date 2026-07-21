@@ -30,6 +30,7 @@ import { registerPublicRoutes } from "./routes/public.js";
 import { registerSystemRoutes } from "./routes/system.js";
 import { registerWebinarRoutes } from "./routes/webinars.js";
 import { registerWorkspaceRoutes } from "./routes/workspaces.js";
+import { registerUploadRoutes } from "./routes/uploads.js";
 import { securityPlugin } from "./security/plugin.js";
 import { PublicRegistrationService } from "./webinars/public-registration-service.js";
 
@@ -57,7 +58,7 @@ export async function buildApplication(
   const ownsRepositories = options.repositories === undefined;
   const repositories = options.repositories ?? new PrismaUnitOfWork(config.databaseUrl);
   const app = Fastify({
-    bodyLimit: 1_048_576,
+    bodyLimit: 3_200_000,
     logger: config.nodeEnv === "test" ? false : { level: config.logLevel },
     requestIdHeader: "x-request-id",
     trustProxy: config.trustProxy,
@@ -120,6 +121,7 @@ export async function buildApplication(
   await app.register(authenticationPlugin(config, auth));
   await registerAuthRoutes(app, auth, config);
   await registerWorkspaceRoutes(app, repositories);
+  await registerUploadRoutes(app, config.storage);
   await registerSystemRoutes(app, config);
   await registerWebinarRoutes(app, repositories, {
     livekit,

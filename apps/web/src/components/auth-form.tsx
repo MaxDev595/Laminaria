@@ -12,6 +12,7 @@ import {
   Mail,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -226,7 +227,7 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
 
       {isSignIn || isSignUp ? (
         <button type="button" className="google-auth-button" onClick={startGoogle}>
-          <span>G</span>
+          <span><Image src="/google-logo.png" alt="" width={24} height={24} priority /></span>
           {locale === "ru" ? "Продолжить через Google" : "Continue with Google"}
         </button>
       ) : null}

@@ -27,6 +27,7 @@ import { formatLocalDate } from "@/lib/text";
 import { Badge, Button, Skeleton } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { ServiceState } from "./ui";
+import { StyledSelect } from "./styled-select";
 
 export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" }) {
   const t = useTranslations();
@@ -707,16 +708,7 @@ function WebinarCard({
             placeholder={locale === "ru" ? "email модератора" : "moderator email"}
             type="email"
           />
-          <select
-            value={inviteRole}
-            onChange={(event) =>
-              setInviteRole(event.target.value as "MODERATOR" | "SPEAKER" | "COHOST")
-            }
-          >
-            <option value="MODERATOR">{locale === "ru" ? "Модератор" : "Moderator"}</option>
-            <option value="SPEAKER">{locale === "ru" ? "Спикер" : "Speaker"}</option>
-            <option value="COHOST">{locale === "ru" ? "Со-ведущий" : "Co-host"}</option>
-          </select>
+          <StyledSelect value={inviteRole} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MODERATOR", label: locale === "ru" ? "Модератор" : "Moderator" }, { value: "SPEAKER", label: locale === "ru" ? "Спикер" : "Speaker" }, { value: "COHOST", label: locale === "ru" ? "Соведущий" : "Co-host" }]} onChange={setInviteRole} />
           <button
             type="button"
             onClick={() => void assignHostRole()}

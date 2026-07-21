@@ -139,6 +139,11 @@ export const api = {
       method: "DELETE",
       body: JSON.stringify({ confirmation: "DELETE" }),
     }),
+  uploadImage: (kind: "avatar" | "workspace-logo", dataUrl: string) =>
+    apiFetch<{ url: string }>("/v1/uploads/images", {
+      method: "POST",
+      body: JSON.stringify({ kind, dataUrl }),
+    }),
   forgotPassword: (email: string) =>
     apiFetch<{ accepted: true }>("/v1/auth/forgot-password", {
       method: "POST",
