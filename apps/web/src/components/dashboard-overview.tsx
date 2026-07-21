@@ -28,7 +28,7 @@ import { Badge, Button, Skeleton } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { ServiceState } from "./ui";
 
-export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" | "drafts" }) {
+export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" }) {
   const t = useTranslations();
   const locale = useLocale();
   const { user, workspace } = useDashboard();
@@ -68,9 +68,7 @@ export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" | "
       ? all.filter((webinar) => webinar.status === "SCHEDULED" || webinar.status === "LIVE")
       : filter === "past"
         ? all.filter((webinar) => webinar.status === "ENDED" || webinar.status === "ARCHIVED")
-        : filter === "drafts"
-          ? all.filter((webinar) => webinar.status === "DRAFT")
-          : all;
+        : all;
   const scheduled = all.filter(
     (webinar) =>
       webinar.status === "SCHEDULED" &&
@@ -81,9 +79,7 @@ export function DashboardOverview({ filter }: { filter?: "upcoming" | "past" | "
       ? t("nav.upcoming")
       : filter === "past"
         ? t("nav.past")
-        : filter === "drafts"
-          ? t("nav.drafts")
-          : `${t("dashboard.greeting")}, ${user.name.split(" ")[0]}`;
+        : `${t("dashboard.greeting")}, ${user.name.split(" ")[0]}`;
 
   return (
     <div className="dashboard-page">

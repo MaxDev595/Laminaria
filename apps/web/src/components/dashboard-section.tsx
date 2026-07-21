@@ -27,7 +27,7 @@ export function DashboardSection({ section }: { section: DashboardSectionName })
   const t = useTranslations();
   const { workspace } = useDashboard();
 
-  if (section === "upcoming" || section === "past" || section === "drafts")
+  if (section === "upcoming" || section === "past")
     return <DashboardOverview filter={section} />;
   if (section === "recordings") return <DashboardRecordings />;
   if (section === "analytics") return <AnalyticsSection />;

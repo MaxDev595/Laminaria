@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   CalendarCheck,
+  CalendarDays,
   Check,
   ChevronDown,
   Copy,
@@ -67,6 +68,8 @@ export function CreateWebinarForm() {
   const title = useWatch({ control: form.control, name: "title" });
   const slug = useWatch({ control: form.control, name: "slug" });
   const scheduledStartAt = useWatch({ control: form.control, name: "scheduledStartAt" });
+  const language = useWatch({ control: form.control, name: "language" });
+  const visibility = useWatch({ control: form.control, name: "visibility" });
   const allowGuests = useWatch({ control: form.control, name: "allowGuests" });
   const requireEmailRegistration = useWatch({
     control: form.control,
@@ -146,8 +149,8 @@ export function CreateWebinarForm() {
               <ExternalLink size={17} />
             </Button>
           </Link>
-          <Button variant="secondary" onClick={() => router.push("/dashboard/drafts")}>
-            {t("nav.drafts")}
+          <Button variant="secondary" onClick={() => router.push("/dashboard/upcoming")}>
+            {t("nav.upcoming")}
           </Button>
         </div>
       </motion.div>
@@ -205,11 +208,16 @@ export function CreateWebinarForm() {
           </div>
           <div className="form-section__fields form-grid">
             <Field label={t("webinar.date")}>
-              <Input type="datetime-local" {...form.register("scheduledStartAt")} />
+              <div className="date-time-control">
+                <Input type="datetime-local" {...form.register("scheduledStartAt")} />
+                <span className="date-time-control__icon" aria-hidden="true">
+                  <CalendarDays size={17} strokeWidth={2} />
+                </span>
+              </div>
             </Field>
             <Field label={t("webinar.language")}>
               <FancySelect
-                value={form.watch("language")}
+                value={language}
                 options={[
                   { value: "en", label: "English" },
                   { value: "ru", label: "Русский" },
@@ -219,7 +227,7 @@ export function CreateWebinarForm() {
             </Field>
             <Field label={t("webinar.access")}>
               <FancySelect
-                value={form.watch("visibility")}
+                value={visibility}
                 options={[
                   { value: "PUBLIC", label: t("webinar.public") },
                   { value: "PRIVATE", label: t("webinar.private") },

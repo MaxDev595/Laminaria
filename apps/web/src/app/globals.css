@@ -3124,24 +3124,46 @@ select {
   cursor: not-allowed;
 }
 
-.input[type="datetime-local"] {
+.date-time-control {
+  position: relative;
+}
+
+.date-time-control .input[type="datetime-local"] {
+  width: 100%;
   padding-right: 3.35rem;
 }
 
-.input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  width: 1.95rem;
-  height: 1.95rem;
-  margin-right: -0.58rem;
+.date-time-control__icon {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: 0.65rem;
+  width: 2.15rem;
+  height: 2.15rem;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  padding: 0.2rem;
+  color: var(--color-primary);
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent),
     color-mix(in srgb, var(--color-surface-soft) 86%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.date-time-control .input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 0.65rem;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
-  opacity: 0.9;
-  filter: invert(1) saturate(0.6);
+  opacity: 0;
+  transform: translateY(-50%);
 }
 
 .textarea {
@@ -6154,7 +6176,7 @@ select {
   position: relative;
   min-height: 100%;
   display: grid;
-  grid-template-columns: minmax(13rem, 0.5fr) minmax(0, 1fr);
+  grid-template-columns: clamp(11rem, 22vw, 16rem) minmax(0, 1fr);
   gap: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
@@ -6171,7 +6193,7 @@ select {
 }
 
 .broadcast-stage-layout.has-content {
-  grid-template-columns: minmax(13rem, 0.5fr) minmax(0, 1fr);
+  grid-template-columns: clamp(11rem, 22vw, 16rem) minmax(0, 1fr);
 }
 
 .broadcast-stage-layout.no-presenter-stack {
@@ -6180,7 +6202,7 @@ select {
 
 .broadcast-stage-layout.has-content.overlay-top-right,
 .broadcast-stage-layout.has-content.overlay-bottom-right {
-  grid-template-columns: minmax(13rem, 0.5fr) minmax(0, 1fr);
+  grid-template-columns: clamp(11rem, 22vw, 16rem) minmax(0, 1fr);
 }
 
 .presenter-stack {
@@ -7930,7 +7952,7 @@ select {
 }
 
 .recording-video-shell { display: grid; place-items: center; min-height: min(72svh, 850px); }
-.recording-video-shell video { display: block; width: 100%; max-height: 78svh; background: #000; }
+.recording-video-shell video { display: block; width: 100%; height: 100%; max-height: 78svh; object-fit: contain; background: #000; }
 .recording-chat { display: grid; grid-template-rows: auto minmax(0, 1fr); max-height: 78svh; background: #091722; }
 .recording-chat > header { display: grid; gap: 0.5rem; padding: 1rem; border-bottom: 1px solid rgb(255 255 255 / 8%); }
 .recording-chat > header > div,
@@ -8593,9 +8615,14 @@ select {
   }
 
   .room-topbar {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 0.35rem;
     padding: 0 0.45rem;
+  }
+
+  .room-topbar__actions {
+    min-width: 0;
+    gap: 0.25rem;
   }
 
   .room-topbar .lm-logo strong {
@@ -8644,8 +8671,14 @@ select {
   .room-invite {
     width: 2.5rem;
     padding: 0;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     font-size: 0;
+  }
+
+  .room-invite svg {
+    display: block;
+    margin: auto;
   }
 
   .room-leave {
@@ -8727,17 +8760,58 @@ select {
     gap: 0.45rem;
     padding: 0.45rem;
     border-radius: 1rem;
-    min-height: 28rem;
+    min-height: 0;
   }
 
   .camera-full-stage {
-    min-height: 28rem;
+    min-height: 0;
     grid-template-columns: 1fr;
     padding: 0.45rem;
   }
 
   .camera-full-stage .presenter-video-tile {
-    min-height: 26rem;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    max-height: 68svh;
+  }
+
+  .camera-full-stage .presenter-video-tile video {
+    object-fit: contain;
+  }
+
+  .broadcast-stage-layout.has-screen-share,
+  .broadcast-stage-layout.has-screen-share.overlay-top-right,
+  .broadcast-stage-layout.has-screen-share.overlay-bottom-right {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(18rem, 62svh) auto;
+  }
+
+  .broadcast-stage-layout.has-screen-share .stage-content-frame,
+  .broadcast-stage-layout.has-screen-share.overlay-top-right .stage-content-frame,
+  .broadcast-stage-layout.has-screen-share.overlay-bottom-right .stage-content-frame {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: min(62svh, 34rem);
+  }
+
+  .broadcast-stage-layout.has-screen-share .presenter-column,
+  .broadcast-stage-layout.has-screen-share.overlay-top-right .presenter-column,
+  .broadcast-stage-layout.has-screen-share.overlay-bottom-right .presenter-column {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    height: auto;
+    min-width: 0;
+  }
+
+  .broadcast-stage-layout.has-screen-share .presenter-stack {
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    grid-template-rows: auto;
+  }
+
+  .broadcast-stage-layout.has-screen-share .presenter-video-tile {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
   }
 
   .presenter-column {

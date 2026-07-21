@@ -14,6 +14,7 @@ import {
   ConnectionState,
   DefaultReconnectPolicy,
   ParticipantEvent,
+  ScreenSharePresets,
   Track,
   VideoPresets,
   VideoQuality,
@@ -142,7 +143,7 @@ export function RoomExperience({ slug }: { slug: string }) {
   const [endedStatus, setEndedStatus] = useState<EndedStatus | null>(null);
   const [stageLayout, setStageLayout] = useState<StageLayout>(DEFAULT_STAGE_LAYOUT);
   const [activePanel, setActivePanel] = useState<RoomPanel>("chat");
-  const [quality, setQuality] = useState<QualityPreset>("720p");
+  const [quality, setQuality] = useState<QualityPreset>("1080p");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [chatCollapsed, setChatCollapsed] = useState(false);
   const subscribeStorage = useCallback(() => () => undefined, []);
@@ -215,8 +216,11 @@ export function RoomExperience({ slug }: { slug: string }) {
           simulcast: true,
           videoEncoding: { maxBitrate: 3_500_000, maxFramerate: 30 },
           videoSimulcastLayers: [VideoPresets.h216, VideoPresets.h540],
-          screenShareEncoding: { maxBitrate: 5_000_000, maxFramerate: 30 },
-          screenShareSimulcastLayers: [VideoPresets.h360, VideoPresets.h720],
+          screenShareEncoding: ScreenSharePresets.original.encoding,
+          screenShareSimulcastLayers: [
+            ScreenSharePresets.h720fps15,
+            ScreenSharePresets.h1080fps30,
+          ],
         },
       }}
       data-lk-theme="default"
@@ -334,7 +338,11 @@ function RoomConnectionGuard({ session }: { session: StoredRoom }) {
       await room.connect(session.media.url, session.media.token);
       if (restoreMic) await room.localParticipant.setMicrophoneEnabled(true);
       if (restoreCamera) await room.localParticipant.setCameraEnabled(true);
-      if (restoreScreen) await room.localParticipant.setScreenShareEnabled(true);
+      if (restoreScreen)
+        await room.localParticipant.setScreenShareEnabled(true, {
+          audio: true,
+          resolution: ScreenSharePresets.original.resolution,
+        });
     } catch {
       setTimedOut(true);
     } finally {
@@ -1019,7 +1027,26 @@ function HostMediaControls({
     if (!connected || screenBlockedByOther) return;
     const next = !screenOn;
     try {
-      await room.localParticipant.setScreenShareEnabled(next);
+      await room.localParticipant.setScreenShareEnabled(
+        next,
+        next
+          ? {
+              audio: true,
+              resolution: ScreenSharePresets.original.resolution,
+              selfBrowserSurface: "exclude",
+            }
+          : undefined,
+        next
+          ? {
+              simulcast: true,
+              screenShareEncoding: ScreenSharePresets.original.encoding,
+              screenShareSimulcastLayers: [
+                ScreenSharePresets.h720fps15,
+                ScreenSharePresets.h1080fps30,
+              ],
+            }
+          : undefined,
+      );
       if (next && !room.localParticipant.isCameraEnabled) {
         await room.localParticipant.setCameraEnabled(true);
         setCameraOn(true);

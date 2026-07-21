@@ -2,6 +2,7 @@ import {
   EgressClient,
   EncodedFileOutput,
   EncodedFileType,
+  EncodingOptionsPreset,
   S3Upload,
 } from "livekit-server-sdk";
 import type { AppConfig } from "../config.js";
@@ -50,6 +51,7 @@ export class LiveKitRecordingService {
     });
     const info = await this.#client.startRoomCompositeEgress(roomName, output, {
       layout: "speaker",
+      encodingOptions: EncodingOptionsPreset.H264_1080P_30,
     });
     return {
       externalId: info.egressId,
