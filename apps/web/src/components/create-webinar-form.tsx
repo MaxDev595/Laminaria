@@ -7,6 +7,9 @@ import {
   CalendarDays,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
   Copy,
   ExternalLink,
   LoaderCircle,
@@ -16,7 +19,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -26,6 +29,7 @@ import { localTimezone, slugify } from "@/lib/text";
 import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { Field, Input, Textarea } from "./ui";
+import { StyledSelect } from "./styled-select";
 
 const schema = z.object({
   title: z.string().trim().min(3).max(180),
@@ -208,12 +212,12 @@ export function CreateWebinarForm() {
           </div>
           <div className="form-section__fields form-grid">
             <Field label={t("webinar.date")}>
-              <div className="date-time-control">
-                <Input type="datetime-local" {...form.register("scheduledStartAt")} />
-                <span className="date-time-control__icon" aria-hidden="true">
-                  <CalendarDays size={17} strokeWidth={2} />
-                </span>
-              </div>
+              <input type="hidden" {...form.register("scheduledStartAt")} />
+              <DateTimePicker
+                locale={locale}
+                value={scheduledStartAt}
+                onChange={(value) => form.setValue("scheduledStartAt", value, { shouldDirty: true })}
+              />
             </Field>
             <Field label={t("webinar.language")}>
               <FancySelect
@@ -316,6 +320,114 @@ export function CreateWebinarForm() {
     </div>
   );
 }
+
+function DateTimePicker({
+  locale,
+  value,
+  onChange,
+}: {
+  locale: "en" | "ru";
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+  const selected = parseLocalDateTime(value);
+  const [open, setOpen] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(selected ?? new Date()));
+  const calendarDays = useMemo(() => calendarGrid(viewMonth), [viewMonth]);
+  const hours = String(selected?.getHours() ?? 12).padStart(2, "0");
+  const minutes = String(selected ? Math.floor(selected.getMinutes() / 5) * 5 : 0).padStart(2, "0");
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
+
+  function updateTime(nextHours: string, nextMinutes: string) {
+    const base = selected ?? new Date();
+    onChange(formatLocalDateTime(base, Number(nextHours), Number(nextMinutes)));
+  }
+
+  function chooseDay(day: Date) {
+    onChange(formatLocalDateTime(day, Number(hours), Number(minutes)));
+    if (day.getMonth() !== viewMonth.getMonth()) setViewMonth(startOfMonth(day));
+  }
+
+  const label = selected
+    ? new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(selected)
+    : locale === "ru"
+      ? "Выберите дату и время"
+      : "Choose date and time";
+
+  return (
+    <div ref={root} className={`laminaria-calendar ${open ? "is-open" : ""}`}>
+      <button type="button" className="laminaria-calendar__trigger" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+        <span>{label}</span>
+        <span className="laminaria-calendar__trigger-icon"><CalendarDays size={17} /></span>
+      </button>
+      <AnimatePresence>
+        {open ? (
+          <motion.div className="laminaria-calendar__popover" role="dialog" aria-label={locale === "ru" ? "Выбор даты и времени" : "Choose date and time"} initial={{ opacity: 0, y: -8, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: .98 }} transition={{ duration: .18 }}>
+            <header>
+              <button type="button" onClick={() => setViewMonth(addMonths(viewMonth, -1))} aria-label={locale === "ru" ? "Предыдущий месяц" : "Previous month"}><ChevronLeft size={17} /></button>
+              <strong>{viewMonth.toLocaleDateString(locale, { month: "long", year: "numeric" })}</strong>
+              <button type="button" onClick={() => setViewMonth(addMonths(viewMonth, 1))} aria-label={locale === "ru" ? "Следующий месяц" : "Next month"}><ChevronRight size={17} /></button>
+            </header>
+            <div className="laminaria-calendar__weekdays">{(locale === "ru" ? ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]).map((day) => <span key={day}>{day}</span>)}</div>
+            <div className="laminaria-calendar__days">
+              {calendarDays.map((day) => {
+                const active = selected ? sameDay(day, selected) : false;
+                const today = sameDay(day, new Date());
+                return <button key={day.toISOString()} type="button" className={`${day.getMonth() !== viewMonth.getMonth() ? "is-outside" : ""} ${active ? "is-selected" : ""} ${today ? "is-today" : ""}`} onClick={() => chooseDay(day)}><span>{day.getDate()}</span></button>;
+              })}
+            </div>
+            <div className="laminaria-calendar__time">
+              <span><Clock3 size={16} />{locale === "ru" ? "Время" : "Time"}</span>
+              <div>
+                <StyledSelect className="styled-select--compact styled-select--up" value={hours} ariaLabel={locale === "ru" ? "Часы" : "Hours"} options={Array.from({ length: 24 }, (_, index) => { const item = String(index).padStart(2, "0"); return { value: item, label: item }; })} onChange={(next) => updateTime(next, minutes)} />
+                <i>:</i>
+                <StyledSelect className="styled-select--compact styled-select--up" value={minutes} ariaLabel={locale === "ru" ? "Минуты" : "Minutes"} options={Array.from({ length: 12 }, (_, index) => { const item = String(index * 5).padStart(2, "0"); return { value: item, label: item }; })} onChange={(next) => updateTime(hours, next)} />
+              </div>
+            </div>
+            <footer>
+              <button type="button" onClick={() => { onChange(""); setOpen(false); }}>{locale === "ru" ? "Очистить" : "Clear"}</button>
+              <button type="button" className="is-primary" onClick={() => { const next = new Date(Date.now() + 60 * 60 * 1000); next.setMinutes(Math.ceil(next.getMinutes() / 5) * 5, 0, 0); onChange(formatLocalDateTime(next, next.getHours(), next.getMinutes())); setViewMonth(startOfMonth(next)); }}>{locale === "ru" ? "Через час" : "In one hour"}</button>
+              <button type="button" className="is-done" onClick={() => setOpen(false)}>{locale === "ru" ? "Готово" : "Done"}</button>
+            </footer>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function parseLocalDateTime(value: string): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatLocalDateTime(date: Date, hours: number, minutes: number): string {
+  const next = new Date(date);
+  next.setHours(hours, minutes, 0, 0);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}T${pad(next.getHours())}:${pad(next.getMinutes())}`;
+}
+
+function startOfMonth(date: Date): Date { return new Date(date.getFullYear(), date.getMonth(), 1); }
+function addMonths(date: Date, amount: number): Date { return new Date(date.getFullYear(), date.getMonth() + amount, 1); }
+function sameDay(left: Date, right: Date): boolean { return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate(); }
+function calendarGrid(month: Date): Date[] { const first = startOfMonth(month); const mondayOffset = (first.getDay() + 6) % 7; const start = new Date(first.getFullYear(), first.getMonth(), 1 - mondayOffset); return Array.from({ length: 42 }, (_, index) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + index)); }
 
 function FancySelect<TValue extends string>({
   value,
