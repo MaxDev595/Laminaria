@@ -3938,6 +3938,7 @@ select {
 .webinar-list {
   display: grid;
   gap: var(--space-3);
+  isolation: isolate;
 }
 
 .webinar-card {
@@ -6708,6 +6709,27 @@ select {
   color: var(--color-text);
   font-weight: 800;
   outline: none;
+}
+
+.webinar-card:has(.styled-select.is-open) {
+  z-index: 80;
+  overflow: visible;
+  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+  box-shadow: 0 1.4rem 3.5rem rgb(0 0 0 / .34), var(--highlight-inset);
+}
+
+.webinar-card:has(.styled-select.is-open)::before {
+  opacity: 0;
+}
+
+.webinar-card:has(.styled-select.is-open) .webinar-role-form {
+  z-index: 100;
+}
+
+.webinar-role-form .styled-select__menu {
+  z-index: 200;
+  background: #101a2b;
+  box-shadow: 0 1.2rem 3rem rgb(0 0 0 / .55);
 }
 
 .quality-select--topbar {

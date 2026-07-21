@@ -708,7 +708,7 @@ function WebinarCard({
             placeholder={locale === "ru" ? "email модератора" : "moderator email"}
             type="email"
           />
-          <StyledSelect value={inviteRole} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MODERATOR", label: locale === "ru" ? "Модератор" : "Moderator" }, { value: "SPEAKER", label: locale === "ru" ? "Спикер" : "Speaker" }, { value: "COHOST", label: locale === "ru" ? "Соведущий" : "Co-host" }]} onChange={setInviteRole} />
+          <StyledSelect className="styled-select--up" value={inviteRole} ariaLabel={locale === "ru" ? "Роль" : "Role"} options={[{ value: "MODERATOR", label: locale === "ru" ? "Модератор" : "Moderator" }, { value: "SPEAKER", label: locale === "ru" ? "Спикер" : "Speaker" }, { value: "COHOST", label: locale === "ru" ? "Соведущий" : "Co-host" }]} onChange={setInviteRole} />
           <button
             type="button"
             onClick={() => void assignHostRole()}
