@@ -19,6 +19,22 @@ const memberSchema = z.object({
   role: z.enum(["ADMIN", "MEMBER"]).default("MEMBER"),
 });
 const memberRoleSchema = z.object({ role: z.enum(["ADMIN", "MEMBER"]) });
+const webinarDefaultsSchema = z.object({
+  language: z.enum(["en", "ru"]),
+  timezone: z.string().trim().min(1).max(100),
+  access: z.enum(["PUBLIC", "PRIVATE"]),
+  allowGuests: z.boolean(),
+  requireRegistration: z.boolean(),
+  autoRecording: z.boolean(),
+  viewerChat: z.boolean(),
+});
+const updateWorkspaceSchema = z.object({
+  name: z.string().trim().min(1).max(160).optional(),
+  logoUrl: z.url().max(2048).nullable().optional(),
+  locale: z.enum(["en", "ru"]).optional(),
+  timezone: z.string().trim().min(1).max(100).optional(),
+  settings: z.object({ webinarDefaults: webinarDefaultsSchema }).optional(),
+});
 
 export async function registerWorkspaceRoutes(
   app: FastifyInstance,
@@ -79,6 +95,69 @@ export async function registerWorkspaceRoutes(
         "workspace:read",
       );
       return { workspaceId: membership.workspaceId, role: membership.role };
+    },
+  );
+
+  app.get<{ Params: { workspaceId: string } }>(
+    "/v1/workspaces/:workspaceId/settings",
+    { schema: { tags: ["Workspaces"], summary: "Get workspace settings and usage" } },
+    async (request) => {
+      const membership = await requireWorkspacePermission(
+        request,
+        repositories,
+        request.params.workspaceId,
+        "workspace:read",
+      );
+      const workspace = await repositories.workspaces.getSettings(request.params.workspaceId);
+      if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+      const [planCode, usage] = await Promise.all([
+        repositories.workspaces.findActivePlanCode(request.params.workspaceId),
+        repositories.workspaces.getUsageSummary(request.params.workspaceId),
+      ]);
+      return { workspace, role: membership.role, planCode: planCode ?? "FREE", usage };
+    },
+  );
+
+  app.patch<{ Params: { workspaceId: string } }>(
+    "/v1/workspaces/:workspaceId/settings",
+    { schema: { tags: ["Workspaces"], summary: "Update workspace settings" } },
+    async (request) => {
+      await requireWorkspacePermission(
+        request,
+        repositories,
+        request.params.workspaceId,
+        "workspace:manage",
+      );
+      const parsed = updateWorkspaceSchema.parse(request.body);
+      await repositories.workspaces.updateSettings(request.params.workspaceId, {
+        ...(parsed.name !== undefined ? { name: parsed.name } : {}),
+        ...(parsed.logoUrl !== undefined ? { logoUrl: parsed.logoUrl } : {}),
+        ...(parsed.locale !== undefined ? { locale: parsed.locale } : {}),
+        ...(parsed.timezone !== undefined ? { timezone: parsed.timezone } : {}),
+        ...(parsed.settings !== undefined ? { settings: parsed.settings } : {}),
+      });
+      const workspace = await repositories.workspaces.getSettings(request.params.workspaceId);
+      if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+      return { workspace };
+    },
+  );
+
+  app.delete<{ Params: { workspaceId: string } }>(
+    "/v1/workspaces/:workspaceId",
+    { schema: { tags: ["Workspaces"], summary: "Delete a workspace" } },
+    async (request, reply) => {
+      const membership = await requireWorkspacePermission(
+        request,
+        repositories,
+        request.params.workspaceId,
+        "workspace:manage",
+      );
+      if (membership.role !== "OWNER") {
+        throw new AppError(403, "FORBIDDEN", "Only the owner can delete a workspace");
+      }
+      z.object({ confirmation: z.literal("DELETE") }).parse(request.body);
+      await repositories.workspaces.softDelete(request.params.workspaceId, new Date());
+      return reply.status(204).send();
     },
   );
 

@@ -17,6 +17,8 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       create: unavailable,
       markEmailVerified: unavailable,
       updatePassword: unavailable,
+      updateProfile: unavailable,
+      softDelete: unavailable,
     },
     sessions: {
       create: unavailable,
@@ -24,6 +26,7 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       touchIfOlderThan: unavailable,
       revoke: unavailable,
       revokeAllForUser: unavailable,
+      listActiveForUser: unavailable,
     },
     tokens: {
       create: unavailable,
@@ -39,6 +42,10 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       listMembers: unavailable,
       updateMemberRole: unavailable,
       removeMember: unavailable,
+      getSettings: unavailable,
+      updateSettings: unavailable,
+      softDelete: unavailable,
+      getUsageSummary: unavailable,
     },
     webinars: {
       findById: unavailable,

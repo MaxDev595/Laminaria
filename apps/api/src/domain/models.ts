@@ -30,6 +30,9 @@ export interface UserRecord {
   name: string;
   passwordHash: string;
   locale: Locale;
+  avatarUrl: string | null;
+  timezone: string;
+  preferences: Record<string, unknown>;
   emailVerifiedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -41,6 +44,8 @@ export interface SessionRecord {
   tokenHash: string;
   expiresAt: Date;
   lastSeenAt: Date;
+  ipAddress: string | null;
+  userAgent: string | null;
   revokedAt: Date | null;
   createdAt: Date;
 }
@@ -135,7 +140,17 @@ export interface RegistrationRecord {
 
 export interface AuthenticatedActor {
   kind: "user";
-  user: Pick<UserRecord, "id" | "email" | "name" | "locale" | "emailVerifiedAt">;
+  user: Pick<
+    UserRecord,
+    | "id"
+    | "email"
+    | "name"
+    | "locale"
+    | "avatarUrl"
+    | "timezone"
+    | "preferences"
+    | "emailVerifiedAt"
+  >;
   session: Pick<SessionRecord, "id" | "expiresAt">;
 }
 

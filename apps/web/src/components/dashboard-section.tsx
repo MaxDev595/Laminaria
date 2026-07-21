@@ -3,59 +3,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
-  CheckCircle2,
   DatabaseZap,
-  Mail,
   LoaderCircle,
-  Settings,
   Trash2,
   UserPlus,
   UsersRound,
-  Video,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { api, friendlyError, type Registration, type ServiceStatus, type Webinar } from "@/lib/api";
+import { api, friendlyError, type Registration, type Webinar } from "@/lib/api";
 import type { DashboardSectionName } from "@/lib/dashboard-sections";
-import { Badge, Button } from "@laminaria/ui";
+import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { DashboardOverview, DashboardRecordings, PageHeading } from "./dashboard-overview";
 import { ServiceState } from "./ui";
+import { SettingsCenter } from "./settings-center";
 
 export function DashboardSection({ section }: { section: DashboardSectionName }) {
-  const t = useTranslations();
-  const { workspace } = useDashboard();
-
   if (section === "upcoming" || section === "past")
     return <DashboardOverview filter={section} />;
   if (section === "recordings") return <DashboardRecordings />;
   if (section === "analytics") return <AnalyticsSection />;
   if (section === "team") return <TeamSection />;
-
-  const copy = {
-    settings: {
-      title: t("nav.settings"),
-      body: t("dashboard.settingsBody"),
-      icon: <Settings size={24} />,
-      service: t("dashboard.settingsState"),
-    },
-  }[section];
-
-  return (
-    <div className="dashboard-page">
-      <PageHeading eyebrow={workspace.name} title={copy.title} body={copy.body} />
-      <div className="section-placeholder">
-        <span className="section-placeholder__icon">{copy.icon}</span>
-        <ServiceState
-          icon={<DatabaseZap size={20} />}
-          title={copy.service}
-          description={t("dashboard.honestState")}
-        />
-      </div>
-      {section === "settings" ? <ServiceStatusGrid /> : null}
-    </div>
-  );
+  if (section === "settings") return <SettingsCenter />;
+  return null;
 }
 
 function TeamSection() {
@@ -302,91 +274,3 @@ function AnalyticsSection() {
     </div>
   );
 }
-
-function ServiceStatusGrid() {
-  const locale = useLocale();
-  const t = useTranslations();
-  const query = useQuery({
-    queryKey: ["service-status"],
-    queryFn: ({ signal }) => api.serviceStatus(signal),
-  });
-
-  if (query.isError) {
-    return (
-      <ServiceState
-        icon={<DatabaseZap size={20} />}
-        title={t("dashboard.servicesLoadError")}
-        description={friendlyError(query.error, locale)}
-        action={
-          <Button variant="secondary" onClick={() => void query.refetch()}>
-            {t("common.retry")}
-          </Button>
-        }
-      />
-    );
-  }
-
-  const services = (query.data?.services ?? defaultServices).filter((service) =>
-    ["livekit", "mail", "google"].includes(service.key),
-  );
-  return (
-    <div className="settings-service-grid">
-      {services.map((service) => (
-        <ServiceCard key={service.key} service={service} loading={query.isLoading} />
-      ))}
-    </div>
-  );
-}
-
-function ServiceCard({ service, loading }: { service: ServiceStatus; loading: boolean }) {
-  const t = useTranslations();
-  const Icon =
-    service.key in serviceIcon ? serviceIcon[service.key as keyof typeof serviceIcon] : DatabaseZap;
-  const configured = !loading && service.configured;
-
-  return (
-    <article className="service-card">
-      <span>{configured ? <CheckCircle2 /> : <Icon />}</span>
-      <div>
-        <strong>{service.label}</strong>
-        <small>
-          {loading
-            ? t("dashboard.serviceChecking")
-            : configured
-              ? t("dashboard.serviceReady")
-              : `${t("dashboard.serviceAdd")}: ${service.requiredEnv.join(", ")}`}
-        </small>
-      </div>
-      <Badge tone={configured ? "success" : "warning"}>
-        {configured ? t("dashboard.serviceConfigured") : t("dashboard.serviceSetupRequired")}
-      </Badge>
-    </article>
-  );
-}
-
-const serviceIcon = {
-  livekit: Video,
-  mail: Mail,
-  google: UsersRound,
-} satisfies Partial<Record<ServiceStatus["key"], typeof Video>>;
-
-const defaultServices: ServiceStatus[] = [
-  {
-    key: "livekit",
-    label: "LiveKit",
-    configured: false,
-    requiredEnv: ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"],
-  },
-  {
-    key: "mail",
-    label: "Email delivery",
-    configured: false,
-    requiredEnv: ["SMTP_HOST", "EMAIL_FROM"],
-  },
-  {
-    key: "google",
-    label: "Google OAuth",
-    configured: false,
-    requiredEnv: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
-  },
-];

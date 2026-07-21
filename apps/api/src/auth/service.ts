@@ -151,6 +151,47 @@ export class AuthService {
     await this.repositories.sessions.revoke(sessionId, this.clock.now());
   }
 
+  public async updateProfile(
+    userId: string,
+    input: {
+      name?: string;
+      avatarUrl?: string | null;
+      locale?: Locale;
+      timezone?: string;
+      preferences?: Record<string, unknown>;
+    },
+  ): Promise<AuthenticatedActor["user"]> {
+    const user = await this.repositories.users.updateProfile(userId, input);
+    if (!user) throw new AppError(404, "NOT_FOUND", "Account not found");
+    return pickPublicUser(user);
+  }
+
+  public async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.repositories.users.findById(userId);
+    if (!user || !(await verifyPassword(user.passwordHash, currentPassword))) {
+      throw new AppError(400, "BAD_REQUEST", "Current password is incorrect");
+    }
+    await this.repositories.users.updatePassword(userId, await hashPassword(newPassword));
+  }
+
+  public listSessions(userId: string): Promise<readonly import("../domain/models.js").SessionRecord[]> {
+    return this.repositories.sessions.listActiveForUser(userId, this.clock.now());
+  }
+
+  public async revokeAllSessions(userId: string): Promise<void> {
+    await this.repositories.sessions.revokeAllForUser(userId, this.clock.now());
+  }
+
+  public async deleteAccount(userId: string): Promise<void> {
+    const now = this.clock.now();
+    await this.repositories.sessions.revokeAllForUser(userId, now);
+    await this.repositories.users.softDelete(userId, now);
+  }
+
   public async verifyEmail(token: string): Promise<void> {
     const now = this.clock.now();
     const record = await this.repositories.tokens.consume(
@@ -269,6 +310,9 @@ function pickPublicUser(user: UserRecord): AuthenticatedActor["user"] {
     email: user.email,
     name: user.name,
     locale: user.locale,
+    avatarUrl: user.avatarUrl,
+    timezone: user.timezone,
+    preferences: user.preferences,
     emailVerifiedAt: user.emailVerifiedAt,
   };
 }

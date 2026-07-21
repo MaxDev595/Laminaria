@@ -177,6 +177,31 @@ export class PrismaUnitOfWork implements UnitOfWork {
           data: { passwordHash },
         });
       },
+
+      updateProfile: async (userId, input) => {
+        const result = await this.#client.user.updateMany({
+          where: { id: userId, deletedAt: null },
+          data: {
+            ...(input.name !== undefined ? { name: input.name } : {}),
+            ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+            ...(input.locale !== undefined ? { locale: toDatabaseLocale(input.locale) } : {}),
+            ...(input.timezone !== undefined ? { timezone: input.timezone } : {}),
+            ...(input.preferences !== undefined
+              ? { preferences: input.preferences as Prisma.InputJsonValue }
+              : {}),
+          },
+        });
+        if (result.count !== 1) return null;
+        const user = await this.#client.user.findUnique({ where: { id: userId } });
+        return user ? mapUser(user) : null;
+      },
+
+      softDelete: async (userId, at) => {
+        await this.#client.user.updateMany({
+          where: { id: userId, deletedAt: null },
+          data: { deletedAt: at },
+        });
+      },
     };
   }
 
@@ -223,6 +248,14 @@ export class PrismaUnitOfWork implements UnitOfWork {
           where: { userId, revokedAt: null },
           data: { revokedAt: at },
         });
+      },
+
+      listActiveForUser: async (userId, now) => {
+        const sessions = await this.#client.session.findMany({
+          where: { userId, revokedAt: null, expiresAt: { gt: now } },
+          orderBy: { lastSeenAt: "desc" },
+        });
+        return sessions.map(mapSession);
       },
     };
   }
@@ -357,7 +390,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
                   },
                 },
               },
-              select: { id: true, name: true, slug: true },
+              select: { id: true, name: true, slug: true, logoUrl: true, timezone: true },
             });
             return { ...workspace, role: "OWNER" as const };
           } catch (error) {
@@ -377,7 +410,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
           select: {
             role: true,
             workspace: {
-              select: { id: true, name: true, slug: true },
+              select: { id: true, name: true, slug: true, logoUrl: true, timezone: true },
             },
           },
           orderBy: { joinedAt: "asc" },
@@ -421,6 +454,72 @@ export class PrismaUnitOfWork implements UnitOfWork {
           data: { deletedAt: at },
         });
         return result.count === 1;
+      },
+
+      getSettings: async (workspaceId) => {
+        const workspace = await this.#client.workspace.findFirst({
+          where: { id: workspaceId, deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logoUrl: true,
+            locale: true,
+            timezone: true,
+            settings: true,
+          },
+        });
+        return workspace
+          ? {
+              ...workspace,
+              locale: fromDatabaseLocale(workspace.locale),
+              settings: jsonObject(workspace.settings),
+            }
+          : null;
+      },
+
+      updateSettings: async (workspaceId, input) => {
+        await this.#client.workspace.updateMany({
+          where: { id: workspaceId, deletedAt: null },
+          data: {
+            ...(input.name !== undefined ? { name: input.name } : {}),
+            ...(input.logoUrl !== undefined ? { logoUrl: input.logoUrl } : {}),
+            ...(input.locale !== undefined ? { locale: toDatabaseLocale(input.locale) } : {}),
+            ...(input.timezone !== undefined ? { timezone: input.timezone } : {}),
+            ...(input.settings !== undefined
+              ? { settings: input.settings as Prisma.InputJsonValue }
+              : {}),
+          },
+        });
+      },
+
+      softDelete: async (workspaceId, at) => {
+        await this.#client.workspace.updateMany({
+          where: { id: workspaceId, deletedAt: null },
+          data: { deletedAt: at },
+        });
+      },
+
+      getUsageSummary: async (workspaceId) => {
+        const [members, webinars, recordings, storage] = await Promise.all([
+          this.#client.workspaceMember.count({
+            where: { workspaceId, deletedAt: null, user: { deletedAt: null } },
+          }),
+          this.#client.webinar.count({ where: { workspaceId, deletedAt: null } }),
+          this.#client.recording.count({
+            where: { webinarSession: { webinar: { workspaceId } }, deletedAt: null },
+          }),
+          this.#client.recording.aggregate({
+            where: { webinarSession: { webinar: { workspaceId } }, deletedAt: null },
+            _sum: { sizeBytes: true },
+          }),
+        ]);
+        return {
+          members,
+          webinars,
+          recordings,
+          storageBytes: Number(storage._sum.sizeBytes ?? 0n),
+        };
       },
     };
   }
@@ -922,6 +1021,9 @@ function mapUser(user: User): UserRecord {
     name: user.name,
     passwordHash: user.passwordHash,
     locale: fromDatabaseLocale(user.locale),
+    avatarUrl: user.avatarUrl,
+    timezone: user.timezone,
+    preferences: jsonObject(user.preferences),
     emailVerifiedAt: user.emailVerifiedAt,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
@@ -935,9 +1037,17 @@ function mapSession(session: Session): SessionRecord {
     tokenHash: session.tokenHash,
     expiresAt: session.expiresAt,
     lastSeenAt: session.lastSeenAt,
+    ipAddress: session.ipAddress,
+    userAgent: session.userAgent,
     revokedAt: session.revokedAt,
     createdAt: session.createdAt,
   };
+}
+
+function jsonObject(value: Prisma.JsonValue): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function mapOneTimeToken(token: AuthToken): OneTimeTokenRecord {

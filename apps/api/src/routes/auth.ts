@@ -15,6 +15,13 @@ const signUpSchema = z.object({
 });
 const signInSchema = z.object({ email, password: z.string().min(1).max(128) });
 const tokenSchema = z.object({ token: z.string().min(32).max(256) });
+const profileSchema = z.object({
+  name: z.string().trim().min(1).max(160).optional(),
+  avatarUrl: z.url().max(2048).nullable().optional(),
+  locale: z.enum(["en", "ru"]).optional(),
+  timezone: z.string().trim().min(1).max(100).optional(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
+});
 const GOOGLE_STATE_COOKIE = "laminaria_google_state";
 
 export async function registerAuthRoutes(
@@ -265,6 +272,101 @@ export async function registerAuthRoutes(
     async (request, reply) => {
       const body = tokenSchema.extend({ password }).parse(request.body);
       await auth.resetPassword(body.token, body.password);
+      return reply.status(204).send();
+    },
+  );
+
+  app.patch(
+    "/v1/auth/profile",
+    { schema: { tags: ["Authentication"], summary: "Update account profile and preferences" } },
+    async (request) => {
+      const actor = requireUser(request);
+      const parsed = profileSchema.parse(request.body);
+      const input = {
+        ...(parsed.name !== undefined ? { name: parsed.name } : {}),
+        ...(parsed.avatarUrl !== undefined ? { avatarUrl: parsed.avatarUrl } : {}),
+        ...(parsed.locale !== undefined ? { locale: parsed.locale } : {}),
+        ...(parsed.timezone !== undefined ? { timezone: parsed.timezone } : {}),
+        ...(parsed.preferences !== undefined ? { preferences: parsed.preferences } : {}),
+      };
+      return { user: await auth.updateProfile(actor.user.id, input) };
+    },
+  );
+
+  app.post(
+    "/v1/auth/change-password",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 hour" } },
+      schema: { tags: ["Authentication"], summary: "Change the current password" },
+    },
+    async (request, reply) => {
+      const actor = requireUser(request);
+      const body = z
+        .object({ currentPassword: z.string().min(1).max(128), newPassword: password })
+        .parse(request.body);
+      await auth.changePassword(actor.user.id, body.currentPassword, body.newPassword);
+      return reply.status(204).send();
+    },
+  );
+
+  app.get(
+    "/v1/auth/sessions",
+    { schema: { tags: ["Authentication"], summary: "List active account sessions" } },
+    async (request) => {
+      const actor = requireUser(request);
+      const sessions = await auth.listSessions(actor.user.id);
+      return {
+        sessions: sessions.map((session) => ({
+          id: session.id,
+          current: session.id === actor.session.id,
+          lastSeenAt: session.lastSeenAt.toISOString(),
+          expiresAt: session.expiresAt.toISOString(),
+          ipAddress: session.ipAddress,
+          userAgent: session.userAgent,
+        })),
+      };
+    },
+  );
+
+  app.post(
+    "/v1/auth/sessions/revoke-all",
+    { schema: { tags: ["Authentication"], summary: "Sign out on every device" } },
+    async (request, reply) => {
+      const actor = requireUser(request);
+      await auth.revokeAllSessions(actor.user.id);
+      reply.clearCookie(config.sessionCookieName, { path: "/" });
+      return reply.status(204).send();
+    },
+  );
+
+  app.get(
+    "/v1/auth/export",
+    { schema: { tags: ["Authentication"], summary: "Export personal account data" } },
+    async (request, reply) => {
+      const actor = requireUser(request);
+      const sessions = await auth.listSessions(actor.user.id);
+      reply.header("content-disposition", 'attachment; filename="laminaria-data.json"');
+      return {
+        exportedAt: new Date().toISOString(),
+        account: actor.user,
+        sessions: sessions.map(({ id, expiresAt, lastSeenAt, createdAt }) => ({
+          id,
+          expiresAt,
+          lastSeenAt,
+          createdAt,
+        })),
+      };
+    },
+  );
+
+  app.delete(
+    "/v1/auth/account",
+    { schema: { tags: ["Authentication"], summary: "Delete the current account" } },
+    async (request, reply) => {
+      const actor = requireUser(request);
+      z.object({ confirmation: z.literal("DELETE") }).parse(request.body);
+      await auth.deleteAccount(actor.user.id);
+      reply.clearCookie(config.sessionCookieName, { path: "/" });
       return reply.status(204).send();
     },
   );

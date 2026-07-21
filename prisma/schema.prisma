@@ -213,6 +213,7 @@ model User {
   avatarUrl             String?              @db.Text
   locale                Locale               @default(EN)
   timezone              String               @default("UTC") @db.VarChar(100)
+  preferences           Json                 @default("{}")
   emailVerifiedAt       DateTime?            @db.Timestamptz(3)
   lastLoginAt           DateTime?            @db.Timestamptz(3)
   createdAt             DateTime             @default(now()) @db.Timestamptz(3)
@@ -301,6 +302,7 @@ model Workspace {
   logoUrl        String?           @db.Text
   locale         Locale            @default(EN)
   timezone       String            @default("UTC") @db.VarChar(100)
+  settings       Json              @default("{}")
   createdAt      DateTime          @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime          @updatedAt @db.Timestamptz(3)
   deletedAt      DateTime?         @db.Timestamptz(3)

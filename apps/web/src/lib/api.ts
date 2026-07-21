@@ -120,6 +120,25 @@ export const api = {
       body: JSON.stringify(input),
     }),
   signOut: () => apiFetch<void>("/v1/auth/sign-out", { method: "POST" }),
+  updateProfile: (input: UpdateProfileInput) =>
+    apiFetch<{ user: User }>("/v1/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  changePassword: (input: { currentPassword: string; newPassword: string }) =>
+    apiFetch<void>("/v1/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  listSessions: () => apiFetch<{ sessions: AccountSession[] }>("/v1/auth/sessions"),
+  revokeAllSessions: () =>
+    apiFetch<void>("/v1/auth/sessions/revoke-all", { method: "POST" }),
+  exportAccount: () => apiFetch<Record<string, unknown>>("/v1/auth/export"),
+  deleteAccount: () =>
+    apiFetch<void>("/v1/auth/account", {
+      method: "DELETE",
+      body: JSON.stringify({ confirmation: "DELETE" }),
+    }),
   forgotPassword: (email: string) =>
     apiFetch<{ accepted: true }>("/v1/auth/forgot-password", {
       method: "POST",
@@ -137,6 +156,20 @@ export const api = {
     apiFetch<{ workspace: Workspace }>("/v1/workspaces", {
       method: "POST",
       body: JSON.stringify(input),
+    }),
+  workspaceSettings: (workspaceId: string) =>
+    apiFetch<WorkspaceSettingsPayload>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/settings`,
+    ),
+  updateWorkspaceSettings: (workspaceId: string, input: UpdateWorkspaceInput) =>
+    apiFetch<{ workspace: WorkspaceSettings }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/settings`,
+      { method: "PATCH", body: JSON.stringify(input) },
+    ),
+  deleteWorkspace: (workspaceId: string) =>
+    apiFetch<void>(`/v1/workspaces/${encodeURIComponent(workspaceId)}`, {
+      method: "DELETE",
+      body: JSON.stringify({ confirmation: "DELETE" }),
     }),
   listWorkspaceMembers: (workspaceId: string) =>
     apiFetch<{ members: WorkspaceMember[] }>(
@@ -263,6 +296,9 @@ export interface User {
   email: string;
   name: string;
   locale: "en" | "ru";
+  avatarUrl?: string | null;
+  timezone?: string;
+  preferences?: UserPreferences;
   emailVerifiedAt?: string | null;
 }
 
@@ -291,6 +327,75 @@ export interface Workspace {
   name: string;
   slug: string;
   role?: "OWNER" | "ADMIN" | "MEMBER";
+  logoUrl?: string | null;
+  timezone?: string;
+}
+
+export interface UserPreferences {
+  notifications?: {
+    registrationConfirmation?: boolean;
+    webinarReminder?: boolean;
+    teamInvitation?: boolean;
+    recordingReady?: boolean;
+  };
+  devices?: {
+    cameraId?: string;
+    microphoneId?: string;
+    speakerId?: string;
+    videoQuality?: "auto" | "360p" | "480p" | "720p" | "1080p";
+  };
+}
+
+export interface UpdateProfileInput {
+  name?: string;
+  avatarUrl?: string | null;
+  locale?: "en" | "ru";
+  timezone?: string;
+  preferences?: UserPreferences;
+}
+
+export interface WebinarDefaults {
+  language: "en" | "ru";
+  timezone: string;
+  access: "PUBLIC" | "PRIVATE";
+  allowGuests: boolean;
+  requireRegistration: boolean;
+  autoRecording: boolean;
+  viewerChat: boolean;
+}
+
+export interface WorkspaceSettings {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  locale: "en" | "ru";
+  timezone: string;
+  settings: { webinarDefaults?: WebinarDefaults };
+}
+
+export interface WorkspaceSettingsPayload {
+  workspace: WorkspaceSettings;
+  role: "OWNER" | "ADMIN" | "MEMBER";
+  planCode: string;
+  usage: { members: number; webinars: number; recordings: number; storageBytes: number };
+}
+
+export interface UpdateWorkspaceInput {
+  name?: string;
+  logoUrl?: string | null;
+  locale?: "en" | "ru";
+  timezone?: string;
+  settings?: { webinarDefaults: WebinarDefaults };
+}
+
+export interface AccountSession {
+  id: string;
+  current: boolean;
+  lastSeenAt: string;
+  expiresAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
 }
 
 export interface WorkspaceMember {

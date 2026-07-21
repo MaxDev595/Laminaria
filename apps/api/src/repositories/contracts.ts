@@ -29,6 +29,17 @@ export interface UserRepository {
   }): Promise<UserRecord>;
   markEmailVerified(userId: string, verifiedAt: Date): Promise<void>;
   updatePassword(userId: string, passwordHash: string): Promise<void>;
+  updateProfile(
+    userId: string,
+    input: {
+      name?: string;
+      avatarUrl?: string | null;
+      locale?: "en" | "ru";
+      timezone?: string;
+      preferences?: Record<string, unknown>;
+    },
+  ): Promise<UserRecord | null>;
+  softDelete(userId: string, at: Date): Promise<void>;
 }
 
 export interface SessionRepository {
@@ -42,6 +53,7 @@ export interface SessionRepository {
   touchIfOlderThan(sessionId: string, threshold: Date, now: Date): Promise<void>;
   revoke(sessionId: string, at: Date): Promise<void>;
   revokeAllForUser(userId: string, at: Date): Promise<void>;
+  listActiveForUser(userId: string, now: Date): Promise<readonly SessionRecord[]>;
 }
 
 export interface OneTimeTokenRepository {
@@ -68,10 +80,26 @@ export interface WorkspaceRepository {
     name: string;
     slug: string;
     ownerId: string;
-  }): Promise<{ id: string; name: string; slug: string; role: WorkspaceRole }>;
+  }): Promise<{
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+    timezone: string;
+    role: WorkspaceRole;
+  }>;
   listForUser(
     userId: string,
-  ): Promise<readonly { id: string; name: string; slug: string; role: WorkspaceRole }[]>;
+  ): Promise<
+    readonly {
+      id: string;
+      name: string;
+      slug: string;
+      logoUrl: string | null;
+      timezone: string;
+      role: WorkspaceRole;
+    }[]
+  >;
   listMembers(workspaceId: string): Promise<
     readonly {
       userId: string;
@@ -88,6 +116,32 @@ export interface WorkspaceRepository {
     role: Exclude<WorkspaceRole, "OWNER">,
   ): Promise<WorkspaceMemberRecord | null>;
   removeMember(workspaceId: string, userId: string, at: Date): Promise<boolean>;
+  getSettings(workspaceId: string): Promise<{
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+    locale: "en" | "ru";
+    timezone: string;
+    settings: Record<string, unknown>;
+  } | null>;
+  updateSettings(
+    workspaceId: string,
+    input: {
+      name?: string;
+      logoUrl?: string | null;
+      locale?: "en" | "ru";
+      timezone?: string;
+      settings?: Record<string, unknown>;
+    },
+  ): Promise<void>;
+  softDelete(workspaceId: string, at: Date): Promise<void>;
+  getUsageSummary(workspaceId: string): Promise<{
+    members: number;
+    webinars: number;
+    recordings: number;
+    storageBytes: number;
+  }>;
 }
 
 export interface WebinarRepository {
