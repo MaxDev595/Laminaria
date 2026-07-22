@@ -7,7 +7,11 @@ const apiProxyTarget = (
   process.env.API_PROXY_TARGET ??
   process.env.NEXT_PUBLIC_API_URL ??
   (isDevelopment ? "http://localhost:4000" : "https://laminaria.onrender.com")
-).replace(/\/$/, "");
+)
+  .replace(/\/+$/, "")
+  // Both environment variables are commonly entered with `/v1`. Rewrites
+  // append that prefix themselves, so normalize it here to avoid `/v1/v1/*`.
+  .replace(/\/v1$/, "");
 const scriptPolicy = isDevelopment
   ? "'self' 'unsafe-inline' 'unsafe-eval'"
   : "'self' 'unsafe-inline'";
