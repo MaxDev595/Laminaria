@@ -79,6 +79,16 @@ export async function registerBillingRoutes(
       { parseAs: "buffer" },
       (_request, body, done) => done(null, body),
     );
+    webhookApp.get(
+      "/v1/webhooks/stripe",
+      { schema: { tags: ["Billing"], summary: "Check the Stripe webhook endpoint" } },
+      async () => ({
+        status: "ready" as const,
+        provider: "stripe" as const,
+        configured: billing.configured,
+        method: "POST" as const,
+      }),
+    );
     webhookApp.post(
       "/v1/webhooks/stripe",
       { schema: { tags: ["Billing"], summary: "Receive signed Stripe events" } },

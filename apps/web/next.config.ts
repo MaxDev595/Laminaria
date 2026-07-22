@@ -53,6 +53,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/stripe/webhook",
+        destination: `${apiProxyTarget}/v1/webhooks/stripe`,
+      },
+      {
         source: "/v1/:path*",
         destination: `${apiProxyTarget}/v1/:path*`,
       },

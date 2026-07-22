@@ -4,6 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertTriangle,
   Bell,
   BarChart3,
   Braces,
@@ -144,6 +145,11 @@ export function SettingsCenter() {
     queryKey: ["account-sessions"],
     queryFn: api.listSessions,
     enabled: tab === "security",
+  });
+  const servicesQuery = useQuery({
+    queryKey: ["service-status"],
+    queryFn: ({ signal }) => api.serviceStatus(signal),
+    enabled: tab === "billing",
   });
 
   useEffect(() => {
@@ -330,7 +336,7 @@ export function SettingsCenter() {
           {tab === "integrations" ? <ApiComingSoon ru={ru} /> : null}
           {tab === "notifications" ? <NotificationSettings ru={ru} value={notifications} setValue={setNotifications} onSave={() => void savePreferences({ notifications })} /> : null}
           {tab === "devices" ? <DeviceSettings ru={ru} value={devices} setValue={setDevices} onSave={() => void savePreferences({ devices })} setNotice={setNotice} /> : null}
-          {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} locale={locale} setNotice={setNotice} /> : null}
+          {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} locale={locale} setNotice={setNotice} billingConfigured={servicesQuery.data?.services.find((service) => service.key === "billing")?.configured ?? false} billingStatusLoading={servicesQuery.isLoading} /> : null}
           {tab === "security" ? (
             <SecuritySettings
               ru={ru}
@@ -383,11 +389,11 @@ function ProfileSettings({ ru, email, value, setValue, passwords, setPasswords, 
       </div>
       <div className="settings-actions"><SaveButton ru={ru} loading={saving} onClick={onSave} /></div>
     </div>
-    <div className="settings-card"><h3><KeyRound size={18} />{ru ? "Смена пароля" : "Change password"}</h3><div className="settings-form-grid settings-form-grid--three">
-      <Field label={ru ? "Текущий пароль" : "Current password"}><input type="password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} /></Field>
-      <Field label={ru ? "Новый пароль" : "New password"}><input type="password" minLength={12} value={passwords.next} onChange={(e) => setPasswords({ ...passwords, next: e.target.value })} /></Field>
-      <Field label={ru ? "Повторите пароль" : "Confirm password"}><input type="password" minLength={12} value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} /></Field>
-    </div><div className="settings-actions"><Button variant="secondary" onClick={onPassword}>{ru ? "Изменить пароль" : "Change password"}</Button></div></div>
+    <form className="settings-card" onSubmit={(event) => { event.preventDefault(); void onPassword(); }}><h3><KeyRound size={18} />{ru ? "Смена пароля" : "Change password"}</h3><div className="settings-form-grid settings-form-grid--three">
+      <Field label={ru ? "Текущий пароль" : "Current password"}><input type="password" name="current-password" autoComplete="current-password" required value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} /></Field>
+      <Field label={ru ? "Новый пароль" : "New password"}><input type="password" name="new-password" autoComplete="new-password" required minLength={12} value={passwords.next} onChange={(e) => setPasswords({ ...passwords, next: e.target.value })} /></Field>
+      <Field label={ru ? "Повторите пароль" : "Confirm password"}><input type="password" name="confirm-password" autoComplete="new-password" required minLength={12} value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} /></Field>
+    </div><div className="settings-actions"><Button type="submit" variant="secondary">{ru ? "Изменить пароль" : "Change password"}</Button></div></form>
   </section>;
 }
 
@@ -615,7 +621,7 @@ function DeviceSettings({ ru, value, setValue, onSave, setNotice }: any) {
 
 function DeviceSelect({ icon, label, value, items, fallback, onChange }: any) { return <Field label={label}><div className="settings-input-icon">{icon}<StyledSelect value={value} ariaLabel={label} options={[{ value: "", label: fallback }, ...items.map((item: MediaDeviceInfo, index: number) => ({ value: item.deviceId, label: item.label || `${label} ${index + 1}` }))]} onChange={onChange} /></div></Field>; }
 
-function BillingSettings({ ru, payload, locale, setNotice }: any) {
+function BillingSettings({ ru, payload, locale, setNotice, billingConfigured, billingStatusLoading }: any) {
   const usage = payload?.usage ?? { members: 0, webinars: 0, recordings: 0, storageBytes: 0 };
   const plan = String(payload?.planCode ?? "FREE").toUpperCase();
   const [interval, setInterval] = useState<"month" | "year">("year");
@@ -649,9 +655,10 @@ function BillingSettings({ ru, payload, locale, setNotice }: any) {
     }
   }
   return <section className="settings-stack"><SettingsHeader icon={<CreditCard />} title={ru ? "Тариф и оплата" : "Plan & billing"} body={ru ? "Безопасная оплата картой и управление подпиской." : "Secure card payments and subscription management."} />
+    {!billingStatusLoading && !billingConfigured ? <div className="billing-setup-notice"><AlertTriangle size={19} /><div><strong>{ru ? "Оплата ещё не подключена" : "Payments are not connected yet"}</strong><p>{ru ? "Добавьте Stripe-ключи в Render и перезапустите API. До этого списаний не будет." : "Add Stripe keys in Render and redeploy the API. No charges can be made until then."}</p></div></div> : null}
     <div className="settings-plan-card"><div><small>{ru ? "ТЕКУЩИЙ ТАРИФ" : "CURRENT PLAN"}</small><strong>{plan === "PROFESSIONAL" ? "PRO" : plan}</strong><p>{plan === "FREE" ? (ru ? "Бесплатно, без привязанной карты" : "Free, no card attached") : (ru ? "Подписка активна" : "Subscription active")}</p></div>{plan !== "FREE" ? <Button variant="secondary" onClick={() => void portal()} disabled={Boolean(loading)}>{loading === "portal" ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{ru ? "Управлять подпиской" : "Manage subscription"}</Button> : null}</div>
     <div className="billing-period" role="group" aria-label={ru ? "Период оплаты" : "Billing interval"}><button type="button" className={interval === "year" ? "is-active" : ""} onClick={() => setInterval("year")}>{ru ? "Год" : "Year"}<span>{ru ? "выгоднее" : "best value"}</span></button><button type="button" className={interval === "month" ? "is-active" : ""} onClick={() => setInterval("month")}>{ru ? "Месяц" : "Month"}</button></div>
-    <div className="billing-offers">{offers.map((offer) => { const current = plan === offer.id.toUpperCase() || (offer.id === "professional" && plan === "PRO"); const paid = offer.id !== "free"; const amount = interval === "year" ? offer.year : offer.month; return <article key={offer.id} className={`${offer.id === "professional" ? "is-featured" : ""} ${current ? "is-current" : ""}`}><header><div><small>{current ? (ru ? "ТЕКУЩИЙ" : "CURRENT") : "LAMINARIA"}</small><h3>{offer.name}</h3></div><div className="billing-price"><strong>${amount}</strong><span>{interval === "year" ? (ru ? "/год" : "/year") : (ru ? "/месяц" : "/month")}</span></div></header><ul>{offer.features.map((feature) => <li key={feature}><Check size={16} />{feature}</li>)}</ul>{paid ? <Button onClick={() => void checkout(offer.id)} disabled={current || Boolean(loading)}>{loading === offer.id ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{current ? (ru ? "Активен" : "Active") : (ru ? "Оплатить картой" : "Pay by card")}</Button> : <Button variant="secondary" disabled>{current ? (ru ? "Активен" : "Active") : (ru ? "Бесплатно" : "Free")}</Button>}</article>; })}</div>
+    <div className="billing-offers">{offers.map((offer) => { const current = plan === offer.id.toUpperCase() || (offer.id === "professional" && plan === "PRO"); const paid = offer.id !== "free"; const amount = interval === "year" ? offer.year : offer.month; return <article key={offer.id} className={`${offer.id === "professional" ? "is-featured" : ""} ${current ? "is-current" : ""}`}><header><div><small>{current ? (ru ? "ТЕКУЩИЙ" : "CURRENT") : "LAMINARIA"}</small><h3>{offer.name}</h3></div><div className="billing-price"><strong>${amount}</strong><span>{interval === "year" ? (ru ? "/год" : "/year") : (ru ? "/месяц" : "/month")}</span></div></header><ul>{offer.features.map((feature) => <li key={feature}><Check size={16} />{feature}</li>)}</ul>{paid ? <Button onClick={() => void checkout(offer.id)} disabled={!billingConfigured || current || Boolean(loading)}>{loading === offer.id ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{current ? (ru ? "Активен" : "Active") : !billingConfigured ? (ru ? "Нужно подключить Stripe" : "Connect Stripe first") : (ru ? "Оплатить картой" : "Pay by card")}</Button> : <Button variant="secondary" disabled>{current ? (ru ? "Активен" : "Active") : (ru ? "Бесплатно" : "Free")}</Button>}</article>; })}</div>
     <p className="billing-security"><LockKeyhole size={15} />{ru ? "Данные карты обрабатывает Stripe и не хранятся в Laminaria." : "Card details are processed by Stripe and are never stored by Laminaria."}</p>
     <div className="settings-card"><h3>{ru ? "Использованные лимиты" : "Usage"}</h3><div className="usage-grid"><Usage value={usage.members} label={ru ? "участников команды" : "team members"} /><Usage value={usage.webinars} label={ru ? "вебинаров" : "webinars"} /><Usage value={usage.recordings} label={ru ? "записей" : "recordings"} /><Usage value={formatBytes(usage.storageBytes)} label={ru ? "хранилище" : "storage"} /></div></div>
   </section>;

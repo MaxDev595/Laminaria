@@ -89,41 +89,7 @@ export function Logo({ compact = false, className, label = "Laminaria", ...props
       style={{ display: "inline-flex", alignItems: "center", gap: "0.65rem", color: "inherit" }}
       {...props}
     >
-      <svg
-        width="30"
-        height="30"
-        viewBox="0 0 30 30"
-        fill="none"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <path
-          d="M15.2 4.2c-3 3.8-3.7 7.2-2 10.3 1.8 3.2 1 6.8-2.3 10.8"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-        />
-        <path
-          d="M21.6 6.8c-2.4 2.7-2.8 5.4-1.3 8.1 1.4 2.5 1 5.1-1.4 8"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          opacity=".72"
-        />
-        <path
-          d="M8.8 8.2c-2 2.6-2.2 5.1-.7 7.4 1.2 2 1 4.3-.8 6.8"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          opacity=".5"
-        />
-        <path
-          d="M4 17.5c6.1-2.1 15.3-2.1 22 0"
-          stroke="currentColor"
-          strokeWidth="1.4"
-          opacity=".4"
-        />
-      </svg>
+      <img className="lm-logo__mark" src="/icon.svg" width="30" height="30" alt="" aria-hidden="true" />
       {compact ? <span className="lm-sr-only">{label}</span> : <strong>{label}</strong>}
     </span>
   );

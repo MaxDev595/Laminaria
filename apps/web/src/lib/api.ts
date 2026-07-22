@@ -649,6 +649,11 @@ function serviceNotConfiguredMessage(message: string, russian: boolean) {
       ? "Почта не настроена. Для локальной разработки можно отключить подтверждение email или добавить SMTP_HOST и EMAIL_FROM."
       : "Email delivery is not configured. For local development, disable email confirmation or add SMTP_HOST and EMAIL_FROM.";
   }
+  if (/billing/i.test(message)) {
+    return russian
+      ? "Оплата ещё не подключена. Добавьте Stripe-ключи в Render и перезапустите API."
+      : "Payments are not connected yet. Add Stripe keys in Render and redeploy the API.";
+  }
   return russian
     ? "Этот сервис ещё не настроен. Проверьте экран Settings."
     : "This service has not been configured yet. Check Settings.";

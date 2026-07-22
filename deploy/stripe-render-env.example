@@ -1,0 +1,16 @@
+# Render API environment for Stripe subscriptions.
+# Never commit real sk_* or whsec_* values.
+WEB_APP_URL=https://laminarias.com
+CORS_ORIGINS=https://laminarias.com
+
+BILLING_PROVIDER=stripe
+BILLING_API_KEY=sk_live_REPLACE_ME
+BILLING_WEBHOOK_SECRET=whsec_REPLACE_ME
+
+STRIPE_PRO_MONTHLY_PRICE_ID=price_REPLACE_ME
+STRIPE_PRO_YEARLY_PRICE_ID=price_REPLACE_ME
+STRIPE_BUSINESS_MONTHLY_PRICE_ID=price_REPLACE_ME
+STRIPE_BUSINESS_YEARLY_PRICE_ID=price_REPLACE_ME
+
+# Add this exact endpoint in Stripe Workbench -> Webhooks:
+# https://laminarias.com/api/stripe/webhook

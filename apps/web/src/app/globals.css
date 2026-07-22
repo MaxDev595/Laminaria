@@ -3128,6 +3128,15 @@ select {
   position: relative;
 }
 
+.lm-logo__mark {
+  display: block;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: .48rem;
+  object-fit: contain;
+  box-shadow: 0 .4rem 1rem rgb(7 27 36 / .22);
+}
+
 .date-time-control .input[type="datetime-local"] {
   width: 100%;
   padding-right: 3.35rem;
@@ -8085,6 +8094,10 @@ select {
 .billing-offers article > button { align-self: end; width: 100%; }
 .billing-security { display: flex; align-items: center; gap: .5rem; color: var(--color-muted-foreground); font-size: .76rem; }
 .billing-security svg { color: #48ddb0; }
+.billing-setup-notice { display: flex; align-items: flex-start; gap: .75rem; padding: 1rem 1.1rem; border: 1px solid rgb(251 191 36 / .28); border-radius: 1rem; color: #f9cf6a; background: linear-gradient(135deg, rgb(251 191 36 / .09), rgb(251 146 60 / .035)); }
+.billing-setup-notice > svg { flex: 0 0 auto; margin-top: .12rem; }
+.billing-setup-notice strong { color: #ffe5a1; font-size: .88rem; }
+.billing-setup-notice p { margin-top: .2rem; color: var(--color-muted-foreground); font-size: .77rem; line-height: 1.5; }
 .usage-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1rem; }
 .usage-grid > div { padding: 1rem; border: 1px solid var(--color-border); border-radius: .9rem; background: color-mix(in srgb, var(--color-background) 45%, transparent); }
 .usage-grid strong, .usage-grid span { display: block; }
