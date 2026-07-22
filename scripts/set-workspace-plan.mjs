@@ -23,6 +23,8 @@ const plans = {
       customLogo: false,
       removeLaminariaBranding: false,
       dataExport: false,
+      apiAccess: false,
+      workspaceTeam: false,
     },
   },
   professional: {
@@ -32,7 +34,7 @@ const plans = {
     maxConcurrentAttendees: 150,
     recordingRetentionDays: 30,
     storageBytes: 10 * 1024 * 1024 * 1024,
-    teamMembers: 3,
+    teamMembers: 1,
     features: {
       webinarRecording: true,
       polls: true,
@@ -41,6 +43,8 @@ const plans = {
       customLogo: true,
       removeLaminariaBranding: false,
       dataExport: true,
+      apiAccess: false,
+      workspaceTeam: false,
     },
   },
   business: {
@@ -59,6 +63,8 @@ const plans = {
       customLogo: true,
       removeLaminariaBranding: true,
       dataExport: true,
+      apiAccess: true,
+      workspaceTeam: true,
     },
   },
 };

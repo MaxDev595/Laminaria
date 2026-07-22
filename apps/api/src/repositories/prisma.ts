@@ -24,6 +24,7 @@ import type {
 } from "../domain/models.js";
 import type { ChatMessage, ChatRepository } from "../realtime/types.js";
 import type {
+  BillingRepository,
   OneTimeTokenRepository,
   RecordingRepository,
   RegistrationRepository,
@@ -42,6 +43,37 @@ const webinarInclude = {
     take: 1,
   },
 } as const satisfies Prisma.WebinarInclude;
+
+function billingPlanData(code: "professional" | "business"): Prisma.PlanCreateInput {
+  const business = code === "business";
+  return {
+    code,
+    displayNameKey: business ? "plans.business" : "plans.professional",
+    priceMonthlyMinor: business ? 2_900 : 1_200,
+    priceAnnualMinor: business ? 29_000 : 12_000,
+    currency: "USD",
+    limits: {
+      maxConcurrentAttendees: business ? 1_000 : 150,
+      concurrentWebinars: business ? 10 : 2,
+      recordingRetentionDays: business ? 365 : 30,
+      storageBytes: business ? 100 * 1024 * 1024 * 1024 : 10 * 1024 * 1024 * 1024,
+      aiQuota: 0,
+      teamMembers: business ? 25 : 1,
+    },
+    features: {
+      webinarRecording: true,
+      polls: true,
+      advancedAnalytics: true,
+      customLogo: true,
+      branding: true,
+      api: business,
+      whiteLabel: business,
+      team: business,
+    },
+    businessDecisionRequired: false,
+    active: true,
+  };
+}
 
 type WebinarWithSession = Prisma.WebinarGetPayload<{
   include: typeof webinarInclude;
@@ -67,6 +99,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
   public readonly realtimeChat: ChatRepository;
   public readonly registrations: RegistrationRepository;
   public readonly moderationRestrictions: ModerationRestrictionRepository;
+  public readonly billing: BillingRepository;
 
   public constructor(databaseUrl: string) {
     const adapter = new PrismaPg({ connectionString: databaseUrl });
@@ -81,6 +114,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
     this.realtimeChat = this.createRealtimeChatRepository();
     this.registrations = this.createRegistrationRepository();
     this.moderationRestrictions = this.createModerationRestrictionRepository();
+    this.billing = this.createBillingRepository();
   }
 
   public async healthcheck(): Promise<void> {
@@ -520,6 +554,67 @@ export class PrismaUnitOfWork implements UnitOfWork {
           recordings,
           storageBytes: Number(storage._sum.sizeBytes ?? 0n),
         };
+      },
+    };
+  }
+
+  private createBillingRepository(): BillingRepository {
+    return {
+      getCustomerId: async (workspaceId) => {
+        const subscription = await this.#client.subscription.findFirst({
+          where: { workspaceId, deletedAt: null, providerCustomerId: { not: null } },
+          orderBy: { updatedAt: "desc" },
+          select: { providerCustomerId: true },
+        });
+        return subscription?.providerCustomerId ?? null;
+      },
+      syncStripeSubscription: async (input) => {
+        const planData = billingPlanData(input.planCode);
+        await this.#client.$transaction(async (transaction) => {
+          const plan = await transaction.plan.upsert({
+            where: { code: input.planCode },
+            create: planData,
+            update: { ...planData, updatedAt: new Date() },
+            select: { id: true },
+          });
+          if (input.status === "ACTIVE" || input.status === "TRIALING") {
+            await transaction.subscription.updateMany({
+              where: {
+                workspaceId: input.workspaceId,
+                providerSubscriptionId: { not: input.providerSubscriptionId },
+                deletedAt: null,
+                status: { in: ["ACTIVE", "TRIALING"] },
+              },
+              data: { status: "CANCELLED", cancelledAt: new Date() },
+            });
+          }
+          await transaction.subscription.upsert({
+            where: { providerSubscriptionId: input.providerSubscriptionId },
+            create: {
+              workspaceId: input.workspaceId,
+              planId: plan.id,
+              status: input.status,
+              billingProvider: "STRIPE",
+              providerCustomerId: input.providerCustomerId,
+              providerSubscriptionId: input.providerSubscriptionId,
+              currentPeriodStart: input.currentPeriodStart,
+              currentPeriodEnd: input.currentPeriodEnd,
+              cancelAtPeriodEnd: input.cancelAtPeriodEnd,
+              ...(input.status === "CANCELLED" ? { cancelledAt: new Date() } : {}),
+            },
+            update: {
+              workspaceId: input.workspaceId,
+              planId: plan.id,
+              status: input.status,
+              providerCustomerId: input.providerCustomerId,
+              currentPeriodStart: input.currentPeriodStart,
+              currentPeriodEnd: input.currentPeriodEnd,
+              cancelAtPeriodEnd: input.cancelAtPeriodEnd,
+              deletedAt: null,
+              ...(input.status === "CANCELLED" ? { cancelledAt: new Date() } : { cancelledAt: null }),
+            },
+          });
+        });
       },
     };
   }

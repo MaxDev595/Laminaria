@@ -73,6 +73,10 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
       confirmByTokenHash: unavailable,
       create: unavailable,
     },
+    billing: {
+      getCustomerId: unavailable,
+      syncStripeSubscription: unavailable,
+    },
     healthcheck: unavailable,
     close: async () => undefined,
   };

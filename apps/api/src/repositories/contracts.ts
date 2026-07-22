@@ -247,6 +247,30 @@ export interface ModerationRestrictionRepository {
   }): Promise<void>;
 }
 
+export type BillingPlanCode = "professional" | "business";
+export type BillingSubscriptionStatus =
+  | "INCOMPLETE"
+  | "TRIALING"
+  | "ACTIVE"
+  | "PAST_DUE"
+  | "PAUSED"
+  | "CANCELLED"
+  | "EXPIRED";
+
+export interface BillingRepository {
+  getCustomerId(workspaceId: string): Promise<string | null>;
+  syncStripeSubscription(input: {
+    workspaceId: string;
+    planCode: BillingPlanCode;
+    status: BillingSubscriptionStatus;
+    providerCustomerId: string | null;
+    providerSubscriptionId: string;
+    currentPeriodStart: Date | null;
+    currentPeriodEnd: Date | null;
+    cancelAtPeriodEnd: boolean;
+  }): Promise<void>;
+}
+
 export interface UnitOfWork {
   readonly users: UserRepository;
   readonly sessions: SessionRepository;
@@ -257,6 +281,7 @@ export interface UnitOfWork {
   readonly realtimeChat?: ChatRepository;
   readonly registrations: RegistrationRepository;
   readonly moderationRestrictions?: ModerationRestrictionRepository;
+  readonly billing: BillingRepository;
   healthcheck(): Promise<void>;
   close(): Promise<void>;
 }

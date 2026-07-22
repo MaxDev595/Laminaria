@@ -4,6 +4,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { Server as SocketIoServer } from "socket.io";
 
 import { NotConfiguredMailAdapter, SmtpMailAdapter } from "./adapters/mail.js";
+import { NotConfiguredBillingAdapter, StripeBillingAdapter } from "./adapters/billing.js";
 import { ParticipantTokenService } from "./auth/participant-token.js";
 import { authenticationPlugin } from "./auth/plugin.js";
 import { AuthService } from "./auth/service.js";
@@ -31,6 +32,7 @@ import { registerSystemRoutes } from "./routes/system.js";
 import { registerWebinarRoutes } from "./routes/webinars.js";
 import { registerWorkspaceRoutes } from "./routes/workspaces.js";
 import { registerUploadRoutes } from "./routes/uploads.js";
+import { registerBillingRoutes } from "./routes/billing.js";
 import { securityPlugin } from "./security/plugin.js";
 import { PublicRegistrationService } from "./webinars/public-registration-service.js";
 
@@ -77,6 +79,7 @@ export async function buildApplication(
         { name: "Workspaces" },
         { name: "Webinars" },
         { name: "Public webinars" },
+        { name: "Billing" },
         { name: "Health" },
       ],
     },
@@ -90,6 +93,9 @@ export async function buildApplication(
   await app.register(securityPlugin(config));
 
   const mail = config.mail ? new SmtpMailAdapter(config.mail) : new NotConfiguredMailAdapter();
+  const billing = config.billing
+    ? new StripeBillingAdapter(config.billing)
+    : new NotConfiguredBillingAdapter();
   const participants = new ParticipantTokenService(config.tokenPepper);
   const livekit = new LiveKitTokenService(config.livekit);
   const recordings = new LiveKitRecordingService(config.livekit, config.storage);
@@ -122,6 +128,7 @@ export async function buildApplication(
   await registerAuthRoutes(app, auth, config);
   await registerWorkspaceRoutes(app, repositories);
   await registerUploadRoutes(app, config.storage);
+  await registerBillingRoutes(app, repositories, billing, config);
   await registerSystemRoutes(app, config);
   await registerWebinarRoutes(app, repositories, {
     livekit,

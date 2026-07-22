@@ -71,6 +71,10 @@ const envSchema = z
     BILLING_PROVIDER: optionalProvider,
     BILLING_API_KEY: optionalString,
     BILLING_WEBHOOK_SECRET: optionalString,
+    STRIPE_PRO_MONTHLY_PRICE_ID: optionalString,
+    STRIPE_PRO_YEARLY_PRICE_ID: optionalString,
+    STRIPE_BUSINESS_MONTHLY_PRICE_ID: optionalString,
+    STRIPE_BUSINESS_YEARLY_PRICE_ID: optionalString,
     STORAGE_ENDPOINT: optionalUrl,
     STORAGE_PUBLIC_URL: optionalUrl,
     STORAGE_REGION: optionalString,
@@ -102,7 +106,21 @@ const envSchema = z
       });
     }
     allOrNone(["AI_PROVIDER", "AI_API_KEY", "AI_MODEL"], "AI");
-    allOrNone(["BILLING_PROVIDER", "BILLING_API_KEY", "BILLING_WEBHOOK_SECRET"], "Billing");
+    allOrNone(
+      [
+        "BILLING_PROVIDER",
+        "BILLING_API_KEY",
+        "BILLING_WEBHOOK_SECRET",
+        "STRIPE_PRO_MONTHLY_PRICE_ID",
+        "STRIPE_PRO_YEARLY_PRICE_ID",
+        "STRIPE_BUSINESS_MONTHLY_PRICE_ID",
+        "STRIPE_BUSINESS_YEARLY_PRICE_ID",
+      ],
+      "Billing",
+    );
+    if (env.BILLING_PROVIDER && env.BILLING_PROVIDER.toLowerCase() !== "stripe") {
+      context.addIssue({ code: "custom", path: ["BILLING_PROVIDER"], message: "Only stripe is supported" });
+    }
     allOrNone(
       [
         "STORAGE_ENDPOINT",
@@ -147,7 +165,12 @@ export type AppConfig = Readonly<{
   }> | null;
   google: Readonly<{ clientId: string; clientSecret: string; redirectUri: string }> | null;
   ai: Readonly<{ provider: string; apiKey: string; model: string }> | null;
-  billing: Readonly<{ provider: string; apiKey: string; webhookSecret: string }> | null;
+  billing: Readonly<{
+    provider: "stripe";
+    apiKey: string;
+    webhookSecret: string;
+    prices: Readonly<Record<"professional" | "business", Readonly<Record<"month" | "year", string>>>>;
+  }> | null;
   storage: Readonly<{
     endpoint: string;
     publicUrl: string | null;
@@ -222,11 +245,28 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
       redirectUri: env.GOOGLE_REDIRECT_URI ?? `${env.PUBLIC_API_URL}/v1/auth/google/callback`,
     }),
     ai: configured({ provider: env.AI_PROVIDER, apiKey: env.AI_API_KEY, model: env.AI_MODEL }),
-    billing: configured({
-      provider: env.BILLING_PROVIDER,
-      apiKey: env.BILLING_API_KEY,
-      webhookSecret: env.BILLING_WEBHOOK_SECRET,
-    }),
+    billing: (() => {
+      const value = configured({
+        provider: env.BILLING_PROVIDER,
+        apiKey: env.BILLING_API_KEY,
+        webhookSecret: env.BILLING_WEBHOOK_SECRET,
+        proMonth: env.STRIPE_PRO_MONTHLY_PRICE_ID,
+        proYear: env.STRIPE_PRO_YEARLY_PRICE_ID,
+        businessMonth: env.STRIPE_BUSINESS_MONTHLY_PRICE_ID,
+        businessYear: env.STRIPE_BUSINESS_YEARLY_PRICE_ID,
+      });
+      return value
+        ? {
+            provider: "stripe" as const,
+            apiKey: value.apiKey,
+            webhookSecret: value.webhookSecret,
+            prices: {
+              professional: { month: value.proMonth, year: value.proYear },
+              business: { month: value.businessMonth, year: value.businessYear },
+            },
+          }
+        : null;
+    })(),
     storage: (() => {
       const value = configured({
       endpoint: env.STORAGE_ENDPOINT,

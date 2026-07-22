@@ -285,7 +285,12 @@ export async function registerWebinarRoutes(
           await resolveWorkspacePlan(repositories, access.webinar.workspaceId),
           "webinarRecording",
         ),
-        polls: pollSettings(workspaceSettings?.settings["polls"]),
+        polls: planAllows(
+          await resolveWorkspacePlan(repositories, access.webinar.workspaceId),
+          "polls",
+        )
+          ? pollSettings(workspaceSettings?.settings["polls"])
+          : { enabled: false, anonymousVoting: false, resultsVisibility: "LIVE" as const },
         media,
         realtimeToken: roomAccess.participants.issue({
           subject,
@@ -369,6 +374,10 @@ export async function registerWebinarRoutes(
       await requireWebinarPermission(request, repositories, params.webinarId, "webinar:moderate");
       const existing = await service.find(params.webinarId);
       assertWorkspace(existing.workspaceId, params.workspaceId);
+      const planId = await resolveWorkspacePlan(repositories, existing.workspaceId);
+      if (!planAllows(planId, "advancedAnalytics")) {
+        throw new AppError(403, "PLAN_LIMIT_EXCEEDED", "Analytics requires Pro or Business");
+      }
       const registrations = await repositories.registrations.listByWebinar(existing.id);
       return { registrations };
     },

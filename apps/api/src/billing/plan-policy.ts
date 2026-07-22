@@ -11,19 +11,22 @@ export interface PlanPolicy {
   readonly customLogo: boolean;
   readonly removeLaminariaBranding: boolean;
   readonly dataExport: boolean;
+  readonly apiAccess: boolean;
+  readonly workspaceTeam: boolean;
 }
 
 export const PLAN_POLICY: Readonly<Record<PlanId, PlanPolicy>> = Object.freeze({
   free: Object.freeze({
-    // Temporary MVP testing mode: every feature is unlocked on Free.
-    maxConcurrentAttendees: 1_000,
-    webinarRecording: true,
-    polls: true,
-    advancedModeration: true,
-    advancedAnalytics: true,
-    customLogo: true,
-    removeLaminariaBranding: true,
-    dataExport: true,
+    maxConcurrentAttendees: 25,
+    webinarRecording: false,
+    polls: false,
+    advancedModeration: false,
+    advancedAnalytics: false,
+    customLogo: false,
+    removeLaminariaBranding: false,
+    dataExport: false,
+    apiAccess: false,
+    workspaceTeam: false,
   }),
   professional: Object.freeze({
     maxConcurrentAttendees: 150,
@@ -34,6 +37,8 @@ export const PLAN_POLICY: Readonly<Record<PlanId, PlanPolicy>> = Object.freeze({
     customLogo: true,
     removeLaminariaBranding: false,
     dataExport: true,
+    apiAccess: false,
+    workspaceTeam: false,
   }),
   business: Object.freeze({
     maxConcurrentAttendees: 1_000,
@@ -44,6 +49,8 @@ export const PLAN_POLICY: Readonly<Record<PlanId, PlanPolicy>> = Object.freeze({
     customLogo: true,
     removeLaminariaBranding: true,
     dataExport: true,
+    apiAccess: true,
+    workspaceTeam: true,
   }),
 });
 

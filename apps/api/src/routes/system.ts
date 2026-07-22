@@ -41,7 +41,15 @@ export async function registerSystemRoutes(app: FastifyInstance, config: AppConf
             key: "billing",
             label: "Billing",
             configured: Boolean(config.billing),
-            requiredEnv: ["BILLING_PROVIDER", "BILLING_API_KEY", "BILLING_WEBHOOK_SECRET"],
+            requiredEnv: [
+              "BILLING_PROVIDER",
+              "BILLING_API_KEY",
+              "BILLING_WEBHOOK_SECRET",
+              "STRIPE_PRO_MONTHLY_PRICE_ID",
+              "STRIPE_PRO_YEARLY_PRICE_ID",
+              "STRIPE_BUSINESS_MONTHLY_PRICE_ID",
+              "STRIPE_BUSINESS_YEARLY_PRICE_ID",
+            ],
           },
           {
             key: "storage",

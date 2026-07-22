@@ -176,6 +176,23 @@ export const api = {
       method: "DELETE",
       body: JSON.stringify({ confirmation: "DELETE" }),
     }),
+  createBillingCheckout: (
+    workspaceId: string,
+    input: {
+      plan: "professional" | "business";
+      interval: "month" | "year";
+      locale: "en" | "ru";
+    },
+  ) =>
+    apiFetch<{ url: string }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/checkout`,
+      { method: "POST", body: JSON.stringify(input) },
+    ),
+  createBillingPortal: (workspaceId: string, locale: "en" | "ru") =>
+    apiFetch<{ url: string }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/portal`,
+      { method: "POST", body: JSON.stringify({ locale }) },
+    ),
   listWorkspaceMembers: (workspaceId: string) =>
     apiFetch<{ members: WorkspaceMember[] }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,
@@ -598,6 +615,10 @@ export function friendlyError(error: unknown, locale: string) {
     FORBIDDEN: [
       "Your role does not allow this action.",
       "Ваша роль не позволяет выполнить это действие.",
+    ],
+    PLAN_LIMIT_EXCEEDED: [
+      "Upgrade your plan to use this feature.",
+      "Перейдите на подходящий тариф, чтобы использовать эту функцию.",
     ],
     VALIDATION_ERROR: [
       "Review the highlighted information and try again.",

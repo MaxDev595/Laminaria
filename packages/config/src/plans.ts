@@ -27,6 +27,8 @@ export const FEATURE_KEYS = [
   "removeLaminariaBranding",
   "advancedAnalytics",
   "dataExport",
+  "apiAccess",
+  "workspaceTeam",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -97,6 +99,8 @@ const configuredFeatures = (input: Record<FeatureKey, boolean>): PlanDefinition[
     removeLaminariaBranding: configuredDecision(input.removeLaminariaBranding),
     advancedAnalytics: configuredDecision(input.advancedAnalytics),
     dataExport: configuredDecision(input.dataExport),
+    apiAccess: configuredDecision(input.apiAccess),
+    workspaceTeam: configuredDecision(input.workspaceTeam),
   });
 
 const monthlyMoney = (amountMinorUnits: number): BusinessDecision<Money> =>
@@ -150,6 +154,8 @@ export const PLAN_CATALOG: PlanCatalog = Object.freeze({
       removeLaminariaBranding: false,
       advancedAnalytics: false,
       dataExport: false,
+      apiAccess: false,
+      workspaceTeam: false,
     },
   ),
   professional: createPlan(
@@ -162,7 +168,7 @@ export const PLAN_CATALOG: PlanCatalog = Object.freeze({
       recordingRetentionDays: 30,
       storageBytes: 10 * 1024 * 1024 * 1024,
       aiQuota: 0,
-      teamMembers: 3,
+      teamMembers: 1,
     },
     {
       webinarRecording: true,
@@ -174,6 +180,8 @@ export const PLAN_CATALOG: PlanCatalog = Object.freeze({
       removeLaminariaBranding: false,
       advancedAnalytics: true,
       dataExport: true,
+      apiAccess: false,
+      workspaceTeam: false,
     },
   ),
   business: createPlan(
@@ -198,6 +206,8 @@ export const PLAN_CATALOG: PlanCatalog = Object.freeze({
       removeLaminariaBranding: true,
       advancedAnalytics: true,
       dataExport: true,
+      apiAccess: true,
+      workspaceTeam: true,
     },
   ),
 });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireUser, requireWorkspacePermission } from "../auth/plugin.js";
 import type { UnitOfWork } from "../repositories/contracts.js";
 import { AppError } from "../errors.js";
+import { normalizePlanId, planAllows } from "../billing/plan-policy.js";
 
 const createWorkspaceSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -158,6 +159,15 @@ export async function registerWorkspaceRoutes(
             ...(parsed.settings.branding ? { branding: parsed.settings.branding } : {}),
           }
         : undefined;
+      const planId = normalizePlanId(
+        await repositories.workspaces.findActivePlanCode(request.params.workspaceId),
+      );
+      if (parsed.settings?.polls && !planAllows(planId, "polls")) {
+        throw new AppError(403, "PLAN_LIMIT_EXCEEDED", "Polls require Pro or Business");
+      }
+      if (parsed.settings?.branding && !planAllows(planId, "customLogo")) {
+        throw new AppError(403, "PLAN_LIMIT_EXCEEDED", "Branding requires Pro or Business");
+      }
       await repositories.workspaces.updateSettings(request.params.workspaceId, {
         ...(parsed.name !== undefined ? { name: parsed.name } : {}),
         ...(parsed.logoUrl !== undefined ? { logoUrl: parsed.logoUrl } : {}),
@@ -200,6 +210,7 @@ export async function registerWorkspaceRoutes(
         request.params.workspaceId,
         "workspace:read",
       );
+      await requireWorkspaceTeamPlan(repositories, request.params.workspaceId);
       return { members: await repositories.workspaces.listMembers(request.params.workspaceId) };
     },
   );
@@ -214,6 +225,7 @@ export async function registerWorkspaceRoutes(
         request.params.workspaceId,
         "workspace:manage",
       );
+      await requireWorkspaceTeamPlan(repositories, request.params.workspaceId);
       const body = memberSchema.parse(request.body);
       if (actorMembership.role !== "OWNER" && body.role === "ADMIN") {
         throw new AppError(403, "FORBIDDEN", "Only the owner can appoint workspace admins");
@@ -241,6 +253,7 @@ export async function registerWorkspaceRoutes(
         request.params.workspaceId,
         "workspace:manage",
       );
+      await requireWorkspaceTeamPlan(repositories, request.params.workspaceId);
       const body = memberRoleSchema.parse(request.body);
       if (actorMembership.role !== "OWNER" && body.role === "ADMIN") {
         throw new AppError(403, "FORBIDDEN", "Only the owner can appoint workspace admins");
@@ -265,6 +278,7 @@ export async function registerWorkspaceRoutes(
         request.params.workspaceId,
         "workspace:manage",
       );
+      await requireWorkspaceTeamPlan(repositories, request.params.workspaceId);
       const removed = await repositories.workspaces.removeMember(
         request.params.workspaceId,
         request.params.userId,
@@ -274,4 +288,11 @@ export async function registerWorkspaceRoutes(
       return reply.status(204).send();
     },
   );
+}
+
+async function requireWorkspaceTeamPlan(repositories: UnitOfWork, workspaceId: string) {
+  const plan = normalizePlanId(await repositories.workspaces.findActivePlanCode(workspaceId));
+  if (!planAllows(plan, "workspaceTeam")) {
+    throw new AppError(403, "PLAN_LIMIT_EXCEEDED", "Team management requires Business");
+  }
 }

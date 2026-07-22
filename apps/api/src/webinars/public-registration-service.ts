@@ -4,6 +4,7 @@ import { createOpaqueToken, hashOpaqueToken } from "../auth/opaque-token.js";
 import { ParticipantTokenService } from "../auth/participant-token.js";
 import type { Locale, RegistrationRecord, WebinarRecord } from "../domain/models.js";
 import { AppError, ServiceNotConfiguredError } from "../errors.js";
+import { normalizePlanId, planAllows } from "../billing/plan-policy.js";
 import { LiveKitTokenService } from "../livekit/token-service.js";
 import type { UnitOfWork } from "../repositories/contracts.js";
 
@@ -150,9 +151,14 @@ export class PublicRegistrationService {
       metadata: { subject },
     });
     const workspaceSettings = await this.repositories.workspaces.getSettings(webinar.workspaceId);
+    const planId = normalizePlanId(
+      await this.repositories.workspaces.findActivePlanCode(webinar.workspaceId),
+    );
     return {
       webinarId: webinar.id,
-      polls: publicPollSettings(workspaceSettings?.settings["polls"]),
+      polls: planAllows(planId, "polls")
+        ? publicPollSettings(workspaceSettings?.settings["polls"])
+        : { enabled: false, anonymousVoting: false, resultsVisibility: "LIVE" as const },
       media,
       realtimeToken: this.participants.issue({
         subject,

@@ -8063,6 +8063,28 @@ select {
 .settings-plan-card small { color: var(--color-primary); font-size: .68rem; font-weight: 800; letter-spacing: .12em; }
 .settings-plan-card strong { display: block; margin-top: .25rem; color: var(--color-foreground); font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: -.06em; }
 .settings-plan-card p { color: var(--color-muted-foreground); }
+.billing-period { display: flex; width: fit-content; padding: .3rem; border: 1px solid var(--color-border); border-radius: 999px; background: color-mix(in srgb, var(--color-card) 92%, transparent); box-shadow: inset 0 1px rgb(255 255 255 / .04); }
+.billing-period button { display: flex; align-items: center; gap: .45rem; min-height: 2.65rem; padding: 0 1rem; border: 0; border-radius: 999px; color: var(--color-muted-foreground); background: transparent; font: inherit; font-size: .82rem; font-weight: 750; cursor: pointer; transition: color .25s ease, background .25s ease, box-shadow .25s ease, transform .25s ease; }
+.billing-period button span { padding: .22rem .42rem; border-radius: 999px; color: #b9ffe6; background: rgb(50 205 145 / .14); font-size: .62rem; text-transform: uppercase; letter-spacing: .05em; }
+.billing-period button.is-active { color: white; background: linear-gradient(135deg, #5f45e8, #8266ff); box-shadow: 0 .65rem 1.5rem rgb(89 64 219 / .28); }
+.billing-offers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+.billing-offers article { position: relative; display: grid; align-content: start; gap: 1.15rem; min-height: 22rem; padding: 1.25rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: 1.25rem; background: linear-gradient(155deg, color-mix(in srgb, var(--color-card) 98%, white 1%), color-mix(in srgb, var(--color-background) 72%, transparent)); transition: transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s ease, box-shadow .3s ease; }
+.billing-offers article::before { position: absolute; inset: 0 auto auto 15%; width: 70%; height: 1px; content: ""; background: linear-gradient(90deg, transparent, rgb(132 105 255 / .75), transparent); }
+.billing-offers article:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border)); box-shadow: 0 1.3rem 3rem rgb(0 0 0 / .18); }
+.billing-offers article.is-featured { background: radial-gradient(circle at 70% 0%, rgb(116 87 255 / .2), transparent 42%), color-mix(in srgb, var(--color-card) 96%, transparent); }
+.billing-offers article.is-current { border-color: color-mix(in srgb, var(--color-primary) 70%, transparent); }
+.billing-offers header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.billing-offers header small { color: var(--color-primary); font-size: .61rem; font-weight: 850; letter-spacing: .11em; }
+.billing-offers h3 { margin-top: .25rem; color: var(--color-foreground); font-family: var(--font-display); font-size: 1.45rem; }
+.billing-price { text-align: right; }
+.billing-price strong { display: block; color: var(--color-foreground); font-family: var(--font-display); font-size: 1.75rem; letter-spacing: -.05em; }
+.billing-price span { color: var(--color-muted-foreground); font-size: .68rem; }
+.billing-offers ul { display: grid; align-content: start; gap: .65rem; min-height: 9rem; margin: 0; padding: 0; list-style: none; }
+.billing-offers li { display: flex; align-items: center; gap: .55rem; color: var(--color-muted-foreground); font-size: .82rem; }
+.billing-offers li svg { flex: 0 0 auto; color: #48ddb0; }
+.billing-offers article > button { align-self: end; width: 100%; }
+.billing-security { display: flex; align-items: center; gap: .5rem; color: var(--color-muted-foreground); font-size: .76rem; }
+.billing-security svg { color: #48ddb0; }
 .usage-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1rem; }
 .usage-grid > div { padding: 1rem; border: 1px solid var(--color-border); border-radius: .9rem; background: color-mix(in srgb, var(--color-background) 45%, transparent); }
 .usage-grid strong, .usage-grid span { display: block; }
@@ -8164,6 +8186,8 @@ select {
 .laminaria-calendar__popover > footer button.is-done { color: white; background: linear-gradient(135deg, var(--color-primary), #7658f7); box-shadow: 0 .35rem 1rem color-mix(in srgb, var(--color-primary) 22%, transparent); }
 
 @media (max-width: 900px) {
+  .billing-offers { grid-template-columns: 1fr; }
+  .billing-offers article, .billing-offers ul { min-height: 0; }
   .settings-layout { grid-template-columns: 1fr; }
   .settings-nav { position: static; grid-auto-flow: column; grid-auto-columns: minmax(10.5rem, 1fr); overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
   .settings-nav button { grid-template-columns: 1.25rem minmax(0, 1fr); }

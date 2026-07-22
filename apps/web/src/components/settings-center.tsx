@@ -30,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useRouter } from "@/i18n/navigation";
@@ -108,6 +109,7 @@ export function SettingsCenter() {
   const locale = useLocale() as "en" | "ru";
   const ru = locale === "ru";
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { user, workspace } = useDashboard();
   const [tab, setTab] = useState<SettingsTab>("profile");
@@ -129,6 +131,10 @@ export function SettingsCenter() {
   const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
   const [devices, setDevices] = useState<NonNullable<UserPreferences["devices"]>>(DEFAULT_DEVICES);
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
+
+  useEffect(() => {
+    if (searchParams.get("tab") === "billing") setTab("billing");
+  }, [searchParams]);
 
   const settingsQuery = useQuery({
     queryKey: ["workspace-settings", workspace.id],
@@ -324,7 +330,7 @@ export function SettingsCenter() {
           {tab === "integrations" ? <ApiComingSoon ru={ru} /> : null}
           {tab === "notifications" ? <NotificationSettings ru={ru} value={notifications} setValue={setNotifications} onSave={() => void savePreferences({ notifications })} /> : null}
           {tab === "devices" ? <DeviceSettings ru={ru} value={devices} setValue={setDevices} onSave={() => void savePreferences({ devices })} setNotice={setNotice} /> : null}
-          {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} /> : null}
+          {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} locale={locale} setNotice={setNotice} /> : null}
           {tab === "security" ? (
             <SecuritySettings
               ru={ru}
@@ -609,10 +615,46 @@ function DeviceSettings({ ru, value, setValue, onSave, setNotice }: any) {
 
 function DeviceSelect({ icon, label, value, items, fallback, onChange }: any) { return <Field label={label}><div className="settings-input-icon">{icon}<StyledSelect value={value} ariaLabel={label} options={[{ value: "", label: fallback }, ...items.map((item: MediaDeviceInfo, index: number) => ({ value: item.deviceId, label: item.label || `${label} ${index + 1}` }))]} onChange={onChange} /></div></Field>; }
 
-function BillingSettings({ ru, payload }: any) {
+function BillingSettings({ ru, payload, locale, setNotice }: any) {
   const usage = payload?.usage ?? { members: 0, webinars: 0, recordings: 0, storageBytes: 0 };
   const plan = String(payload?.planCode ?? "FREE").toUpperCase();
-  return <section className="settings-stack"><SettingsHeader icon={<CreditCard />} title={ru ? "Тариф и оплата" : "Plan & billing"} body={ru ? "Текущий план и использование пространства." : "Your current plan and workspace usage."} /><div className="settings-plan-card"><div><small>{ru ? "ТЕКУЩИЙ ТАРИФ" : "CURRENT PLAN"}</small><strong>{plan}</strong><p>{plan === "FREE" ? (ru ? "Бесплатно, без привязанной карты" : "Free, no card attached") : (ru ? "Подписка активна" : "Subscription active")}</p></div><Button onClick={() => { window.location.href = `/#pricing`; }}>{ru ? "Сменить тариф" : "Change plan"}</Button></div><div className="settings-card"><h3>{ru ? "Использованные лимиты" : "Usage"}</h3><div className="usage-grid"><Usage value={usage.members} label={ru ? "участников команды" : "team members"} /><Usage value={usage.webinars} label={ru ? "вебинаров" : "webinars"} /><Usage value={usage.recordings} label={ru ? "записей" : "recordings"} /><Usage value={formatBytes(usage.storageBytes)} label={ru ? "хранилище" : "storage"} /></div></div><div className="settings-card"><h3>{ru ? "История платежей" : "Payment history"}</h3><div className="settings-empty"><CreditCard size={22} /><p>{ru ? "Платежей пока не было." : "No payments yet."}</p></div><div className="settings-actions"><Button variant="secondary" disabled={plan === "FREE"}>{ru ? "Управление подпиской" : "Manage subscription"}</Button></div></div></section>;
+  const [interval, setInterval] = useState<"month" | "year">("year");
+  const [loading, setLoading] = useState<string | null>(null);
+  const workspaceId = payload?.workspace?.id as string | undefined;
+  const offers = [
+    { id: "free", name: "Free", month: 0, year: 0, features: ru ? ["До 25 участников", "HD-видео", "Чат", "Демонстрация экрана"] : ["Up to 25 participants", "HD video", "Chat", "Screen sharing"] },
+    { id: "professional", name: "Pro", month: 12, year: 120, features: ru ? ["До 150 участников", "Запись", "Аналитика", "Опросы", "Брендинг"] : ["Up to 150 participants", "Recording", "Analytics", "Polls", "Branding"] },
+    { id: "business", name: "Business", month: 29, year: 290, features: ru ? ["До 1000 участников", "API", "White Label", "Команда"] : ["Up to 1,000 participants", "API", "White Label", "Team"] },
+  ] as const;
+  async function checkout(nextPlan: "professional" | "business") {
+    if (!workspaceId || loading) return;
+    setLoading(nextPlan);
+    try {
+      const result = await api.createBillingCheckout(workspaceId, { plan: nextPlan, interval, locale });
+      window.location.assign(result.url);
+    } catch (error) {
+      setNotice(friendlyError(error, locale));
+      setLoading(null);
+    }
+  }
+  async function portal() {
+    if (!workspaceId || loading) return;
+    setLoading("portal");
+    try {
+      const result = await api.createBillingPortal(workspaceId, locale);
+      window.location.assign(result.url);
+    } catch (error) {
+      setNotice(friendlyError(error, locale));
+      setLoading(null);
+    }
+  }
+  return <section className="settings-stack"><SettingsHeader icon={<CreditCard />} title={ru ? "Тариф и оплата" : "Plan & billing"} body={ru ? "Безопасная оплата картой и управление подпиской." : "Secure card payments and subscription management."} />
+    <div className="settings-plan-card"><div><small>{ru ? "ТЕКУЩИЙ ТАРИФ" : "CURRENT PLAN"}</small><strong>{plan === "PROFESSIONAL" ? "PRO" : plan}</strong><p>{plan === "FREE" ? (ru ? "Бесплатно, без привязанной карты" : "Free, no card attached") : (ru ? "Подписка активна" : "Subscription active")}</p></div>{plan !== "FREE" ? <Button variant="secondary" onClick={() => void portal()} disabled={Boolean(loading)}>{loading === "portal" ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{ru ? "Управлять подпиской" : "Manage subscription"}</Button> : null}</div>
+    <div className="billing-period" role="group" aria-label={ru ? "Период оплаты" : "Billing interval"}><button type="button" className={interval === "year" ? "is-active" : ""} onClick={() => setInterval("year")}>{ru ? "Год" : "Year"}<span>{ru ? "выгоднее" : "best value"}</span></button><button type="button" className={interval === "month" ? "is-active" : ""} onClick={() => setInterval("month")}>{ru ? "Месяц" : "Month"}</button></div>
+    <div className="billing-offers">{offers.map((offer) => { const current = plan === offer.id.toUpperCase() || (offer.id === "professional" && plan === "PRO"); const paid = offer.id !== "free"; const amount = interval === "year" ? offer.year : offer.month; return <article key={offer.id} className={`${offer.id === "professional" ? "is-featured" : ""} ${current ? "is-current" : ""}`}><header><div><small>{current ? (ru ? "ТЕКУЩИЙ" : "CURRENT") : "LAMINARIA"}</small><h3>{offer.name}</h3></div><div className="billing-price"><strong>${amount}</strong><span>{interval === "year" ? (ru ? "/год" : "/year") : (ru ? "/месяц" : "/month")}</span></div></header><ul>{offer.features.map((feature) => <li key={feature}><Check size={16} />{feature}</li>)}</ul>{paid ? <Button onClick={() => void checkout(offer.id)} disabled={current || Boolean(loading)}>{loading === offer.id ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{current ? (ru ? "Активен" : "Active") : (ru ? "Оплатить картой" : "Pay by card")}</Button> : <Button variant="secondary" disabled>{current ? (ru ? "Активен" : "Active") : (ru ? "Бесплатно" : "Free")}</Button>}</article>; })}</div>
+    <p className="billing-security"><LockKeyhole size={15} />{ru ? "Данные карты обрабатывает Stripe и не хранятся в Laminaria." : "Card details are processed by Stripe and are never stored by Laminaria."}</p>
+    <div className="settings-card"><h3>{ru ? "Использованные лимиты" : "Usage"}</h3><div className="usage-grid"><Usage value={usage.members} label={ru ? "участников команды" : "team members"} /><Usage value={usage.webinars} label={ru ? "вебинаров" : "webinars"} /><Usage value={usage.recordings} label={ru ? "записей" : "recordings"} /><Usage value={formatBytes(usage.storageBytes)} label={ru ? "хранилище" : "storage"} /></div></div>
+  </section>;
 }
 
 function SecuritySettings({ ru, sessions, loading, onLogoutAll, onExport, onDelete }: any) { return <section className="settings-stack"><SettingsHeader icon={<ShieldCheck />} title={ru ? "Безопасность" : "Security"} body={ru ? "Сессии, экспорт и контроль аккаунта." : "Sessions, exports and account control."} /><div className="settings-card"><h3>{ru ? "Активные сессии" : "Active sessions"}</h3>{loading ? <SettingsLoading /> : <div className="session-list">{sessions.map((session: any) => <div key={session.id}><span className="session-device"><Globe2 size={17} /></span><div><strong>{session.current ? (ru ? "Это устройство" : "This device") : browserName(session.userAgent)}</strong><small>{session.ipAddress ?? (ru ? "IP не определён" : "IP unavailable")} · {new Date(session.lastSeenAt).toLocaleString()}</small></div>{session.current ? <span className="session-current">{ru ? "Текущая" : "Current"}</span> : null}</div>)}</div>}<div className="settings-actions"><Button variant="secondary" onClick={onLogoutAll}><LogOut size={17} />{ru ? "Выйти со всех устройств" : "Sign out everywhere"}</Button></div></div><div className="settings-card"><h3>{ru ? "Ваши данные" : "Your data"}</h3><p className="settings-card__body">{ru ? "Скачайте копию данных аккаунта в формате JSON." : "Download a JSON copy of your account data."}</p><div className="settings-actions settings-actions--left"><Button variant="secondary" onClick={onExport}><Download size={17} />{ru ? "Экспортировать данные" : "Export data"}</Button></div></div><DangerCard title={ru ? "Удалить аккаунт" : "Delete account"} body={ru ? "Профиль будет удалён, а все активные сессии завершены. Действие необратимо." : "Your profile will be deleted and every session revoked. This cannot be undone."} action={ru ? "Удалить аккаунт" : "Delete account"} onClick={onDelete} /></section>; }
