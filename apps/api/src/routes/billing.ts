@@ -72,6 +72,39 @@ export async function registerBillingRoutes(
     },
   );
 
+  app.post<{ Params: { workspaceId: string } }>(
+    "/v1/workspaces/:workspaceId/billing/cancel-and-refund",
+    { schema: { tags: ["Billing"], summary: "Cancel immediately and refund the latest payment" } },
+    async (request) => {
+      requireUser(request);
+      await requireWorkspacePermission(
+        request,
+        repositories,
+        request.params.workspaceId,
+        "billing:manage",
+      );
+      if (!billing.configured) throw new ServiceNotConfiguredError("Billing provider");
+      const subscription = await repositories.billing.getActiveStripeSubscription(
+        request.params.workspaceId,
+      );
+      if (!subscription) throw new AppError(404, "NOT_FOUND", "No active paid subscription found");
+      const result = await billing.cancelAndRefund({
+        subscriptionId: subscription.providerSubscriptionId,
+      });
+      await repositories.billing.syncStripeSubscription({
+        workspaceId: request.params.workspaceId,
+        planCode: subscription.planCode,
+        status: "CANCELLED",
+        providerCustomerId: subscription.providerCustomerId,
+        providerSubscriptionId: subscription.providerSubscriptionId,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+      });
+      return { cancelled: true as const, refunded: true as const, refundId: result.refundId };
+    },
+  );
+
   await app.register(async (webhookApp) => {
     webhookApp.removeContentTypeParser("application/json");
     webhookApp.addContentTypeParser(

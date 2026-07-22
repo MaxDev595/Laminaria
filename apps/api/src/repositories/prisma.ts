@@ -568,6 +568,35 @@ export class PrismaUnitOfWork implements UnitOfWork {
         });
         return subscription?.providerCustomerId ?? null;
       },
+      getActiveStripeSubscription: async (workspaceId) => {
+        const subscription = await this.#client.subscription.findFirst({
+          where: {
+            workspaceId,
+            deletedAt: null,
+            status: { in: ["ACTIVE", "TRIALING"] },
+            billingProvider: "STRIPE",
+            providerSubscriptionId: { not: null },
+          },
+          orderBy: { updatedAt: "desc" },
+          select: {
+            providerCustomerId: true,
+            providerSubscriptionId: true,
+            plan: { select: { code: true } },
+          },
+        });
+        const planCode = subscription?.plan.code;
+        if (
+          !subscription?.providerSubscriptionId ||
+          (planCode !== "professional" && planCode !== "business")
+        ) {
+          return null;
+        }
+        return {
+          planCode,
+          providerCustomerId: subscription.providerCustomerId,
+          providerSubscriptionId: subscription.providerSubscriptionId,
+        };
+      },
       syncStripeSubscription: async (input) => {
         const planData = billingPlanData(input.planCode);
         await this.#client.$transaction(async (transaction) => {

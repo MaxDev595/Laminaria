@@ -11,6 +11,7 @@ export interface BillingAdapter {
     cancelUrl: string;
   }): Promise<{ url: string }>;
   createCustomerPortal(input: { customerId: string; returnUrl: string }): Promise<{ url: string }>;
+  cancelAndRefund(input: { subscriptionId: string }): Promise<{ refundId: string }>;
   verifyWebhook(input: { rawBody: Uint8Array; signature: string }): Promise<{
     id: string;
     type: string;
@@ -68,6 +69,45 @@ export class StripeBillingAdapter implements BillingAdapter {
     return { url: portal.url };
   }
 
+  public async cancelAndRefund(input: { subscriptionId: string }): Promise<{ refundId: string }> {
+    const subscription = await this.request<{
+      latest_invoice?:
+        | string
+        | { payment_intent?: string | { id?: string } | null }
+        | null;
+    }>(
+      `/v1/subscriptions/${encodeURIComponent(input.subscriptionId)}?expand[]=latest_invoice.payment_intent`,
+      { method: "GET" },
+    );
+    const latestInvoice = subscription.latest_invoice;
+    const paymentIntent =
+      typeof latestInvoice === "object" && latestInvoice
+        ? typeof latestInvoice.payment_intent === "string"
+          ? latestInvoice.payment_intent
+          : latestInvoice.payment_intent?.id
+        : undefined;
+    if (!paymentIntent) {
+      throw new AppError(409, "BILLING_ERROR", "The latest subscription payment cannot be refunded");
+    }
+    const refund = await this.request<{ id: string }>(
+      "/v1/refunds",
+      {
+        method: "POST",
+        body: new URLSearchParams({
+          payment_intent: paymentIntent,
+          reason: "requested_by_customer",
+          "metadata[subscriptionId]": input.subscriptionId,
+        }),
+        idempotencyKey: `laminaria-refund-${input.subscriptionId}`,
+      },
+    );
+    await this.request(`/v1/subscriptions/${encodeURIComponent(input.subscriptionId)}`, {
+      method: "DELETE",
+      idempotencyKey: `laminaria-cancel-${input.subscriptionId}`,
+    });
+    return { refundId: refund.id };
+  }
+
   public async verifyWebhook(input: { rawBody: Uint8Array; signature: string }): Promise<{
     id: string;
     type: string;
@@ -97,16 +137,28 @@ export class StripeBillingAdapter implements BillingAdapter {
     return event;
   }
 
-  private async request<T>(path: string, body: URLSearchParams): Promise<T> {
+  private async request<T>(
+    path: string,
+    options:
+      | URLSearchParams
+      | {
+          method: "GET" | "POST" | "DELETE";
+          body?: URLSearchParams;
+          idempotencyKey?: string;
+        },
+  ): Promise<T> {
+    const normalized =
+      options instanceof URLSearchParams ? { method: "POST" as const, body: options } : options;
     let response: Response;
     try {
       response = await fetch(`https://api.stripe.com${path}`, {
-        method: "POST",
+        method: normalized.method,
         headers: {
           authorization: `Bearer ${this.config.apiKey}`,
-          "content-type": "application/x-www-form-urlencoded",
+          ...(normalized.body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
+          ...(normalized.idempotencyKey ? { "idempotency-key": normalized.idempotencyKey } : {}),
         },
-        body,
+        ...(normalized.body ? { body: normalized.body } : {}),
         signal: AbortSignal.timeout(15_000),
       });
     } catch {
@@ -117,7 +169,7 @@ export class StripeBillingAdapter implements BillingAdapter {
     };
     if (!response.ok) {
       const providerMessage = payload.error?.message?.slice(0, 300) ?? `Request failed (${response.status})`;
-      throw new AppError(502, "BILLING_ERROR", `Stripe rejected checkout: ${providerMessage}`, {
+      throw new AppError(502, "BILLING_ERROR", `Stripe rejected the billing request: ${providerMessage}`, {
         provider: "stripe",
         ...(payload.error?.code ? { code: payload.error.code } : {}),
         ...(payload.error?.type ? { type: payload.error.type } : {}),
@@ -136,6 +188,10 @@ export class NotConfiguredBillingAdapter implements BillingAdapter {
   }
 
   public async createCustomerPortal(): Promise<never> {
+    throw new ServiceNotConfiguredError("Billing provider");
+  }
+
+  public async cancelAndRefund(): Promise<never> {
     throw new ServiceNotConfiguredError("Billing provider");
   }
 

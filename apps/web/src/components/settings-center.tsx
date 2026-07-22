@@ -336,7 +336,7 @@ export function SettingsCenter() {
           {tab === "integrations" ? <ApiComingSoon ru={ru} /> : null}
           {tab === "notifications" ? <NotificationSettings ru={ru} value={notifications} setValue={setNotifications} onSave={() => void savePreferences({ notifications })} /> : null}
           {tab === "devices" ? <DeviceSettings ru={ru} value={devices} setValue={setDevices} onSave={() => void savePreferences({ devices })} setNotice={setNotice} /> : null}
-          {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} locale={locale} setNotice={setNotice} billingConfigured={servicesQuery.data?.services.find((service) => service.key === "billing")?.configured ?? false} billingStatusLoading={servicesQuery.isLoading} /> : null}
+          {tab === "billing" ? <BillingSettings ru={ru} payload={settingsQuery.data} locale={locale} setNotice={setNotice} refresh={() => settingsQuery.refetch()} billingConfigured={servicesQuery.data?.services.find((service) => service.key === "billing")?.configured ?? false} billingStatusLoading={servicesQuery.isLoading} /> : null}
           {tab === "security" ? (
             <SecuritySettings
               ru={ru}
@@ -622,7 +622,7 @@ function DeviceSettings({ ru, value, setValue, onSave, setNotice }: any) {
 
 function DeviceSelect({ icon, label, value, items, fallback, onChange }: any) { return <Field label={label}><div className="settings-input-icon">{icon}<StyledSelect value={value} ariaLabel={label} options={[{ value: "", label: fallback }, ...items.map((item: MediaDeviceInfo, index: number) => ({ value: item.deviceId, label: item.label || `${label} ${index + 1}` }))]} onChange={onChange} /></div></Field>; }
 
-function BillingSettings({ ru, payload, locale, setNotice, billingConfigured, billingStatusLoading }: any) {
+function BillingSettings({ ru, payload, locale, setNotice, refresh, billingConfigured, billingStatusLoading }: any) {
   const usage = payload?.usage ?? { members: 0, webinars: 0, recordings: 0, storageBytes: 0 };
   const plan = String(payload?.planCode ?? "FREE").toUpperCase();
   const [interval, setInterval] = useState<"month" | "year">("year");
@@ -655,9 +655,32 @@ function BillingSettings({ ru, payload, locale, setNotice, billingConfigured, bi
       setLoading(null);
     }
   }
+  async function cancelAndRefund() {
+    if (!workspaceId || loading) return;
+    const confirmed = window.confirm(
+      ru
+        ? "Отменить подписку сейчас и вернуть последний платёж? Workspace сразу перейдёт на Free."
+        : "Cancel now and refund the latest payment? The workspace will switch to Free immediately.",
+    );
+    if (!confirmed) return;
+    setLoading("cancel");
+    try {
+      await api.cancelAndRefundBilling(workspaceId);
+      await refresh();
+      setNotice(
+        ru
+          ? "Подписка отменена, возврат отправлен. Тариф изменён на Free."
+          : "Subscription cancelled, refund submitted, and the plan changed to Free.",
+      );
+    } catch (error) {
+      setNotice(friendlyError(error, locale));
+    } finally {
+      setLoading(null);
+    }
+  }
   return <section className="settings-stack"><SettingsHeader icon={<CreditCard />} title={ru ? "Тариф и оплата" : "Plan & billing"} body={ru ? "Безопасная оплата картой и управление подпиской." : "Secure card payments and subscription management."} />
     {!billingStatusLoading && !billingConfigured ? <div className="billing-setup-notice"><AlertTriangle size={19} /><div><strong>{ru ? "Оплата ещё не подключена" : "Payments are not connected yet"}</strong><p>{ru ? "Добавьте Stripe-ключи в Render и перезапустите API. До этого списаний не будет." : "Add Stripe keys in Render and redeploy the API. No charges can be made until then."}</p></div></div> : null}
-    <div className="settings-plan-card"><div><small>{ru ? "ТЕКУЩИЙ ТАРИФ" : "CURRENT PLAN"}</small><strong>{plan === "PROFESSIONAL" ? "PRO" : plan}</strong><p>{plan === "FREE" ? (ru ? "Бесплатно, без привязанной карты" : "Free, no card attached") : (ru ? "Подписка активна" : "Subscription active")}</p></div>{plan !== "FREE" ? <Button variant="secondary" onClick={() => void portal()} disabled={Boolean(loading)}>{loading === "portal" ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{ru ? "Управлять подпиской" : "Manage subscription"}</Button> : null}</div>
+    <div className="settings-plan-card"><div><small>{ru ? "ТЕКУЩИЙ ТАРИФ" : "CURRENT PLAN"}</small><strong>{plan === "PROFESSIONAL" ? "PRO" : plan}</strong><p>{plan === "FREE" ? (ru ? "Бесплатно, без привязанной карты" : "Free, no card attached") : (ru ? "Подписка активна" : "Subscription active")}</p></div>{plan !== "FREE" ? <div className="settings-actions"><Button variant="secondary" onClick={() => void portal()} disabled={Boolean(loading)}>{loading === "portal" ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{ru ? "Управлять подпиской" : "Manage subscription"}</Button><Button variant="secondary" onClick={() => void cancelAndRefund()} disabled={Boolean(loading)}>{loading === "cancel" ? <LoaderCircle className="spin" size={17} /> : <Trash2 size={17} />}{ru ? "Отменить и вернуть оплату" : "Cancel and refund"}</Button></div> : null}</div>
     <div className="billing-period" role="group" aria-label={ru ? "Период оплаты" : "Billing interval"}><button type="button" className={interval === "year" ? "is-active" : ""} onClick={() => setInterval("year")}>{ru ? "Год" : "Year"}<span>{ru ? "выгоднее" : "best value"}</span></button><button type="button" className={interval === "month" ? "is-active" : ""} onClick={() => setInterval("month")}>{ru ? "Месяц" : "Month"}</button></div>
     <div className="billing-offers">{offers.map((offer) => { const current = plan === offer.id.toUpperCase() || (offer.id === "professional" && plan === "PRO"); const paid = offer.id !== "free"; const amount = interval === "year" ? offer.year : offer.month; return <article key={offer.id} className={`${offer.id === "professional" ? "is-featured" : ""} ${current ? "is-current" : ""}`}><header><div><small>{current ? (ru ? "ТЕКУЩИЙ" : "CURRENT") : "LAMINARIA"}</small><h3>{offer.name}</h3></div><div className="billing-price"><strong>${amount}</strong><span>{interval === "year" ? (ru ? "/год" : "/year") : (ru ? "/месяц" : "/month")}</span></div></header><ul>{offer.features.map((feature) => <li key={feature}><Check size={16} />{feature}</li>)}</ul>{paid ? <Button onClick={() => void checkout(offer.id)} disabled={!billingConfigured || current || Boolean(loading)}>{loading === offer.id ? <LoaderCircle className="spin" size={17} /> : <CreditCard size={17} />}{current ? (ru ? "Активен" : "Active") : !billingConfigured ? (ru ? "Нужно подключить Stripe" : "Connect Stripe first") : (ru ? "Оплатить картой" : "Pay by card")}</Button> : <Button variant="secondary" disabled>{current ? (ru ? "Активен" : "Active") : (ru ? "Бесплатно" : "Free")}</Button>}</article>; })}</div>
     <p className="billing-security"><LockKeyhole size={15} />{ru ? "Данные карты обрабатывает Stripe и не хранятся в Laminaria." : "Card details are processed by Stripe and are never stored by Laminaria."}</p>

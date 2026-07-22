@@ -259,6 +259,11 @@ export type BillingSubscriptionStatus =
 
 export interface BillingRepository {
   getCustomerId(workspaceId: string): Promise<string | null>;
+  getActiveStripeSubscription(workspaceId: string): Promise<{
+    planCode: BillingPlanCode;
+    providerCustomerId: string | null;
+    providerSubscriptionId: string;
+  } | null>;
   syncStripeSubscription(input: {
     workspaceId: string;
     planCode: BillingPlanCode;

@@ -193,6 +193,11 @@ export const api = {
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/portal`,
       { method: "POST", body: JSON.stringify({ locale }) },
     ),
+  cancelAndRefundBilling: (workspaceId: string) =>
+    apiFetch<{ cancelled: true; refunded: true; refundId: string }>(
+      `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/cancel-and-refund`,
+      { method: "POST", body: JSON.stringify({}) },
+    ),
   listWorkspaceMembers: (workspaceId: string) =>
     apiFetch<{ members: WorkspaceMember[] }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,
