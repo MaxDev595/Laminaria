@@ -593,6 +593,11 @@ export interface RegistrationPayload {
 export function friendlyError(error: unknown, locale: string) {
   const code = error instanceof ApiError ? error.code : "UNKNOWN";
   const russian = locale === "ru";
+  if (error instanceof ApiError && code === "BILLING_ERROR") {
+    return russian
+      ? error.message.replace("Stripe rejected checkout:", "Stripe отклонил оплату:")
+      : error.message;
+  }
   if (error instanceof ApiError && error.status === 409) {
     return russian
       ? "Эта почта или ссылка уже занята. Используйте другую или войдите через уже созданную."
@@ -619,6 +624,10 @@ export function friendlyError(error: unknown, locale: string) {
     PLAN_LIMIT_EXCEEDED: [
       "Upgrade your plan to use this feature.",
       "Перейдите на подходящий тариф, чтобы использовать эту функцию.",
+    ],
+    BILLING_ERROR: [
+      "Stripe could not create the payment. Check the secret key and Price IDs.",
+      "Stripe не смог создать оплату. Проверьте секретный ключ и Price ID.",
     ],
     VALIDATION_ERROR: [
       "Review the highlighted information and try again.",

@@ -10,6 +10,7 @@ export type ErrorCode =
   | "PLAN_LIMIT_EXCEEDED"
   | "RATE_LIMITED"
   | "SERVICE_NOT_CONFIGURED"
+  | "BILLING_ERROR"
   | "INTERNAL_ERROR";
 
 export class AppError extends Error {

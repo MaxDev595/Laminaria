@@ -390,6 +390,7 @@ function ProfileSettings({ ru, email, value, setValue, passwords, setPasswords, 
       <div className="settings-actions"><SaveButton ru={ru} loading={saving} onClick={onSave} /></div>
     </div>
     <form className="settings-card" onSubmit={(event) => { event.preventDefault(); void onPassword(); }}><h3><KeyRound size={18} />{ru ? "Смена пароля" : "Change password"}</h3><div className="settings-form-grid settings-form-grid--three">
+      <input className="lm-sr-only" type="email" name="username" autoComplete="username" value={email} readOnly tabIndex={-1} aria-hidden="true" />
       <Field label={ru ? "Текущий пароль" : "Current password"}><input type="password" name="current-password" autoComplete="current-password" required value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} /></Field>
       <Field label={ru ? "Новый пароль" : "New password"}><input type="password" name="new-password" autoComplete="new-password" required minLength={12} value={passwords.next} onChange={(e) => setPasswords({ ...passwords, next: e.target.value })} /></Field>
       <Field label={ru ? "Повторите пароль" : "Confirm password"}><input type="password" name="confirm-password" autoComplete="new-password" required minLength={12} value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} /></Field>

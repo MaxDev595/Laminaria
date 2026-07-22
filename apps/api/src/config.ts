@@ -10,7 +10,11 @@ const optionalUrl = z.preprocess(
 );
 
 const optionalString = z.preprocess(
-  (value) => (value === "" ? undefined : value),
+  (value) => {
+    if (typeof value !== "string") return value;
+    const normalized = value.trim();
+    return normalized === "" ? undefined : normalized;
+  },
   z.string().min(1).optional(),
 );
 

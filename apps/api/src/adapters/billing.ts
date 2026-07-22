@@ -1,4 +1,4 @@
-import { ServiceNotConfiguredError } from "../errors.js";
+import { AppError, ServiceNotConfiguredError } from "../errors.js";
 
 export interface BillingAdapter {
   readonly configured: boolean;
@@ -98,17 +98,32 @@ export class StripeBillingAdapter implements BillingAdapter {
   }
 
   private async request<T>(path: string, body: URLSearchParams): Promise<T> {
-    const response = await fetch(`https://api.stripe.com${path}`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.config.apiKey}`,
-        "content-type": "application/x-www-form-urlencoded",
-      },
-      body,
-      signal: AbortSignal.timeout(15_000),
-    });
-    const payload = (await response.json()) as T & { error?: { message?: string } };
-    if (!response.ok) throw new Error(payload.error?.message ?? `Stripe request failed (${response.status})`);
+    let response: Response;
+    try {
+      response = await fetch(`https://api.stripe.com${path}`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.config.apiKey}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body,
+        signal: AbortSignal.timeout(15_000),
+      });
+    } catch {
+      throw new AppError(502, "BILLING_ERROR", "Stripe is temporarily unreachable");
+    }
+    const payload = (await response.json()) as T & {
+      error?: { message?: string; code?: string; type?: string; param?: string };
+    };
+    if (!response.ok) {
+      const providerMessage = payload.error?.message?.slice(0, 300) ?? `Request failed (${response.status})`;
+      throw new AppError(502, "BILLING_ERROR", `Stripe rejected checkout: ${providerMessage}`, {
+        provider: "stripe",
+        ...(payload.error?.code ? { code: payload.error.code } : {}),
+        ...(payload.error?.type ? { type: payload.error.type } : {}),
+        ...(payload.error?.param ? { param: payload.error.param } : {}),
+      });
+    }
     return payload;
   }
 }
