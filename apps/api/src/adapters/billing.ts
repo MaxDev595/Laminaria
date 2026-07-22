@@ -73,28 +73,45 @@ export class StripeBillingAdapter implements BillingAdapter {
     const subscription = await this.request<{
       latest_invoice?:
         | string
-        | { payment_intent?: string | { id?: string } | null }
+        | { id?: string; payment_intent?: string | { id?: string } | null }
         | null;
-    }>(
-      `/v1/subscriptions/${encodeURIComponent(input.subscriptionId)}?expand[]=latest_invoice.payment_intent`,
-      { method: "GET" },
-    );
+    }>(`/v1/subscriptions/${encodeURIComponent(input.subscriptionId)}`, { method: "GET" });
     const latestInvoice = subscription.latest_invoice;
-    const paymentIntent =
+    const invoiceId = typeof latestInvoice === "string" ? latestInvoice : latestInvoice?.id;
+    const legacyPaymentIntent =
       typeof latestInvoice === "object" && latestInvoice
         ? typeof latestInvoice.payment_intent === "string"
           ? latestInvoice.payment_intent
           : latestInvoice.payment_intent?.id
         : undefined;
-    if (!paymentIntent) {
+    const invoicePayments = invoiceId
+      ? await this.request<{
+          data?: Array<{
+            status?: string;
+            payment?: {
+              type?: string;
+              payment_intent?: string | { id?: string } | null;
+              charge?: string | { id?: string } | null;
+            };
+          }>;
+        }>(
+          `/v1/invoice_payments?invoice=${encodeURIComponent(invoiceId)}&status=paid&limit=10`,
+          { method: "GET" },
+        )
+      : null;
+    const paidPayment = invoicePayments?.data?.find((item) => item.status === "paid")?.payment;
+    const paymentIntent = stringIdentifier(paidPayment?.payment_intent) ?? legacyPaymentIntent;
+    const charge = stringIdentifier(paidPayment?.charge);
+    if (!paymentIntent && !charge) {
       throw new AppError(409, "BILLING_ERROR", "The latest subscription payment cannot be refunded");
     }
+    const refundTarget = paymentIntent ? { payment_intent: paymentIntent } : { charge: charge! };
     const refund = await this.request<{ id: string }>(
       "/v1/refunds",
       {
         method: "POST",
         body: new URLSearchParams({
-          payment_intent: paymentIntent,
+          ...refundTarget,
           reason: "requested_by_customer",
           "metadata[subscriptionId]": input.subscriptionId,
         }),
@@ -178,6 +195,10 @@ export class StripeBillingAdapter implements BillingAdapter {
     }
     return payload;
   }
+}
+
+function stringIdentifier(value: string | { id?: string } | null | undefined): string | undefined {
+  return typeof value === "string" ? value : value?.id;
 }
 
 export class NotConfiguredBillingAdapter implements BillingAdapter {
