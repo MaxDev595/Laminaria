@@ -53,7 +53,7 @@ function billingPlanData(code: "professional" | "business"): Prisma.PlanCreateIn
     priceAnnualMinor: business ? 29_000 : 12_000,
     currency: "USD",
     limits: {
-      maxConcurrentAttendees: business ? 1_000 : 150,
+      maxConcurrentAttendees: business ? 1_000 : 100,
       concurrentWebinars: business ? 10 : 2,
       recordingRetentionDays: business ? 365 : 30,
       storageBytes: business ? 100 * 1024 * 1024 * 1024 : 10 * 1024 * 1024 * 1024,
@@ -640,7 +640,9 @@ export class PrismaUnitOfWork implements UnitOfWork {
               currentPeriodEnd: input.currentPeriodEnd,
               cancelAtPeriodEnd: input.cancelAtPeriodEnd,
               deletedAt: null,
-              ...(input.status === "CANCELLED" ? { cancelledAt: new Date() } : { cancelledAt: null }),
+              ...(input.status === "CANCELLED"
+                ? { cancelledAt: new Date() }
+                : { cancelledAt: null }),
             },
           });
         });
@@ -953,7 +955,9 @@ export class PrismaUnitOfWork implements UnitOfWork {
           ...(input.sizeBytes !== undefined
             ? { sizeBytes: input.sizeBytes === null ? null : BigInt(input.sizeBytes) }
             : {}),
-          ...(input.durationSeconds !== undefined ? { durationSeconds: input.durationSeconds } : {}),
+          ...(input.durationSeconds !== undefined
+            ? { durationSeconds: input.durationSeconds }
+            : {}),
           ...(input.availableAt !== undefined ? { availableAt: input.availableAt } : {}),
           ...(input.status === "FAILED"
             ? {

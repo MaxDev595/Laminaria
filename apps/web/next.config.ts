@@ -61,6 +61,10 @@ const nextConfig: NextConfig = {
         destination: `${apiProxyTarget}/v1/webhooks/stripe`,
       },
       {
+        source: "/health/:path*",
+        destination: `${apiProxyTarget}/health/:path*`,
+      },
+      {
         source: "/v1/:path*",
         destination: `${apiProxyTarget}/v1/:path*`,
       },

@@ -38,6 +38,9 @@ export async function registerBillingRoutes(
       );
       if (!billing.configured) throw new ServiceNotConfiguredError("Billing provider");
       const body = checkoutSchema.parse(request.body);
+      if (body.plan === "business") {
+        throw new AppError(409, "BILLING_ERROR", "Business plan is coming soon");
+      }
       const returnBase = `${config.webAppUrl.replace(/\/$/, "")}/${body.locale}/dashboard/settings`;
       return billing.createCheckout({
         workspaceId: request.params.workspaceId,
@@ -178,7 +181,8 @@ async function applyStripeEvent(
   await repositories.billing.syncStripeSubscription({
     workspaceId,
     planCode,
-    status: event.type === "customer.subscription.deleted" ? "CANCELLED" : stripeStatus(object.status),
+    status:
+      event.type === "customer.subscription.deleted" ? "CANCELLED" : stripeStatus(object.status),
     providerCustomerId: stringId(object.customer),
     providerSubscriptionId: subscriptionId,
     currentPeriodStart: stripeDate(object.current_period_start ?? firstItem?.current_period_start),
@@ -205,7 +209,7 @@ function metadataValue(object: StripeObject, key: string): string | null {
 }
 
 function stringId(value: StripeObject["customer"]): string | null {
-  return typeof value === "string" ? value : value?.id ?? null;
+  return typeof value === "string" ? value : (value?.id ?? null);
 }
 
 function parsePlan(value: string | null): BillingPlanCode | null {

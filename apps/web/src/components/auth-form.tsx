@@ -19,7 +19,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Link, useRouter } from "@/i18n/navigation";
-import { api, friendlyError, type AuthPayload, type AuthProvidersPayload } from "@/lib/api";
+import {
+  ApiError,
+  api,
+  friendlyError,
+  type AuthPayload,
+  type AuthProvidersPayload,
+} from "@/lib/api";
 import { Button, Field, Input } from "./ui";
 
 type AuthMode = "sign-in" | "sign-up" | "forgot" | "reset";
@@ -158,6 +164,12 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
         setSuccess(true);
       }
     } catch (error) {
+      if (mode === "sign-in" && error instanceof ApiError && error.status === 401) {
+        setServerError(
+          locale === "ru" ? "Неверный email или пароль." : "Incorrect email or password.",
+        );
+        return;
+      }
       setServerError(
         error instanceof Error && !("code" in error) ? error.message : friendlyError(error, locale),
       );
@@ -227,7 +239,9 @@ export function AuthForm({ mode, token }: { mode: AuthMode; token?: string }) {
 
       {isSignIn || isSignUp ? (
         <button type="button" className="google-auth-button" onClick={startGoogle}>
-          <span><Image src="/google-logo.png" alt="" width={24} height={24} priority /></span>
+          <span>
+            <Image src="/google-logo.png" alt="" width={24} height={24} priority />
+          </span>
           {locale === "ru" ? "Продолжить через Google" : "Continue with Google"}
         </button>
       ) : null}

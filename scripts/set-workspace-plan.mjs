@@ -1,5 +1,6 @@
 import "dotenv/config";
 import pg from "pg";
+import { randomUUID } from "node:crypto";
 
 const { Client } = pg;
 
@@ -31,7 +32,7 @@ const plans = {
     displayNameKey: "plans.professional",
     priceMonthlyMinor: 1200,
     priceAnnualMinor: 12000,
-    maxConcurrentAttendees: 150,
+    maxConcurrentAttendees: 100,
     recordingRetentionDays: 30,
     storageBytes: 10 * 1024 * 1024 * 1024,
     teamMembers: 1,
@@ -70,7 +71,9 @@ const plans = {
 };
 
 if (!planCode || !plans[planCode] || !workspaceRef) {
-  console.error("Usage: node scripts/set-workspace-plan.mjs <free|professional|business> <workspace-id-or-slug>");
+  console.error(
+    "Usage: node scripts/set-workspace-plan.mjs <free|professional|business> <workspace-id-or-slug>",
+  );
   process.exit(1);
 }
 
@@ -98,6 +101,7 @@ try {
     await client.query(
       `
       insert into "Plan" (
+        id,
         code,
         "displayNameKey",
         "priceMonthlyMinor",
@@ -106,9 +110,11 @@ try {
         limits,
         features,
         "businessDecisionRequired",
-        active
+        active,
+        "createdAt",
+        "updatedAt"
       )
-      values ($1, $2, $3, $4, 'USD', $5::jsonb, $6::jsonb, false, true)
+      values ($1, $2, $3, $4, $5, 'USD', $6::jsonb, $7::jsonb, false, true, now(), now())
       on conflict (code) do update set
         "displayNameKey" = excluded."displayNameKey",
         "priceMonthlyMinor" = excluded."priceMonthlyMinor",
@@ -121,6 +127,7 @@ try {
         "updatedAt" = now()
       `,
       [
+        randomUUID(),
         code,
         plan.displayNameKey,
         plan.priceMonthlyMinor,
@@ -138,9 +145,10 @@ try {
     );
   }
 
-  const selectedPlan = await client.query('select id from "Plan" where code = $1 and active = true', [
-    planCode,
-  ]);
+  const selectedPlan = await client.query(
+    'select id from "Plan" where code = $1 and active = true',
+    [planCode],
+  );
   const planId = selectedPlan.rows[0].id;
   const workspaceId = workspace.rows[0].id;
 
@@ -152,16 +160,19 @@ try {
   await client.query(
     `
     insert into "Subscription" (
+      id,
       "workspaceId",
       "planId",
       status,
       "billingProvider",
       "currentPeriodStart",
-      "currentPeriodEnd"
+      "currentPeriodEnd",
+      "createdAt",
+      "updatedAt"
     )
-    values ($1, $2, 'ACTIVE', 'MANUAL', now(), now() + interval '1 year')
+    values ($1, $2, $3, 'ACTIVE', 'MANUAL', now(), now() + interval '1 year', now(), now())
     `,
-    [workspaceId, planId],
+    [randomUUID(), workspaceId, planId],
   );
 
   await client.query("commit");

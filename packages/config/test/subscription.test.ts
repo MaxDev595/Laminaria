@@ -72,6 +72,14 @@ describe("SubscriptionService", () => {
       allowed: false,
       reason: "limit_exceeded",
     });
+    expect(service.checkLimit("professional", "maxConcurrentAttendees", 100)).toEqual({
+      allowed: true,
+      reason: "within_configured_limit",
+    });
+    expect(service.checkLimit("professional", "maxConcurrentAttendees", 101)).toEqual({
+      allowed: false,
+      reason: "limit_exceeded",
+    });
   });
 
   it("fails closed for unknown plans", () => {

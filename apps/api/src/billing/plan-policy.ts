@@ -29,7 +29,7 @@ export const PLAN_POLICY: Readonly<Record<PlanId, PlanPolicy>> = Object.freeze({
     workspaceTeam: false,
   }),
   professional: Object.freeze({
-    maxConcurrentAttendees: 150,
+    maxConcurrentAttendees: 100,
     webinarRecording: true,
     polls: true,
     advancedModeration: true,
@@ -58,6 +58,9 @@ export function normalizePlanId(value: string | null | undefined): PlanId {
   return value === "professional" || value === "business" ? value : "free";
 }
 
-export function planAllows(planId: PlanId, feature: keyof Omit<PlanPolicy, "maxConcurrentAttendees">): boolean {
+export function planAllows(
+  planId: PlanId,
+  feature: keyof Omit<PlanPolicy, "maxConcurrentAttendees">,
+): boolean {
   return PLAN_POLICY[planId][feature];
 }

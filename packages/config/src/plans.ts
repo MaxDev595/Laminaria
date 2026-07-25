@@ -163,7 +163,7 @@ export const PLAN_CATALOG: PlanCatalog = Object.freeze({
     { en: "Pro", ru: "Pro" },
     monthlyMoney(1_200),
     {
-      maxConcurrentAttendees: 150,
+      maxConcurrentAttendees: 100,
       concurrentWebinars: 2,
       recordingRetentionDays: 30,
       storageBytes: 10 * 1024 * 1024 * 1024,

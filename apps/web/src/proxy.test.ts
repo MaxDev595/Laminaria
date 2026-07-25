@@ -8,6 +8,8 @@ describe("locale proxy matcher", () => {
 
     expect(matcher.test("/v1/auth/me")).toBe(false);
     expect(matcher.test("/v1/auth/csrf")).toBe(false);
+    expect(matcher.test("/health/live")).toBe(false);
+    expect(matcher.test("/health/ready")).toBe(false);
     expect(matcher.test("/ru/sign-in")).toBe(true);
   });
 });

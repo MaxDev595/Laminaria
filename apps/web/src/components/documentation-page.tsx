@@ -250,16 +250,16 @@ const docs: Record<"en" | "ru", DocsContent> = {
         cards: [
           {
             title: "Free · $0",
-            body: "For testing the product, creating early webinars and validating the viewer flow without paid limits during development.",
-            items: ["Basic webinars", "Core room controls", "Manual testing"],
+            body: "For testing the product and running small webinars with up to 25 participants.",
+            items: ["Up to 25 participants", "HD video", "Chat and screen sharing"],
           },
           {
-            title: "Creator · $15/month",
-            body: "For solo creators and experts who need branded webinars, analytics and a reliable production workflow.",
-            items: ["More attendees", "Branding", "Analytics"],
+            title: "Pro · $12/month",
+            body: "For creators and experts who need up to 100 participants, recording, analytics, polls and branding.",
+            items: ["Up to 100 participants", "Recording", "Analytics, polls and branding"],
           },
           {
-            title: "Business · $49/month",
+            title: "Business · Coming soon",
             body: "For teams that need roles, moderation, admin controls, deeper analytics and team workflows.",
             items: ["Teams", "Advanced moderation", "Commercial analytics"],
           },
@@ -463,16 +463,16 @@ const docs: Record<"en" | "ru", DocsContent> = {
         cards: [
           {
             title: "Free · $0",
-            body: "Для тестирования продукта, первых вебинаров и проверки пути зрителя без платных ограничений во время разработки.",
-            items: ["Базовые вебинары", "Основные кнопки эфира", "Ручное тестирование"],
+            body: "Для тестирования продукта и небольших вебинаров до 25 участников.",
+            items: ["До 25 участников", "HD-видео", "Чат и демонстрация экрана"],
           },
           {
-            title: "Creator · $15/мес",
-            body: "Для создателей и экспертов, которым нужны брендирование, аналитика и более надёжный рабочий процесс.",
-            items: ["Больше участников", "Брендинг", "Аналитика"],
+            title: "Pro · $12/мес",
+            body: "Для создателей и экспертов: до 100 участников, запись, аналитика, опросы и брендинг.",
+            items: ["До 100 участников", "Запись", "Аналитика, опросы и брендинг"],
           },
           {
-            title: "Business · $49/мес",
+            title: "Business · Скоро",
             body: "Для команд: роли, модерация, админ-контроль, расширенная аналитика и командная работа.",
             items: ["Команды", "Продвинутая модерация", "Коммерческая аналитика"],
           },

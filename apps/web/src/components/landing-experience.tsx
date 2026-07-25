@@ -291,11 +291,15 @@ export function LandingExperience() {
           >
             <div className="final-cta__glow" aria-hidden="true" />
             <Logo compact />
-            <h2>{locale === "ru" ? "Создайте пространство, в которое хочется войти." : "Create a space people want to enter."}</h2>
+            <h2>
+              {locale === "ru"
+                ? "Создайте пространство, в которое хочется войти."
+                : "Create a space people want to enter."}
+            </h2>
             <p>
               {locale === "ru"
-                ? "Начните бесплатно с Free. Когда аудитория вырастет — вы сможете перейти на Pro или Business в любой момент."
-                : "Start free with Free. When your audience grows, you can upgrade to Pro or Business anytime."}
+                ? "Начните бесплатно с Free. Когда аудитория вырастет — перейдите на Pro. Business появится позже."
+                : "Start free with Free. Upgrade to Pro as your audience grows. Business is coming later."}
             </p>
             <Link href="/sign-up">
               <Button size="lg">
@@ -316,6 +320,9 @@ export function LandingExperience() {
         </p>
         <div>
           <Link href="/docs">{locale === "ru" ? "Документация" : "Docs"}</Link>
+          <Link href="/privacy">{locale === "ru" ? "Конфиденциальность" : "Privacy"}</Link>
+          <Link href="/terms">{locale === "ru" ? "Условия" : "Terms"}</Link>
+          <Link href="/refund">{locale === "ru" ? "Возврат" : "Refund"}</Link>
           <Link href="/sign-in">{t("auth.signIn")}</Link>
           <a href="#security">{t("shell.security")}</a>
         </div>
@@ -393,7 +400,9 @@ function DemoPreview({ locale }: { locale: string }) {
           {isRu ? "Демо продукта" : "Product demo"}
         </motion.span>
         <motion.h2 variants={reveal}>
-          {isRu ? "Посмотрите, как Laminaria работает за 30 секунд" : "See Laminaria in action in 30 seconds"}
+          {isRu
+            ? "Посмотрите, как Laminaria работает за 30 секунд"
+            : "See Laminaria in action in 30 seconds"}
         </motion.h2>
         <motion.p variants={reveal}>
           {isRu
@@ -469,7 +478,11 @@ function MvpFeatures({ locale }: { locale: string }) {
     <section className="mvp-features section-wrap" id="features">
       <SectionHead
         kicker={isRu ? "Возможности MVP" : "MVP features"}
-        title={isRu ? "Полный набор для первого коммерческого релиза" : "The complete feature set for a commercial MVP"}
+        title={
+          isRu
+            ? "Полный набор для первого коммерческого релиза"
+            : "The complete feature set for a commercial MVP"
+        }
       />
       <div className="mvp-features__grid">
         {features.map(([title, icon]) => (
@@ -506,6 +519,7 @@ function PricingSection({ locale }: { locale: string }) {
         ? ["До 25 участников", "HD-видео", "Чат", "Демонстрация экрана"]
         : ["Up to 25 participants", "HD Video", "Chat", "Screen Share"],
       cta: isRu ? "Начать" : "Start",
+      comingSoon: false,
     },
     {
       name: "Pro",
@@ -515,20 +529,22 @@ function PricingSection({ locale }: { locale: string }) {
       period: yearly ? (isRu ? "/год" : "/year") : isRu ? "/месяц" : "/month",
       featured: true,
       items: isRu
-        ? ["До 150 участников", "Запись", "Аналитика", "Опросы", "Брендинг"]
-        : ["Up to 150 participants", "Recording", "Analytics", "Polls", "Branding"],
+        ? ["До 100 участников", "Запись", "Аналитика", "Опросы", "Брендинг"]
+        : ["Up to 100 participants", "Recording", "Analytics", "Polls", "Branding"],
       cta: isRu ? "Выбрать Pro" : "Choose Pro",
+      comingSoon: false,
     },
     {
       name: "Business",
-      price: yearly ? "$290" : "$29",
-      originalPrice: yearly ? "$348" : "$36",
-      note: isRu ? "для команд" : "for teams",
-      period: yearly ? (isRu ? "/год" : "/year") : isRu ? "/месяц" : "/month",
+      price: isRu ? "Скоро" : "Coming soon",
+      originalPrice: null,
+      note: isRu ? "готовим для команд" : "being prepared for teams",
+      period: "",
+      comingSoon: true,
       items: isRu
         ? ["До 1000 участников", "API", "White Label", "Команда"]
         : ["Up to 1000 participants", "API", "White Label", "Team"],
-      cta: isRu ? "Для бизнеса" : "Go Business",
+      cta: isRu ? "Скоро" : "Coming soon",
     },
   ];
 
@@ -536,9 +552,17 @@ function PricingSection({ locale }: { locale: string }) {
     <section className="landing-pricing section-wrap" id="pricing">
       <SectionHead
         kicker={isRu ? "Тарифы" : "Pricing"}
-        title={isRu ? "Простая цена, чтобы быстро проверить рынок" : "Simple pricing to validate the market fast"}
+        title={
+          isRu
+            ? "Простая цена, чтобы быстро проверить рынок"
+            : "Simple pricing to validate the market fast"
+        }
       />
-      <div className="billing-switch" role="group" aria-label={isRu ? "Период оплаты" : "Billing period"}>
+      <div
+        className="billing-switch"
+        role="group"
+        aria-label={isRu ? "Период оплаты" : "Billing period"}
+      >
         <button
           type="button"
           className={yearly ? "is-active" : ""}
@@ -547,7 +571,11 @@ function PricingSection({ locale }: { locale: string }) {
           {isRu ? "Год" : "Yearly"}
           <span>{isRu ? "скидка 17%" : "save 17%"}</span>
         </button>
-        <button type="button" className={!yearly ? "is-active" : ""} onClick={() => setBilling("monthly")}>
+        <button
+          type="button"
+          className={!yearly ? "is-active" : ""}
+          onClick={() => setBilling("monthly")}
+        >
           {isRu ? "Месяц" : "Monthly"}
           <span>{isRu ? "скидка 20%" : "save 20%"}</span>
         </button>
@@ -584,7 +612,13 @@ function PricingSection({ locale }: { locale: string }) {
                 </li>
               ))}
             </ul>
-            <Link href="/sign-up">{plan.cta}</Link>
+            {plan.comingSoon ? (
+              <span className="landing-price-card__disabled" aria-disabled="true">
+                {plan.cta}
+              </span>
+            ) : (
+              <Link href="/sign-up">{plan.cta}</Link>
+            )}
           </motion.article>
         ))}
       </div>
@@ -631,19 +665,28 @@ function FaqSection({ locale }: { locale: string }) {
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
   const items = isRu
     ? [
-        ["Сколько участников можно пригласить?", "Starter поддерживает до 25 участников, Pro до 150, Business до 1000."],
-        ["Есть ли запись вебинара?", "Да, запись входит в Pro и Business."],
-        ["Работает ли на телефоне?", "Да, лендинг, регистрация и комната адаптированы под мобильные устройства."],
+        [
+          "Сколько участников можно пригласить?",
+          "Free поддерживает до 25 участников, Pro — до 100. Business пока готовится к запуску.",
+        ],
+        ["Есть ли запись вебинара?", "Да, запись входит в Pro."],
+        [
+          "Работает ли на телефоне?",
+          "Да, лендинг, регистрация и комната адаптированы под мобильные устройства.",
+        ],
         ["Нужно ли что-то устанавливать?", "Нет, всё работает в браузере."],
-        ["Можно ли брендировать вебинар?", "Да, брендинг доступен в Pro и Business."],
+        ["Можно ли брендировать вебинар?", "Да, базовый брендинг доступен в Pro."],
         ["Можно ли отменить подписку?", "Да, отменить можно в любой момент."],
       ]
     : [
-        ["How many participants can join?", "Starter supports up to 25 participants, Pro up to 150, Business up to 1000."],
-        ["Can I record webinars?", "Yes, recording is included in Pro and Business."],
+        [
+          "How many participants can join?",
+          "Free supports up to 25 participants and Pro up to 100. Business is still being prepared.",
+        ],
+        ["Can I record webinars?", "Yes, recording is included in Pro."],
         ["Does it work on mobile?", "Yes, the landing, registration and room are mobile-ready."],
         ["Do attendees need to install anything?", "No, everything works in the browser."],
-        ["Can I customize branding?", "Yes, branding is available in Pro and Business."],
+        ["Can I customize branding?", "Yes, basic branding is available in Pro."],
         ["Can I cancel anytime?", "Yes, you can cancel your subscription anytime."],
       ];
 
@@ -659,7 +702,10 @@ function FaqSection({ locale }: { locale: string }) {
               onClick={() => setOpenQuestion((current) => (current === question ? null : question))}
             >
               {question}
-              <motion.span animate={{ rotate: openQuestion === question ? 180 : 0 }} transition={{ duration: 0.28 }}>
+              <motion.span
+                animate={{ rotate: openQuestion === question ? 180 : 0 }}
+                transition={{ duration: 0.28 }}
+              >
                 <ChevronDown size={18} />
               </motion.span>
             </button>
@@ -768,7 +814,11 @@ function RoomIllustration({
             <MonitorUp size={14} />
             {locale === "ru" ? "Вы демонстрируете экран" : "You are sharing your screen"}
           </span>
-          <h3>{locale === "ru" ? "Как запускать вебинары, которые досматривают" : "Run webinars people finish"}</h3>
+          <h3>
+            {locale === "ru"
+              ? "Как запускать вебинары, которые досматривают"
+              : "Run webinars people finish"}
+          </h3>
           <div className="room-slide-shape" aria-hidden="true" />
           <div className="room-annotation-bar">
             <span />
@@ -862,5 +912,3 @@ function WorkflowStep({
     </motion.article>
   );
 }
-
-
