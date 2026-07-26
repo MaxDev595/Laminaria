@@ -1233,6 +1233,12 @@ function BillingSettings({
 }: any) {
   const usage = payload?.usage ?? { members: 0, webinars: 0, recordings: 0, storageBytes: 0 };
   const plan = String(payload?.planCode ?? "FREE").toUpperCase();
+  const cancellationScheduled = payload?.subscription?.cancelAtPeriodEnd === true;
+  const subscriptionEndDate = payload?.subscription?.currentPeriodEnd
+    ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
+        new Date(payload.subscription.currentPeriodEnd),
+      )
+    : null;
   const [interval, setInterval] = useState<"month" | "year">("year");
   const [loading, setLoading] = useState<string | null>(null);
   const workspaceId = payload?.workspace?.id as string | undefined;
@@ -1295,22 +1301,27 @@ function BillingSettings({
       setLoading(null);
     }
   }
-  async function cancelAndRefund() {
+  async function cancelRenewal() {
     if (!workspaceId || loading) return;
     const confirmed = window.confirm(
       ru
-        ? "Отменить подписку сейчас и вернуть последний платёж? Workspace сразу перейдёт на Free."
-        : "Cancel now and refund the latest payment? The workspace will switch to Free immediately.",
+        ? "Отключить автопродление? Тариф останется активным до конца уже оплаченного периода. Средства не возвращаются."
+        : "Turn off auto-renewal? Your plan will remain active until the end of the paid period. Payments are not refunded.",
     );
     if (!confirmed) return;
     setLoading("cancel");
     try {
-      const result = await api.cancelAndRefundBilling(workspaceId);
+      const result = await api.cancelBillingRenewal(workspaceId);
       await refresh();
+      const effectiveDate = result.effectiveAt
+        ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
+            new Date(result.effectiveAt),
+          )
+        : null;
       setNotice(
         ru
-          ? `Подписка отменена, запрос на возврат отправлен в Paddle (${result.refundStatus}). Тариф изменён на Free.`
-          : `Subscription cancelled, the refund was submitted to Paddle (${result.refundStatus}), and the plan changed to Free.`,
+          ? `Автопродление отключено. Pro останется активным${effectiveDate ? ` до ${effectiveDate}` : " до конца оплаченного периода"}.`
+          : `Auto-renewal is off. Pro remains active${effectiveDate ? ` until ${effectiveDate}` : " until the end of the paid period"}.`,
       );
     } catch (error) {
       setNotice(friendlyError(error, locale));
@@ -1351,9 +1362,13 @@ function BillingSettings({
               ? ru
                 ? "Бесплатно, без привязанной карты"
                 : "Free, no card attached"
-              : ru
-                ? "Подписка активна"
-                : "Subscription active"}
+              : cancellationScheduled
+                ? ru
+                  ? `Автопродление отключено${subscriptionEndDate ? `. Pro активен до ${subscriptionEndDate}` : ""}`
+                  : `Auto-renewal is off${subscriptionEndDate ? `. Pro is active until ${subscriptionEndDate}` : ""}`
+                : ru
+                  ? "Подписка активна"
+                  : "Subscription active"}
           </p>
         </div>
         {plan !== "FREE" ? (
@@ -1366,18 +1381,20 @@ function BillingSettings({
               )}
               {ru ? "Управлять подпиской" : "Manage subscription"}
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => void cancelAndRefund()}
-              disabled={Boolean(loading)}
-            >
-              {loading === "cancel" ? (
-                <LoaderCircle className="spin" size={17} />
-              ) : (
-                <Trash2 size={17} />
-              )}
-              {ru ? "Отменить и вернуть оплату" : "Cancel and refund"}
-            </Button>
+            {!cancellationScheduled ? (
+              <Button
+                variant="secondary"
+                onClick={() => void cancelRenewal()}
+                disabled={Boolean(loading)}
+              >
+                {loading === "cancel" ? (
+                  <LoaderCircle className="spin" size={17} />
+                ) : (
+                  <Trash2 size={17} />
+                )}
+                {ru ? "Отключить автопродление" : "Turn off auto-renewal"}
+              </Button>
+            ) : null}
           </div>
         ) : null}
       </div>

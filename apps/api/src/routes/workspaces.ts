@@ -128,11 +128,24 @@ export async function registerWorkspaceRoutes(
       );
       const workspace = await repositories.workspaces.getSettings(request.params.workspaceId);
       if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
-      const [planCode, usage] = await Promise.all([
+      const [planCode, usage, subscription] = await Promise.all([
         repositories.workspaces.findActivePlanCode(request.params.workspaceId),
         repositories.workspaces.getUsageSummary(request.params.workspaceId),
+        repositories.billing.getActivePaddleSubscription(request.params.workspaceId),
       ]);
-      return { workspace, role: membership.role, planCode: planCode ?? "FREE", usage };
+      return {
+        workspace,
+        role: membership.role,
+        planCode: planCode ?? "FREE",
+        usage,
+        subscription: subscription
+          ? {
+              status: subscription.status,
+              currentPeriodEnd: subscription.currentPeriodEnd,
+              cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+            }
+          : null,
+      };
     },
   );
 

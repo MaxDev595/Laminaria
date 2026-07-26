@@ -100,23 +100,23 @@ const content: Record<
         "Laminaria keeps cancellation straightforward and shows the result before you confirm it.",
       sections: [
         {
-          title: "Cancel and refund",
+          title: "Cancel auto-renewal",
           paragraphs: [
-            "When the in-app “Cancel and refund” action is available and succeeds, the active subscription is cancelled immediately, the workspace returns to Free and a refund request for the latest eligible subscription payment is submitted to Paddle. Live refunds may require Paddle approval.",
-            "A successful refund submission is not the same as the money reaching your bank. Banks and card networks commonly need several business days.",
+            "Cancelling a subscription turns off automatic renewal. The paid plan and its features remain active until the end of the period that has already been paid for.",
+            "At the end of that period, the workspace automatically moves to the Free plan and no further subscription payment is collected.",
           ],
         },
         {
-          title: "Eligibility and exceptions",
+          title: "Refunds",
           paragraphs: [
-            "A payment cannot be refunded twice. Refunds may also be unavailable when the payment has already been refunded, disputed, reversed, made outside Paddle, or is otherwise ineligible under Paddle or payment-network rules.",
-            "If the automatic action cannot complete, contact support with the workspace and payment details. We will review the request and applicable consumer law.",
+            "Cancelling auto-renewal does not automatically refund payments for the current billing period.",
+            "Nothing in this policy limits any mandatory refund or withdrawal rights available under applicable consumer law. Contact support if you believe such a right applies.",
           ],
         },
         {
           title: "After cancellation",
           paragraphs: [
-            "Paid-only limits and features stop immediately after a successful cancellation and downgrade. Export or download anything you need before cancelling.",
+            "You can continue using paid limits and features until the displayed subscription end date. Export or download anything you need before that date.",
           ],
         },
       ],
@@ -206,23 +206,23 @@ const content: Record<
       intro: "Laminaria делает отмену понятной и показывает результат до подтверждения.",
       sections: [
         {
-          title: "Отмена и возврат",
+          title: "Отключение автопродления",
           paragraphs: [
-            "Если действие «Отменить и вернуть оплату» доступно и выполнено успешно, подписка отменяется сразу, Workspace переходит на Free, а запрос на возврат последнего подходящего платежа отправляется в Paddle. Возврат в рабочем окружении может потребовать одобрения Paddle.",
-            "Успешно отправленный возврат ещё не означает поступление денег в банк. Банку и платёжной системе обычно нужно несколько рабочих дней.",
+            "Отмена подписки отключает автоматическое продление. Платный тариф и его функции остаются активными до конца уже оплаченного периода.",
+            "После окончания этого периода Workspace автоматически переходит на Free, а новые платежи за подписку не списываются.",
           ],
         },
         {
-          title: "Условия и исключения",
+          title: "Возврат средств",
           paragraphs: [
-            "Один платёж нельзя вернуть дважды. Возврат также может быть недоступен, если платёж уже возвращён, оспорен, отменён, проведён вне Paddle или не соответствует правилам Paddle и платёжной системы.",
-            "Если автоматическая отмена не завершилась, напишите в поддержку и укажите Workspace и платёж. Мы проверим запрос с учётом применимого законодательства о защите потребителей.",
+            "Отключение автопродления не означает автоматический возврат оплаты за текущий расчётный период.",
+            "Эта политика не ограничивает обязательные права на возврат или отказ от покупки, предусмотренные применимым законодательством о защите потребителей. Если такое право применимо, обратитесь в поддержку.",
           ],
         },
         {
           title: "После отмены",
           paragraphs: [
-            "После успешной отмены платные лимиты и функции отключаются сразу. Экспортируйте и скачайте нужные материалы до отмены.",
+            "Платные лимиты и функции доступны до указанной даты окончания подписки. Экспортируйте и скачайте нужные материалы до этой даты.",
           ],
         },
       ],

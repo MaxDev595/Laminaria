@@ -72,11 +72,11 @@ export async function registerBillingRoutes(
   );
 
   app.post<{ Params: { workspaceId: string } }>(
-    "/v1/workspaces/:workspaceId/billing/cancel-and-refund",
+    "/v1/workspaces/:workspaceId/billing/cancel",
     {
       schema: {
         tags: ["Billing"],
-        summary: "Cancel immediately and submit a Paddle refund",
+        summary: "Cancel Paddle renewal at the end of the paid period",
       },
     },
     async (request) => {
@@ -92,24 +92,22 @@ export async function registerBillingRoutes(
         request.params.workspaceId,
       );
       if (!subscription) throw new AppError(404, "NOT_FOUND", "No active paid subscription found");
-      const result = await billing.cancelAndRefund({
+      const result = await billing.cancelAtPeriodEnd({
         subscriptionId: subscription.providerSubscriptionId,
       });
       await repositories.billing.syncPaddleSubscription({
         workspaceId: request.params.workspaceId,
         planCode: subscription.planCode,
-        status: "CANCELLED",
+        status: subscription.status,
         providerCustomerId: subscription.providerCustomerId,
         providerSubscriptionId: subscription.providerSubscriptionId,
-        currentPeriodStart: null,
-        currentPeriodEnd: null,
-        cancelAtPeriodEnd: false,
+        currentPeriodStart: subscription.currentPeriodStart,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        cancelAtPeriodEnd: true,
       });
       return {
-        cancelled: true as const,
-        refundSubmitted: true as const,
-        refundId: result.refundId,
-        refundStatus: result.refundStatus,
+        cancellationScheduled: true as const,
+        effectiveAt: result.effectiveAt,
       };
     },
   );

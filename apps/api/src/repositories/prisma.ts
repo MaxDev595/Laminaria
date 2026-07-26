@@ -579,8 +579,12 @@ export class PrismaUnitOfWork implements UnitOfWork {
           },
           orderBy: { updatedAt: "desc" },
           select: {
+            status: true,
             providerCustomerId: true,
             providerSubscriptionId: true,
+            currentPeriodStart: true,
+            currentPeriodEnd: true,
+            cancelAtPeriodEnd: true,
             plan: { select: { code: true } },
           },
         });
@@ -593,8 +597,12 @@ export class PrismaUnitOfWork implements UnitOfWork {
         }
         return {
           planCode,
+          status: subscription.status,
           providerCustomerId: subscription.providerCustomerId,
           providerSubscriptionId: subscription.providerSubscriptionId,
+          currentPeriodStart: subscription.currentPeriodStart,
+          currentPeriodEnd: subscription.currentPeriodEnd,
+          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
         };
       },
       syncPaddleSubscription: async (input) => {

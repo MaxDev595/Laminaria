@@ -249,8 +249,12 @@ export interface BillingRepository {
   getCustomerId(workspaceId: string): Promise<string | null>;
   getActivePaddleSubscription(workspaceId: string): Promise<{
     planCode: BillingPlanCode;
+    status: BillingSubscriptionStatus;
     providerCustomerId: string | null;
     providerSubscriptionId: string;
+    currentPeriodStart: Date | null;
+    currentPeriodEnd: Date | null;
+    cancelAtPeriodEnd: boolean;
   } | null>;
   syncPaddleSubscription(input: {
     workspaceId: string;

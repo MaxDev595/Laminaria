@@ -198,13 +198,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ locale }),
     }),
-  cancelAndRefundBilling: (workspaceId: string) =>
+  cancelBillingRenewal: (workspaceId: string) =>
     apiFetch<{
-      cancelled: true;
-      refundSubmitted: true;
-      refundId: string;
-      refundStatus: string;
-    }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/cancel-and-refund`, {
+      cancellationScheduled: true;
+      effectiveAt: string | null;
+    }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/cancel`, {
       method: "POST",
       body: JSON.stringify({}),
     }),

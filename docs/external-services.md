@@ -31,7 +31,7 @@ PADDLE_PRO_YEARLY_PRICE_ID=pri_...
 ```
 
 Use `production`, a live API key, and a `live_...` client-side token only after sandbox checkout,
-webhook, cancellation, and refund scenarios pass.
+webhook, and end-of-period cancellation scenarios pass.
 
 Before live checkout, approve `laminarias.com` in Paddle's checkout website/domain settings.
 
@@ -46,7 +46,8 @@ Subscribe it to subscription lifecycle events: `subscription.created`,
 `subscription.past_due`, `subscription.paused`, `subscription.resumed`, and
 `subscription.canceled`.
 
-The API key needs transaction read/write, subscription write, adjustment write, and customer portal
-session write permissions. The application creates transactions server-side, opens Paddle Checkout
-using the returned transaction ID, provisions access from signed subscription webhooks, and uses the
-Paddle-hosted customer portal for self-service billing.
+The API key needs transaction read/write, subscription write, and customer portal session write
+permissions. The application creates transactions server-side, opens Paddle Checkout using the
+returned transaction ID, provisions access from signed subscription webhooks, and uses the
+Paddle-hosted customer portal for self-service billing. Cancellation disables renewal at the end of
+the paid period and does not create an automatic refund.

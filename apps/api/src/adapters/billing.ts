@@ -16,9 +16,7 @@ export interface BillingAdapter {
     successUrl: string;
   }>;
   createCustomerPortal(input: { customerId: string }): Promise<{ url: string }>;
-  cancelAndRefund(input: {
-    subscriptionId: string;
-  }): Promise<{ refundId: string; refundStatus: string }>;
+  cancelAtPeriodEnd(input: { subscriptionId: string }): Promise<{ effectiveAt: string | null }>;
   verifyWebhook(input: { rawBody: Uint8Array; signature: string }): Promise<{
     id: string;
     type: string;
@@ -100,40 +98,21 @@ export class PaddleBillingAdapter implements BillingAdapter {
     return { url: session.urls.general.overview };
   }
 
-  public async cancelAndRefund(input: {
+  public async cancelAtPeriodEnd(input: {
     subscriptionId: string;
-  }): Promise<{ refundId: string; refundStatus: string }> {
-    const query = new URLSearchParams({
-      subscription_id: input.subscriptionId,
-      status: "completed",
-      per_page: "1",
-      order_by: "created_at[DESC]",
-    });
-    const transactions = await this.request<Array<{ id: string }>>(`/transactions?${query}`, {
-      method: "GET",
-    });
-    const latestTransaction = transactions[0];
-    if (!latestTransaction) {
-      throw new AppError(
-        409,
-        "BILLING_ERROR",
-        "The latest Paddle subscription payment cannot be refunded",
-      );
-    }
-    const adjustment = await this.request<{ id: string; status: string }>("/adjustments", {
+  }): Promise<{ effectiveAt: string | null }> {
+    const subscription = await this.request<{
+      scheduled_change?: { action?: string; effective_at?: string | null } | null;
+    }>(`/subscriptions/${encodeURIComponent(input.subscriptionId)}/cancel`, {
       method: "POST",
-      body: {
-        action: "refund",
-        type: "full",
-        transaction_id: latestTransaction.id,
-        reason: "Customer requested subscription cancellation and refund",
-      },
+      body: { effective_from: "next_billing_period" },
     });
-    await this.request(`/subscriptions/${encodeURIComponent(input.subscriptionId)}/cancel`, {
-      method: "POST",
-      body: { effective_from: "immediately" },
-    });
-    return { refundId: adjustment.id, refundStatus: adjustment.status };
+    return {
+      effectiveAt:
+        subscription.scheduled_change?.action === "cancel"
+          ? (subscription.scheduled_change.effective_at ?? null)
+          : null,
+    };
   }
 
   public async verifyWebhook(input: { rawBody: Uint8Array; signature: string }): Promise<{
@@ -222,7 +201,7 @@ export class NotConfiguredBillingAdapter implements BillingAdapter {
     throw new ServiceNotConfiguredError("Billing provider");
   }
 
-  public async cancelAndRefund(): Promise<never> {
+  public async cancelAtPeriodEnd(): Promise<never> {
     throw new ServiceNotConfiguredError("Billing provider");
   }
 
