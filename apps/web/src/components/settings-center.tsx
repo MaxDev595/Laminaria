@@ -1354,6 +1354,17 @@ function BillingSettings({
           </div>
         ) : null}
       </div>
+      <div className="billing-policy-note" role="note">
+        <AlertTriangle size={19} />
+        <div>
+          <strong>{ru ? "Важно об отмене подписки" : "Important cancellation notice"}</strong>
+          <p>
+            {ru
+              ? "При отмене отключается только автопродление. Оплата за текущий период не возвращается, а Pro остаётся активным до указанной даты окончания."
+              : "Cancellation only turns off auto-renewal. The current period is non-refundable, and Pro remains active until the displayed end date."}
+          </p>
+        </div>
+      </div>
       <div
         className="billing-period"
         role="group"
