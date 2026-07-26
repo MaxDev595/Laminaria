@@ -629,7 +629,7 @@ function PricingSection({ locale }: { locale: string }) {
 function ComparisonSection({ locale }: { locale: string }) {
   const isRu = locale === "ru";
   const rows = [
-    ["AI Moderator", "yes", "no", "no"],
+    [isRu ? "ИИ-модерация — Скоро" : "AI Moderator — Coming soon", "yes", "no", "no"],
     ["Webinar Analytics", "yes", "warn", "no"],
     ["Branding", "yes", "warn", "no"],
   ] as const;
