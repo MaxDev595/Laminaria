@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { PaddleBillingAdapter } from "./billing.js";
 
@@ -16,10 +16,6 @@ const config = {
     },
   },
 };
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 describe("PaddleBillingAdapter webhook verification", () => {
   it("accepts a valid Paddle signature and normalizes the event", async () => {
@@ -56,40 +52,5 @@ describe("PaddleBillingAdapter webhook verification", () => {
         signature: `ts=${timestamp};h1=${"0".repeat(64)}`,
       }),
     ).rejects.toThrow("Invalid Paddle webhook signature");
-  });
-});
-
-describe("PaddleBillingAdapter subscription cancellation", () => {
-  it("cancels at the next billing period without requesting a refund", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          data: {
-            scheduled_change: {
-              action: "cancel",
-              effective_at: "2027-07-26T00:00:00.000Z",
-            },
-          },
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
-    );
-    vi.stubGlobal("fetch", fetchMock);
-
-    const adapter = new PaddleBillingAdapter(config);
-    await expect(
-      adapter.cancelAtPeriodEnd({ subscriptionId: "sub_test" }),
-    ).resolves.toEqual({
-      effectiveAt: "2027-07-26T00:00:00.000Z",
-    });
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://sandbox-api.paddle.com/subscriptions/sub_test/cancel",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ effective_from: "next_billing_period" }),
-      }),
-    );
   });
 });

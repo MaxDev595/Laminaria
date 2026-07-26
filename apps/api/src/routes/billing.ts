@@ -71,47 +71,6 @@ export async function registerBillingRoutes(
     },
   );
 
-  app.post<{ Params: { workspaceId: string } }>(
-    "/v1/workspaces/:workspaceId/billing/cancel",
-    {
-      schema: {
-        tags: ["Billing"],
-        summary: "Cancel Paddle renewal at the end of the paid period",
-      },
-    },
-    async (request) => {
-      requireUser(request);
-      await requireWorkspacePermission(
-        request,
-        repositories,
-        request.params.workspaceId,
-        "billing:manage",
-      );
-      if (!billing.configured) throw new ServiceNotConfiguredError("Billing provider");
-      const subscription = await repositories.billing.getActivePaddleSubscription(
-        request.params.workspaceId,
-      );
-      if (!subscription) throw new AppError(404, "NOT_FOUND", "No active paid subscription found");
-      const result = await billing.cancelAtPeriodEnd({
-        subscriptionId: subscription.providerSubscriptionId,
-      });
-      await repositories.billing.syncPaddleSubscription({
-        workspaceId: request.params.workspaceId,
-        planCode: subscription.planCode,
-        status: subscription.status,
-        providerCustomerId: subscription.providerCustomerId,
-        providerSubscriptionId: subscription.providerSubscriptionId,
-        currentPeriodStart: subscription.currentPeriodStart,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: true,
-      });
-      return {
-        cancellationScheduled: true as const,
-        effectiveAt: result.effectiveAt,
-      };
-    },
-  );
-
   await app.register(async (webhookApp) => {
     webhookApp.removeContentTypeParser("application/json");
     webhookApp.addContentTypeParser(

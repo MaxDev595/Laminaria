@@ -46,8 +46,8 @@ Subscribe it to subscription lifecycle events: `subscription.created`,
 `subscription.past_due`, `subscription.paused`, `subscription.resumed`, and
 `subscription.canceled`.
 
-The API key needs transaction read/write, subscription write, and customer portal session write
-permissions. The application creates transactions server-side, opens Paddle Checkout using the
-returned transaction ID, provisions access from signed subscription webhooks, and uses the
-Paddle-hosted customer portal for self-service billing. Cancellation disables renewal at the end of
-the paid period and does not create an automatic refund.
+The API key needs transaction read/write and customer portal session write permissions. The
+application creates transactions server-side, opens Paddle Checkout using the returned transaction
+ID, provisions access from signed subscription webhooks, and uses the Paddle-hosted customer portal
+for self-service billing. Cancellation in the portal disables renewal at the end of the paid period
+and does not create an automatic refund.

@@ -198,14 +198,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ locale }),
     }),
-  cancelBillingRenewal: (workspaceId: string) =>
-    apiFetch<{
-      cancellationScheduled: true;
-      effectiveAt: string | null;
-    }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/cancel`, {
-      method: "POST",
-      body: JSON.stringify({}),
-    }),
   listWorkspaceMembers: (workspaceId: string) =>
     apiFetch<{ members: WorkspaceMember[] }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,

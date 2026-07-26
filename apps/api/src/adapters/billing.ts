@@ -16,7 +16,6 @@ export interface BillingAdapter {
     successUrl: string;
   }>;
   createCustomerPortal(input: { customerId: string }): Promise<{ url: string }>;
-  cancelAtPeriodEnd(input: { subscriptionId: string }): Promise<{ effectiveAt: string | null }>;
   verifyWebhook(input: { rawBody: Uint8Array; signature: string }): Promise<{
     id: string;
     type: string;
@@ -96,23 +95,6 @@ export class PaddleBillingAdapter implements BillingAdapter {
       body: {},
     });
     return { url: session.urls.general.overview };
-  }
-
-  public async cancelAtPeriodEnd(input: {
-    subscriptionId: string;
-  }): Promise<{ effectiveAt: string | null }> {
-    const subscription = await this.request<{
-      scheduled_change?: { action?: string; effective_at?: string | null } | null;
-    }>(`/subscriptions/${encodeURIComponent(input.subscriptionId)}/cancel`, {
-      method: "POST",
-      body: { effective_from: "next_billing_period" },
-    });
-    return {
-      effectiveAt:
-        subscription.scheduled_change?.action === "cancel"
-          ? (subscription.scheduled_change.effective_at ?? null)
-          : null,
-    };
   }
 
   public async verifyWebhook(input: { rawBody: Uint8Array; signature: string }): Promise<{
@@ -198,10 +180,6 @@ export class NotConfiguredBillingAdapter implements BillingAdapter {
   }
 
   public async createCustomerPortal(): Promise<never> {
-    throw new ServiceNotConfiguredError("Billing provider");
-  }
-
-  public async cancelAtPeriodEnd(): Promise<never> {
     throw new ServiceNotConfiguredError("Billing provider");
   }
 

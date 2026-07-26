@@ -427,7 +427,6 @@ export function SettingsCenter() {
               payload={settingsQuery.data}
               locale={locale}
               setNotice={setNotice}
-              refresh={() => settingsQuery.refetch()}
               billingConfigured={
                 servicesQuery.data?.services.find((service) => service.key === "billing")
                   ?.configured ?? false
@@ -1227,7 +1226,6 @@ function BillingSettings({
   payload,
   locale,
   setNotice,
-  refresh,
   billingConfigured,
   billingStatusLoading,
 }: any) {
@@ -1301,34 +1299,6 @@ function BillingSettings({
       setLoading(null);
     }
   }
-  async function cancelRenewal() {
-    if (!workspaceId || loading) return;
-    const confirmed = window.confirm(
-      ru
-        ? "Отключить автопродление? Тариф останется активным до конца уже оплаченного периода. Средства не возвращаются."
-        : "Turn off auto-renewal? Your plan will remain active until the end of the paid period. Payments are not refunded.",
-    );
-    if (!confirmed) return;
-    setLoading("cancel");
-    try {
-      const result = await api.cancelBillingRenewal(workspaceId);
-      await refresh();
-      const effectiveDate = result.effectiveAt
-        ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
-            new Date(result.effectiveAt),
-          )
-        : null;
-      setNotice(
-        ru
-          ? `Автопродление отключено. Pro останется активным${effectiveDate ? ` до ${effectiveDate}` : " до конца оплаченного периода"}.`
-          : `Auto-renewal is off. Pro remains active${effectiveDate ? ` until ${effectiveDate}` : " until the end of the paid period"}.`,
-      );
-    } catch (error) {
-      setNotice(friendlyError(error, locale));
-    } finally {
-      setLoading(null);
-    }
-  }
   return (
     <section className="settings-stack">
       <SettingsHeader
@@ -1381,20 +1351,6 @@ function BillingSettings({
               )}
               {ru ? "Управлять подпиской" : "Manage subscription"}
             </Button>
-            {!cancellationScheduled ? (
-              <Button
-                variant="secondary"
-                onClick={() => void cancelRenewal()}
-                disabled={Boolean(loading)}
-              >
-                {loading === "cancel" ? (
-                  <LoaderCircle className="spin" size={17} />
-                ) : (
-                  <Trash2 size={17} />
-                )}
-                {ru ? "Отключить автопродление" : "Turn off auto-renewal"}
-              </Button>
-            ) : null}
           </div>
         ) : null}
       </div>
