@@ -4,7 +4,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { Server as SocketIoServer } from "socket.io";
 
 import { NotConfiguredMailAdapter, SmtpMailAdapter } from "./adapters/mail.js";
-import { NotConfiguredBillingAdapter, StripeBillingAdapter } from "./adapters/billing.js";
+import { NotConfiguredBillingAdapter, PaddleBillingAdapter } from "./adapters/billing.js";
 import { ParticipantTokenService } from "./auth/participant-token.js";
 import { authenticationPlugin } from "./auth/plugin.js";
 import { AuthService } from "./auth/service.js";
@@ -94,7 +94,7 @@ export async function buildApplication(
 
   const mail = config.mail ? new SmtpMailAdapter(config.mail) : new NotConfiguredMailAdapter();
   const billing = config.billing
-    ? new StripeBillingAdapter(config.billing)
+    ? new PaddleBillingAdapter(config.billing)
     : new NotConfiguredBillingAdapter();
   const participants = new ParticipantTokenService(config.tokenPepper);
   const livekit = new LiveKitTokenService(config.livekit);

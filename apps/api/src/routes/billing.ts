@@ -27,7 +27,7 @@ export async function registerBillingRoutes(
 ): Promise<void> {
   app.post<{ Params: { workspaceId: string } }>(
     "/v1/workspaces/:workspaceId/billing/checkout",
-    { schema: { tags: ["Billing"], summary: "Create a hosted subscription checkout" } },
+    { schema: { tags: ["Billing"], summary: "Create a Paddle subscription checkout" } },
     async (request) => {
       const actor = requireUser(request);
       await requireWorkspacePermission(
@@ -48,14 +48,13 @@ export async function registerBillingRoutes(
         interval: body.interval,
         customerEmail: actor.user.email,
         successUrl: `${returnBase}?tab=billing&checkout=success`,
-        cancelUrl: `${returnBase}?tab=billing&checkout=cancelled`,
       });
     },
   );
 
   app.post<{ Params: { workspaceId: string } }>(
     "/v1/workspaces/:workspaceId/billing/portal",
-    { schema: { tags: ["Billing"], summary: "Open the hosted billing portal" } },
+    { schema: { tags: ["Billing"], summary: "Open the Paddle customer portal" } },
     async (request) => {
       requireUser(request);
       await requireWorkspacePermission(
@@ -65,19 +64,21 @@ export async function registerBillingRoutes(
         "billing:manage",
       );
       if (!billing.configured) throw new ServiceNotConfiguredError("Billing provider");
-      const body = portalSchema.parse(request.body);
+      portalSchema.parse(request.body);
       const customerId = await repositories.billing.getCustomerId(request.params.workspaceId);
       if (!customerId) throw new AppError(404, "NOT_FOUND", "No paid subscription found");
-      return billing.createCustomerPortal({
-        customerId,
-        returnUrl: `${config.webAppUrl.replace(/\/$/, "")}/${body.locale}/dashboard/settings?tab=billing`,
-      });
+      return billing.createCustomerPortal({ customerId });
     },
   );
 
   app.post<{ Params: { workspaceId: string } }>(
     "/v1/workspaces/:workspaceId/billing/cancel-and-refund",
-    { schema: { tags: ["Billing"], summary: "Cancel immediately and refund the latest payment" } },
+    {
+      schema: {
+        tags: ["Billing"],
+        summary: "Cancel immediately and submit a Paddle refund",
+      },
+    },
     async (request) => {
       requireUser(request);
       await requireWorkspacePermission(
@@ -87,14 +88,14 @@ export async function registerBillingRoutes(
         "billing:manage",
       );
       if (!billing.configured) throw new ServiceNotConfiguredError("Billing provider");
-      const subscription = await repositories.billing.getActiveStripeSubscription(
+      const subscription = await repositories.billing.getActivePaddleSubscription(
         request.params.workspaceId,
       );
       if (!subscription) throw new AppError(404, "NOT_FOUND", "No active paid subscription found");
       const result = await billing.cancelAndRefund({
         subscriptionId: subscription.providerSubscriptionId,
       });
-      await repositories.billing.syncStripeSubscription({
+      await repositories.billing.syncPaddleSubscription({
         workspaceId: request.params.workspaceId,
         planCode: subscription.planCode,
         status: "CANCELLED",
@@ -104,7 +105,12 @@ export async function registerBillingRoutes(
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
       });
-      return { cancelled: true as const, refunded: true as const, refundId: result.refundId };
+      return {
+        cancelled: true as const,
+        refundSubmitted: true as const,
+        refundId: result.refundId,
+        refundStatus: result.refundStatus,
+      };
     },
   );
 
@@ -116,116 +122,88 @@ export async function registerBillingRoutes(
       (_request, body, done) => done(null, body),
     );
     webhookApp.get(
-      "/v1/webhooks/stripe",
-      { schema: { tags: ["Billing"], summary: "Check the Stripe webhook endpoint" } },
+      "/v1/webhooks/paddle",
+      { schema: { tags: ["Billing"], summary: "Check the Paddle webhook endpoint" } },
       async () => ({
         status: "ready" as const,
-        provider: "stripe" as const,
+        provider: "paddle" as const,
         configured: billing.configured,
         method: "POST" as const,
       }),
     );
     webhookApp.post(
-      "/v1/webhooks/stripe",
-      { schema: { tags: ["Billing"], summary: "Receive signed Stripe events" } },
+      "/v1/webhooks/paddle",
+      { schema: { tags: ["Billing"], summary: "Receive signed Paddle events" } },
       async (request, reply) => {
         if (!billing.configured) throw new ServiceNotConfiguredError("Billing provider");
-        const signature = request.headers["stripe-signature"];
+        const signature = request.headers["paddle-signature"];
         if (typeof signature !== "string" || !Buffer.isBuffer(request.body)) {
-          throw new AppError(400, "BAD_REQUEST", "Invalid Stripe webhook");
+          throw new AppError(400, "BAD_REQUEST", "Invalid Paddle webhook");
         }
         let event: { id: string; type: string; data: unknown };
         try {
           event = await billing.verifyWebhook({ rawBody: request.body, signature });
         } catch {
-          throw new AppError(400, "BAD_REQUEST", "Invalid Stripe webhook signature");
+          throw new AppError(400, "BAD_REQUEST", "Invalid Paddle webhook signature");
         }
-        await applyStripeEvent(repositories, event);
+        await applyPaddleEvent(repositories, event);
         return reply.status(200).send({ received: true });
       },
     );
   });
 }
 
-async function applyStripeEvent(
+async function applyPaddleEvent(
   repositories: UnitOfWork,
   event: { id: string; type: string; data: unknown },
 ): Promise<void> {
-  const object = (event.data as { object?: unknown } | null)?.object as StripeObject | undefined;
-  if (!object) return;
+  if (!event.type.startsWith("subscription.")) return;
+  const subscription = event.data as PaddleSubscription;
+  const workspaceId = customValue(subscription, "workspaceId");
+  const planCode = parsePlan(customValue(subscription, "planCode"));
+  if (!workspaceId || !planCode || !subscription.id) return;
 
-  if (event.type === "checkout.session.completed") {
-    const workspaceId = metadataValue(object, "workspaceId") ?? object.client_reference_id;
-    const planCode = parsePlan(metadataValue(object, "planCode"));
-    const subscriptionId = stringId(object.subscription);
-    if (!workspaceId || !planCode || !subscriptionId) return;
-    await repositories.billing.syncStripeSubscription({
-      workspaceId,
-      planCode,
-      status: "ACTIVE",
-      providerCustomerId: stringId(object.customer),
-      providerSubscriptionId: subscriptionId,
-      currentPeriodStart: null,
-      currentPeriodEnd: null,
-      cancelAtPeriodEnd: false,
-    });
-    return;
-  }
-
-  if (!event.type.startsWith("customer.subscription.")) return;
-  const workspaceId = metadataValue(object, "workspaceId");
-  const planCode = parsePlan(metadataValue(object, "planCode"));
-  const subscriptionId = stringId(object.id);
-  if (!workspaceId || !planCode || !subscriptionId) return;
-  const firstItem = object.items?.data?.[0];
-  await repositories.billing.syncStripeSubscription({
+  await repositories.billing.syncPaddleSubscription({
     workspaceId,
     planCode,
-    status:
-      event.type === "customer.subscription.deleted" ? "CANCELLED" : stripeStatus(object.status),
-    providerCustomerId: stringId(object.customer),
-    providerSubscriptionId: subscriptionId,
-    currentPeriodStart: stripeDate(object.current_period_start ?? firstItem?.current_period_start),
-    currentPeriodEnd: stripeDate(object.current_period_end ?? firstItem?.current_period_end),
-    cancelAtPeriodEnd: object.cancel_at_period_end === true,
+    status: paddleStatus(subscription.status),
+    providerCustomerId: subscription.customer_id ?? null,
+    providerSubscriptionId: subscription.id,
+    currentPeriodStart: paddleDate(subscription.current_billing_period?.starts_at),
+    currentPeriodEnd: paddleDate(subscription.current_billing_period?.ends_at),
+    cancelAtPeriodEnd: subscription.scheduled_change?.action === "cancel",
   });
 }
 
-type StripeObject = {
+type PaddleSubscription = {
   id?: string;
   status?: string;
-  customer?: string | { id?: string } | null;
-  subscription?: string | { id?: string } | null;
-  client_reference_id?: string | null;
-  metadata?: Record<string, string>;
-  current_period_start?: number;
-  current_period_end?: number;
-  cancel_at_period_end?: boolean;
-  items?: { data?: Array<{ current_period_start?: number; current_period_end?: number }> };
+  customer_id?: string | null;
+  custom_data?: Record<string, unknown> | null;
+  current_billing_period?: { starts_at?: string; ends_at?: string } | null;
+  scheduled_change?: { action?: string; effective_at?: string } | null;
 };
 
-function metadataValue(object: StripeObject, key: string): string | null {
-  return object.metadata?.[key] ?? null;
-}
-
-function stringId(value: StripeObject["customer"]): string | null {
-  return typeof value === "string" ? value : (value?.id ?? null);
+function customValue(object: PaddleSubscription, key: string): string | null {
+  const value = object.custom_data?.[key];
+  return typeof value === "string" ? value : null;
 }
 
 function parsePlan(value: string | null): BillingPlanCode | null {
   return value === "professional" || value === "business" ? value : null;
 }
 
-function stripeStatus(value: string | undefined): BillingSubscriptionStatus {
+function paddleStatus(value: string | undefined): BillingSubscriptionStatus {
   if (value === "trialing") return "TRIALING";
   if (value === "active") return "ACTIVE";
-  if (value === "past_due" || value === "unpaid") return "PAST_DUE";
+  if (value === "past_due") return "PAST_DUE";
   if (value === "paused") return "PAUSED";
   if (value === "canceled") return "CANCELLED";
-  if (value === "incomplete_expired") return "EXPIRED";
   return "INCOMPLETE";
 }
 
-function stripeDate(value: number | undefined): Date | null {
-  return typeof value === "number" ? new Date(value * 1000) : null;
+function paddleDate(value: string | undefined): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }

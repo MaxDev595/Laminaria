@@ -76,11 +76,7 @@ export interface WorkspaceRepository {
     userId: string;
     role: WorkspaceRole;
   }): Promise<WorkspaceMemberRecord>;
-  createWithOwner(input: {
-    name: string;
-    slug: string;
-    ownerId: string;
-  }): Promise<{
+  createWithOwner(input: { name: string; slug: string; ownerId: string }): Promise<{
     id: string;
     name: string;
     slug: string;
@@ -88,9 +84,7 @@ export interface WorkspaceRepository {
     timezone: string;
     role: WorkspaceRole;
   }>;
-  listForUser(
-    userId: string,
-  ): Promise<
+  listForUser(userId: string): Promise<
     readonly {
       id: string;
       name: string;
@@ -249,22 +243,16 @@ export interface ModerationRestrictionRepository {
 
 export type BillingPlanCode = "professional" | "business";
 export type BillingSubscriptionStatus =
-  | "INCOMPLETE"
-  | "TRIALING"
-  | "ACTIVE"
-  | "PAST_DUE"
-  | "PAUSED"
-  | "CANCELLED"
-  | "EXPIRED";
+  "INCOMPLETE" | "TRIALING" | "ACTIVE" | "PAST_DUE" | "PAUSED" | "CANCELLED" | "EXPIRED";
 
 export interface BillingRepository {
   getCustomerId(workspaceId: string): Promise<string | null>;
-  getActiveStripeSubscription(workspaceId: string): Promise<{
+  getActivePaddleSubscription(workspaceId: string): Promise<{
     planCode: BillingPlanCode;
     providerCustomerId: string | null;
     providerSubscriptionId: string;
   } | null>;
-  syncStripeSubscription(input: {
+  syncPaddleSubscription(input: {
     workspaceId: string;
     planCode: BillingPlanCode;
     status: BillingSubscriptionStatus;

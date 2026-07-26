@@ -568,13 +568,13 @@ export class PrismaUnitOfWork implements UnitOfWork {
         });
         return subscription?.providerCustomerId ?? null;
       },
-      getActiveStripeSubscription: async (workspaceId) => {
+      getActivePaddleSubscription: async (workspaceId) => {
         const subscription = await this.#client.subscription.findFirst({
           where: {
             workspaceId,
             deletedAt: null,
             status: { in: ["ACTIVE", "TRIALING"] },
-            billingProvider: "STRIPE",
+            billingProvider: "PADDLE",
             providerSubscriptionId: { not: null },
           },
           orderBy: { updatedAt: "desc" },
@@ -597,7 +597,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
           providerSubscriptionId: subscription.providerSubscriptionId,
         };
       },
-      syncStripeSubscription: async (input) => {
+      syncPaddleSubscription: async (input) => {
         const planData = billingPlanData(input.planCode);
         await this.#client.$transaction(async (transaction) => {
           const plan = await transaction.plan.upsert({
@@ -623,7 +623,7 @@ export class PrismaUnitOfWork implements UnitOfWork {
               workspaceId: input.workspaceId,
               planId: plan.id,
               status: input.status,
-              billingProvider: "STRIPE",
+              billingProvider: "PADDLE",
               providerCustomerId: input.providerCustomerId,
               providerSubscriptionId: input.providerSubscriptionId,
               currentPeriodStart: input.currentPeriodStart,

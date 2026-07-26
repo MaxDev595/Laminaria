@@ -44,6 +44,7 @@ import {
   type UserPreferences,
   type WebinarDefaults,
 } from "@/lib/api";
+import { openPaddleCheckout } from "@/lib/paddle";
 import { Button } from "@laminaria/ui";
 import { useDashboard } from "./dashboard-context";
 import { PageHeading } from "./dashboard-overview";
@@ -1276,7 +1277,8 @@ function BillingSettings({
         interval,
         locale,
       });
-      window.location.assign(result.url);
+      await openPaddleCheckout({ ...result, locale });
+      setLoading(null);
     } catch (error) {
       setNotice(friendlyError(error, locale));
       setLoading(null);
@@ -1303,12 +1305,12 @@ function BillingSettings({
     if (!confirmed) return;
     setLoading("cancel");
     try {
-      await api.cancelAndRefundBilling(workspaceId);
+      const result = await api.cancelAndRefundBilling(workspaceId);
       await refresh();
       setNotice(
         ru
-          ? "Подписка отменена, возврат отправлен. Тариф изменён на Free."
-          : "Subscription cancelled, refund submitted, and the plan changed to Free.",
+          ? `Подписка отменена, запрос на возврат отправлен в Paddle (${result.refundStatus}). Тариф изменён на Free.`
+          : `Subscription cancelled, the refund was submitted to Paddle (${result.refundStatus}), and the plan changed to Free.`,
       );
     } catch (error) {
       setNotice(friendlyError(error, locale));
@@ -1334,8 +1336,8 @@ function BillingSettings({
             <strong>{ru ? "Оплата ещё не подключена" : "Payments are not connected yet"}</strong>
             <p>
               {ru
-                ? "Добавьте Stripe-ключи в Render и перезапустите API. До этого списаний не будет."
-                : "Add Stripe keys in Render and redeploy the API. No charges can be made until then."}
+                ? "Добавьте Paddle-ключи в Render и перезапустите API. До этого списаний не будет."
+                : "Add Paddle keys in Render and redeploy the API. No charges can be made until then."}
             </p>
           </div>
         </div>
@@ -1467,8 +1469,8 @@ function BillingSettings({
                         : "Active"
                       : !billingConfigured
                         ? ru
-                          ? "Нужно подключить Stripe"
-                          : "Connect Stripe first"
+                          ? "Нужно подключить Paddle"
+                          : "Connect Paddle first"
                         : ru
                           ? "Оплатить картой"
                           : "Pay by card"}
@@ -1485,8 +1487,8 @@ function BillingSettings({
       <p className="billing-security">
         <LockKeyhole size={15} />
         {ru
-          ? "Данные карты обрабатывает Stripe и не хранятся в Laminaria."
-          : "Card details are processed by Stripe and are never stored by Laminaria."}
+          ? "Данные карты обрабатывает Paddle и не хранятся в Laminaria."
+          : "Card details are processed by Paddle and are never stored by Laminaria."}
       </p>
       <div className="settings-card">
         <h3>{ru ? "Использованные лимиты" : "Usage"}</h3>

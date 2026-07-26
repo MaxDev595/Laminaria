@@ -13,8 +13,8 @@ const apiProxyTarget = (
   // append that prefix themselves, so normalize it here to avoid `/v1/v1/*`.
   .replace(/\/v1$/, "");
 const scriptPolicy = isDevelopment
-  ? "'self' 'unsafe-inline' 'unsafe-eval'"
-  : "'self' 'unsafe-inline'";
+  ? "'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com"
+  : "'self' 'unsafe-inline' https://cdn.paddle.com";
 const localApiOrigin = new URL(configuredApiUrl).origin;
 const connectPolicy = [
   "'self'",
@@ -32,6 +32,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "manifest-src 'self' https://vercel.com",
   "media-src 'self' blob: https:",
+  "frame-src 'self' https://*.paddle.com",
   `connect-src ${connectPolicy}`,
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
@@ -57,8 +58,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/stripe/webhook",
-        destination: `${apiProxyTarget}/v1/webhooks/stripe`,
+        source: "/api/paddle/webhook",
+        destination: `${apiProxyTarget}/v1/webhooks/paddle`,
       },
       {
         source: "/health/:path*",

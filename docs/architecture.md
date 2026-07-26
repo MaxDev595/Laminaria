@@ -15,7 +15,7 @@ flowchart LR
   Worker --> Storage["S3-compatible storage"]
   Worker --> AI["AI provider adapter"]
   Worker --> Mail["Email provider adapter"]
-  API --> Billing["Billing adapter"]
+  API --> Billing["Paddle Billing"]
 ```
 
 ## Boundaries
@@ -35,7 +35,8 @@ flowchart LR
 
 1. `DRAFT -> SCHEDULED -> LIVE -> ENDED` is the only normal webinar progression. `CANCELLED` and
    `ARCHIVED` have explicit guards. An ended webinar is never restarted.
-2. LiveKit secrets and provider keys never enter the browser bundle or database.
+2. LiveKit secrets, Paddle API keys, and webhook secrets never enter the browser bundle or database.
+   Only Paddle's explicitly public client-side token is sent to Paddle.js.
 3. Every workspace/webinar query is scoped by authenticated membership and role.
 4. ATTENDEE and GUEST grants cannot publish media. Promotion to SPEAKER produces a new server grant.
 5. All externally retried and critical commands require an idempotency key.

@@ -1,0 +1,16 @@
+# Render API environment for Paddle Billing.
+# Never commit real API keys, client-side tokens, or webhook secrets.
+WEB_APP_URL=https://laminarias.com
+CORS_ORIGINS=https://laminarias.com
+
+BILLING_PROVIDER=paddle
+PADDLE_API_KEY=pdl_live_apikey_REPLACE_ME
+PADDLE_CLIENT_TOKEN=live_REPLACE_ME
+PADDLE_WEBHOOK_SECRET=pdl_ntfset_REPLACE_ME
+PADDLE_ENVIRONMENT=production
+
+PADDLE_PRO_MONTHLY_PRICE_ID=pri_REPLACE_ME
+PADDLE_PRO_YEARLY_PRICE_ID=pri_REPLACE_ME
+
+# Add this exact destination in Paddle -> Developer tools -> Notifications:
+# https://laminarias.com/api/paddle/webhook

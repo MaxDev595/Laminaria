@@ -1,22 +1,16 @@
 import { z } from "zod";
 
-const optionalUrl = z.preprocess(
-  (value) => {
-    if (typeof value !== "string") return value;
-    const normalized = value.trim();
-    return normalized === "" ? undefined : normalized;
-  },
-  z.url().optional(),
-);
+const optionalUrl = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const normalized = value.trim();
+  return normalized === "" ? undefined : normalized;
+}, z.url().optional());
 
-const optionalString = z.preprocess(
-  (value) => {
-    if (typeof value !== "string") return value;
-    const normalized = value.trim();
-    return normalized === "" ? undefined : normalized;
-  },
-  z.string().min(1).optional(),
-);
+const optionalString = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const normalized = value.trim();
+  return normalized === "" ? undefined : normalized;
+}, z.string().min(1).optional());
 
 const optionalProvider = z.preprocess(
   (value) =>
@@ -73,12 +67,12 @@ const envSchema = z
     AI_API_KEY: optionalString,
     AI_MODEL: optionalString,
     BILLING_PROVIDER: optionalProvider,
-    BILLING_API_KEY: optionalString,
-    BILLING_WEBHOOK_SECRET: optionalString,
-    STRIPE_PRO_MONTHLY_PRICE_ID: optionalString,
-    STRIPE_PRO_YEARLY_PRICE_ID: optionalString,
-    STRIPE_BUSINESS_MONTHLY_PRICE_ID: optionalString,
-    STRIPE_BUSINESS_YEARLY_PRICE_ID: optionalString,
+    PADDLE_API_KEY: optionalString,
+    PADDLE_CLIENT_TOKEN: optionalString,
+    PADDLE_WEBHOOK_SECRET: optionalString,
+    PADDLE_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
+    PADDLE_PRO_MONTHLY_PRICE_ID: optionalString,
+    PADDLE_PRO_YEARLY_PRICE_ID: optionalString,
     STORAGE_ENDPOINT: optionalUrl,
     STORAGE_PUBLIC_URL: optionalUrl,
     STORAGE_REGION: optionalString,
@@ -113,17 +107,20 @@ const envSchema = z
     allOrNone(
       [
         "BILLING_PROVIDER",
-        "BILLING_API_KEY",
-        "BILLING_WEBHOOK_SECRET",
-        "STRIPE_PRO_MONTHLY_PRICE_ID",
-        "STRIPE_PRO_YEARLY_PRICE_ID",
-        "STRIPE_BUSINESS_MONTHLY_PRICE_ID",
-        "STRIPE_BUSINESS_YEARLY_PRICE_ID",
+        "PADDLE_API_KEY",
+        "PADDLE_CLIENT_TOKEN",
+        "PADDLE_WEBHOOK_SECRET",
+        "PADDLE_PRO_MONTHLY_PRICE_ID",
+        "PADDLE_PRO_YEARLY_PRICE_ID",
       ],
       "Billing",
     );
-    if (env.BILLING_PROVIDER && env.BILLING_PROVIDER.toLowerCase() !== "stripe") {
-      context.addIssue({ code: "custom", path: ["BILLING_PROVIDER"], message: "Only stripe is supported" });
+    if (env.BILLING_PROVIDER && env.BILLING_PROVIDER.toLowerCase() !== "paddle") {
+      context.addIssue({
+        code: "custom",
+        path: ["BILLING_PROVIDER"],
+        message: "Only paddle is supported",
+      });
     }
     allOrNone(
       [
@@ -170,10 +167,12 @@ export type AppConfig = Readonly<{
   google: Readonly<{ clientId: string; clientSecret: string; redirectUri: string }> | null;
   ai: Readonly<{ provider: string; apiKey: string; model: string }> | null;
   billing: Readonly<{
-    provider: "stripe";
+    provider: "paddle";
     apiKey: string;
+    clientToken: string;
     webhookSecret: string;
-    prices: Readonly<Record<"professional" | "business", Readonly<Record<"month" | "year", string>>>>;
+    environment: "sandbox" | "production";
+    prices: Readonly<Record<"professional", Readonly<Record<"month" | "year", string>>>>;
   }> | null;
   storage: Readonly<{
     endpoint: string;
@@ -252,32 +251,32 @@ export function parseConfig(source: NodeJS.ProcessEnv = process.env): AppConfig 
     billing: (() => {
       const value = configured({
         provider: env.BILLING_PROVIDER,
-        apiKey: env.BILLING_API_KEY,
-        webhookSecret: env.BILLING_WEBHOOK_SECRET,
-        proMonth: env.STRIPE_PRO_MONTHLY_PRICE_ID,
-        proYear: env.STRIPE_PRO_YEARLY_PRICE_ID,
-        businessMonth: env.STRIPE_BUSINESS_MONTHLY_PRICE_ID,
-        businessYear: env.STRIPE_BUSINESS_YEARLY_PRICE_ID,
+        apiKey: env.PADDLE_API_KEY,
+        clientToken: env.PADDLE_CLIENT_TOKEN,
+        webhookSecret: env.PADDLE_WEBHOOK_SECRET,
+        proMonth: env.PADDLE_PRO_MONTHLY_PRICE_ID,
+        proYear: env.PADDLE_PRO_YEARLY_PRICE_ID,
       });
       return value
         ? {
-            provider: "stripe" as const,
+            provider: "paddle" as const,
             apiKey: value.apiKey,
+            clientToken: value.clientToken,
             webhookSecret: value.webhookSecret,
+            environment: env.PADDLE_ENVIRONMENT,
             prices: {
               professional: { month: value.proMonth, year: value.proYear },
-              business: { month: value.businessMonth, year: value.businessYear },
             },
           }
         : null;
     })(),
     storage: (() => {
       const value = configured({
-      endpoint: env.STORAGE_ENDPOINT,
-      region: env.STORAGE_REGION,
-      bucket: env.STORAGE_BUCKET,
-      accessKeyId: env.STORAGE_ACCESS_KEY_ID,
-      secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
+        endpoint: env.STORAGE_ENDPOINT,
+        region: env.STORAGE_REGION,
+        bucket: env.STORAGE_BUCKET,
+        accessKeyId: env.STORAGE_ACCESS_KEY_ID,
+        secretAccessKey: env.STORAGE_SECRET_ACCESS_KEY,
       });
       return value ? { ...value, publicUrl: env.STORAGE_PUBLIC_URL ?? null } : null;
     })(),

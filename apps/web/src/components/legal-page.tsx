@@ -44,7 +44,7 @@ const content: Record<
         {
           title: "Service providers and international transfers",
           paragraphs: [
-            "Laminaria relies on infrastructure and processors such as Vercel, Render, Neon, LiveKit, Cloudflare R2, Stripe and configured email or identity providers. Data may be processed outside your country with safeguards required by applicable law.",
+            "Laminaria relies on infrastructure and processors such as Vercel, Render, Neon, LiveKit, Cloudflare R2, Paddle and configured email or identity providers. Data may be processed outside your country with safeguards required by applicable law.",
           ],
         },
         {
@@ -102,14 +102,14 @@ const content: Record<
         {
           title: "Cancel and refund",
           paragraphs: [
-            "When the in-app “Cancel and refund” action is available and succeeds, the active subscription is cancelled immediately, the workspace returns to Free and a refund of the latest eligible subscription payment is submitted to Stripe.",
+            "When the in-app “Cancel and refund” action is available and succeeds, the active subscription is cancelled immediately, the workspace returns to Free and a refund request for the latest eligible subscription payment is submitted to Paddle. Live refunds may require Paddle approval.",
             "A successful refund submission is not the same as the money reaching your bank. Banks and card networks commonly need several business days.",
           ],
         },
         {
           title: "Eligibility and exceptions",
           paragraphs: [
-            "A payment cannot be refunded twice. Refunds may also be unavailable when the payment has already been refunded, disputed, reversed, made outside Stripe, or is otherwise ineligible under Stripe or card-network rules.",
+            "A payment cannot be refunded twice. Refunds may also be unavailable when the payment has already been refunded, disputed, reversed, made outside Paddle, or is otherwise ineligible under Paddle or payment-network rules.",
             "If the automatic action cannot complete, contact support with the workspace and payment details. We will review the request and applicable consumer law.",
           ],
         },
@@ -151,7 +151,7 @@ const content: Record<
         {
           title: "Подрядчики и международная обработка",
           paragraphs: [
-            "Laminaria использует инфраструктуру и обработчиков, включая Vercel, Render, Neon, LiveKit, Cloudflare R2, Stripe, а также подключённых провайдеров почты и входа. Данные могут обрабатываться за пределами вашей страны с гарантиями, требуемыми применимым правом.",
+            "Laminaria использует инфраструктуру и обработчиков, включая Vercel, Render, Neon, LiveKit, Cloudflare R2, Paddle, а также подключённых провайдеров почты и входа. Данные могут обрабатываться за пределами вашей страны с гарантиями, требуемыми применимым правом.",
           ],
         },
         {
@@ -208,14 +208,14 @@ const content: Record<
         {
           title: "Отмена и возврат",
           paragraphs: [
-            "Если действие «Отменить и вернуть оплату» доступно и выполнено успешно, подписка отменяется сразу, Workspace переходит на Free, а запрос на возврат последнего подходящего платежа отправляется в Stripe.",
+            "Если действие «Отменить и вернуть оплату» доступно и выполнено успешно, подписка отменяется сразу, Workspace переходит на Free, а запрос на возврат последнего подходящего платежа отправляется в Paddle. Возврат в рабочем окружении может потребовать одобрения Paddle.",
             "Успешно отправленный возврат ещё не означает поступление денег в банк. Банку и платёжной системе обычно нужно несколько рабочих дней.",
           ],
         },
         {
           title: "Условия и исключения",
           paragraphs: [
-            "Один платёж нельзя вернуть дважды. Автоматический возврат также может быть недоступен, если платёж уже возвращён, оспорен, отменён, проведён вне Stripe или не соответствует правилам Stripe и платёжной системы.",
+            "Один платёж нельзя вернуть дважды. Возврат также может быть недоступен, если платёж уже возвращён, оспорен, отменён, проведён вне Paddle или не соответствует правилам Paddle и платёжной системы.",
             "Если автоматическая отмена не завершилась, напишите в поддержку и укажите Workspace и платёж. Мы проверим запрос с учётом применимого законодательства о защите потребителей.",
           ],
         },

@@ -131,8 +131,7 @@ export const api = {
       body: JSON.stringify(input),
     }),
   listSessions: () => apiFetch<{ sessions: AccountSession[] }>("/v1/auth/sessions"),
-  revokeAllSessions: () =>
-    apiFetch<void>("/v1/auth/sessions/revoke-all", { method: "POST" }),
+  revokeAllSessions: () => apiFetch<void>("/v1/auth/sessions/revoke-all", { method: "POST" }),
   exportAccount: () => apiFetch<Record<string, unknown>>("/v1/auth/export"),
   deleteAccount: () =>
     apiFetch<void>("/v1/auth/account", {
@@ -184,20 +183,31 @@ export const api = {
       locale: "en" | "ru";
     },
   ) =>
-    apiFetch<{ url: string }>(
-      `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/checkout`,
-      { method: "POST", body: JSON.stringify(input) },
-    ),
+    apiFetch<{
+      transactionId: string;
+      clientToken: string;
+      environment: "sandbox" | "production";
+      customerEmail: string;
+      successUrl: string;
+    }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/checkout`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
   createBillingPortal: (workspaceId: string, locale: "en" | "ru") =>
-    apiFetch<{ url: string }>(
-      `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/portal`,
-      { method: "POST", body: JSON.stringify({ locale }) },
-    ),
+    apiFetch<{ url: string }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/portal`, {
+      method: "POST",
+      body: JSON.stringify({ locale }),
+    }),
   cancelAndRefundBilling: (workspaceId: string) =>
-    apiFetch<{ cancelled: true; refunded: true; refundId: string }>(
-      `/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/cancel-and-refund`,
-      { method: "POST", body: JSON.stringify({}) },
-    ),
+    apiFetch<{
+      cancelled: true;
+      refundSubmitted: true;
+      refundId: string;
+      refundStatus: string;
+    }>(`/v1/workspaces/${encodeURIComponent(workspaceId)}/billing/cancel-and-refund`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   listWorkspaceMembers: (workspaceId: string) =>
     apiFetch<{ members: WorkspaceMember[] }>(
       `/v1/workspaces/${encodeURIComponent(workspaceId)}/members`,
@@ -482,12 +492,7 @@ export interface Webinar {
 }
 
 export type RecordingStatus =
-  | "PENDING"
-  | "RECORDING"
-  | "PROCESSING"
-  | "READY"
-  | "FAILED"
-  | "DELETED";
+  "PENDING" | "RECORDING" | "PROCESSING" | "READY" | "FAILED" | "DELETED";
 
 export interface Recording {
   id: string;
@@ -600,7 +605,10 @@ export function friendlyError(error: unknown, locale: string) {
   const russian = locale === "ru";
   if (error instanceof ApiError && code === "BILLING_ERROR") {
     return russian
-      ? error.message.replace("Stripe rejected checkout:", "Stripe отклонил оплату:")
+      ? error.message.replace(
+          "Paddle rejected the billing request:",
+          "Paddle отклонил платёжный запрос:",
+        )
       : error.message;
   }
   if (error instanceof ApiError && error.status === 409) {
@@ -631,8 +639,8 @@ export function friendlyError(error: unknown, locale: string) {
       "Перейдите на подходящий тариф, чтобы использовать эту функцию.",
     ],
     BILLING_ERROR: [
-      "Stripe could not create the payment. Check the secret key and Price IDs.",
-      "Stripe не смог создать оплату. Проверьте секретный ключ и Price ID.",
+      "Paddle could not create the payment. Check the API key and Price IDs.",
+      "Paddle не смог создать оплату. Проверьте API-ключ и Price ID.",
     ],
     VALIDATION_ERROR: [
       "Review the highlighted information and try again.",
@@ -665,8 +673,8 @@ function serviceNotConfiguredMessage(message: string, russian: boolean) {
   }
   if (/billing/i.test(message)) {
     return russian
-      ? "Оплата ещё не подключена. Добавьте Stripe-ключи в Render и перезапустите API."
-      : "Payments are not connected yet. Add Stripe keys in Render and redeploy the API.";
+      ? "Оплата ещё не подключена. Добавьте Paddle-ключи в Render и перезапустите API."
+      : "Payments are not connected yet. Add Paddle keys in Render and redeploy the API.";
   }
   return russian
     ? "Этот сервис ещё не настроен. Проверьте экран Settings."

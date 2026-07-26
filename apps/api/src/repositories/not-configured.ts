@@ -75,8 +75,8 @@ export function createUnavailableUnitOfWork(): UnitOfWork {
     },
     billing: {
       getCustomerId: unavailable,
-      getActiveStripeSubscription: unavailable,
-      syncStripeSubscription: unavailable,
+      getActivePaddleSubscription: unavailable,
+      syncPaddleSubscription: unavailable,
     },
     healthcheck: unavailable,
     close: async () => undefined,

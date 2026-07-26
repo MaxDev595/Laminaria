@@ -43,12 +43,12 @@ export async function registerSystemRoutes(app: FastifyInstance, config: AppConf
             configured: Boolean(config.billing),
             requiredEnv: [
               "BILLING_PROVIDER",
-              "BILLING_API_KEY",
-              "BILLING_WEBHOOK_SECRET",
-              "STRIPE_PRO_MONTHLY_PRICE_ID",
-              "STRIPE_PRO_YEARLY_PRICE_ID",
-              "STRIPE_BUSINESS_MONTHLY_PRICE_ID",
-              "STRIPE_BUSINESS_YEARLY_PRICE_ID",
+              "PADDLE_API_KEY",
+              "PADDLE_CLIENT_TOKEN",
+              "PADDLE_WEBHOOK_SECRET",
+              "PADDLE_ENVIRONMENT",
+              "PADDLE_PRO_MONTHLY_PRICE_ID",
+              "PADDLE_PRO_YEARLY_PRICE_ID",
             ],
           },
           {

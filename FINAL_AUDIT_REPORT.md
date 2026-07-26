@@ -173,7 +173,7 @@
 - S3-compatible storage для файлов/записей;
 - observability: error tracking, logs, uptime, metrics и alerts;
 - AI API key только если AI включается в релиз;
-- Stripe keys, products и signed webhook только если billing включается в релиз.
+- Paddle API key, client-side token, prices и signed webhook только если billing включается в релиз.
 
 ## Известные ограничения
 
