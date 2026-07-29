@@ -323,6 +323,7 @@ export function LandingExperience() {
           <Link href="/privacy">{locale === "ru" ? "Конфиденциальность" : "Privacy"}</Link>
           <Link href="/terms">{locale === "ru" ? "Условия" : "Terms"}</Link>
           <Link href="/refund">{locale === "ru" ? "Возврат" : "Refund"}</Link>
+          <a href="mailto:support@laminarias.com">support@laminarias.com</a>
           <Link href="/sign-in">{t("auth.signIn")}</Link>
           <a href="#security">{t("shell.security")}</a>
         </div>

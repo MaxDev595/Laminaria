@@ -1363,6 +1363,13 @@ function BillingSettings({
               ? "При отмене отключается только автопродление. Оплата за текущий период не возвращается, а Pro остаётся активным до указанной даты окончания."
               : "Cancellation only turns off auto-renewal. The current period is non-refundable, and Pro remains active until the displayed end date."}
           </p>
+          <a
+            href={`mailto:support@laminarias.com?subject=${encodeURIComponent(
+              ru ? "Поддержка Laminaria" : "Laminaria support",
+            )}`}
+          >
+            support@laminarias.com
+          </a>
         </div>
       </div>
       <div

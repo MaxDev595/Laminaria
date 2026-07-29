@@ -8223,6 +8223,8 @@ select {
 .billing-policy-note > svg { flex: 0 0 auto; margin-top: .12rem; filter: drop-shadow(0 0 .6rem rgb(244 184 96 / .28)); }
 .billing-policy-note strong { color: #ffe1a6; font-size: .88rem; }
 .billing-policy-note p { max-width: 54rem; margin-top: .22rem; color: var(--color-muted-foreground); font-size: .79rem; line-height: 1.55; }
+.billing-policy-note a { display: inline-flex; margin-top: .45rem; color: #ffd58a; font-size: .79rem; font-weight: 750; text-decoration: underline; text-decoration-color: rgb(255 213 138 / .38); text-underline-offset: .22rem; transition: color .2s ease, text-decoration-color .2s ease, filter .2s ease; }
+.billing-policy-note a:hover { color: #fff0cc; text-decoration-color: currentColor; filter: drop-shadow(0 0 .5rem rgb(255 213 138 / .22)); }
 .usage-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1rem; }
 .usage-grid > div { padding: 1rem; border: 1px solid var(--color-border); border-radius: .9rem; background: color-mix(in srgb, var(--color-background) 45%, transparent); }
 .usage-grid strong, .usage-grid span { display: block; }
