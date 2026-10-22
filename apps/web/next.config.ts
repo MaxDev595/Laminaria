@@ -13,8 +13,8 @@ const apiProxyTarget = (
   // append that prefix themselves, so normalize it here to avoid `/v1/v1/*`.
   .replace(/\/v1$/, "");
 const scriptPolicy = isDevelopment
-  ? "'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com"
-  : "'self' 'unsafe-inline' https://cdn.paddle.com";
+  ? "'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com https://lemeriai.com"
+  : "'self' 'unsafe-inline' https://cdn.paddle.com https://lemeriai.com";
 const localApiOrigin = new URL(configuredApiUrl).origin;
 const connectPolicy = [
   "'self'",
@@ -32,7 +32,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "manifest-src 'self' https://vercel.com",
   "media-src 'self' blob: https:",
-  "frame-src 'self' https://*.paddle.com",
+  "frame-src 'self' https://*.paddle.com https://lemeriai.com",
   `connect-src ${connectPolicy}`,
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
